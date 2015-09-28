@@ -26,8 +26,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import beast.core.util.Log;
-
 import com.itextpdf.awt.PdfGraphics2D;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -69,7 +67,7 @@ public class Panel extends JPanel implements KeyListener {
     		switch (arg) {
     		case "-maxdist":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-maxdist argument requires another argument");
+    				log("-maxdist argument requires another argument");
     				printUsageAndExit();
     			}
     			CognateIO.COGNATE_SPLIT_THRESHOLD = Integer.parseInt(args[i+1]);
@@ -77,7 +75,7 @@ public class Panel extends JPanel implements KeyListener {
     			break;
     		case "-words":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-words argument requires another argument");
+    				log("-words argument requires another argument");
     				printUsageAndExit();
     			}
     			CognateIO.NGLOSSIDS = Integer.parseInt(args[i+1]);
@@ -85,7 +83,7 @@ public class Panel extends JPanel implements KeyListener {
     			break;
     		case "-kml":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-kml argument requires another argument");
+    				log("-kml argument requires another argument");
     				printUsageAndExit();
     			}
     			KML_FILE = args[i+1];
@@ -93,7 +91,7 @@ public class Panel extends JPanel implements KeyListener {
     			break;
     		case "-bg":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-bg argument requires another argument");
+    				log("-bg argument requires another argument");
     				printUsageAndExit();
     			}
     			BG_FILE = args[i+1];
@@ -101,7 +99,7 @@ public class Panel extends JPanel implements KeyListener {
     			break;
     		case "-nex":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-nex argument requires another argument");
+    				log("-nex argument requires another argument");
     				printUsageAndExit();
     			}
     			NEXUS_FILE = args[i+1];
@@ -109,7 +107,7 @@ public class Panel extends JPanel implements KeyListener {
     			break;
     		case "-cognates":
     			if (i+1 >= args.length) {
-    				Log.warning.println("-cognates argument requires another argument");
+    				log("-cognates argument requires another argument");
     				printUsageAndExit();
     			}
     			COGNATE_FILE = args[i+1];
@@ -121,13 +119,17 @@ public class Panel extends JPanel implements KeyListener {
     			printUsageAndExit();
     			break;
     		default:
-				Log.warning.println("unrecognised command " + arg);
+				log("unrecognised command " + arg);
 				printUsageAndExit();
     		}
     	}
 		
 	}
 
+	void log(String m) {
+		System.err.println(m);
+	}
+	
 	private void printUsageAndExit() {
 		System.out.println("java babel.spanningtree.Panel [options]");
 		System.out.println("Draws spanning trees of congates");

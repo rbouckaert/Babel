@@ -29,6 +29,7 @@
         <pathelement path="${buildBabel}"/>
 		<fileset dir="${libBeast2}" includes="junit-4.8.2.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
+		<fileset dir="${libBeast2}" includes="itextpdf-5.2.1.jar"/>
 		<fileset dir="${libBeast2}" includes="antlr-runtime-4.5.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
         <pathelement path="${beast2classpath}"/>
@@ -77,9 +78,9 @@
 		       memorymaximumsize="256m">
 			   <!--source="1.6"
 		       target="1.6"-->
-			<include name="beast/**/**" />
+			<include name="babel/**/**" />
 			<!-- compile JUnit test classes -->
-			<include name="test/beast/**" />
+			<include name="test/babel/**" />
 		</javac>
 		<echo message="Successfully compiled." />
 	</target>
@@ -89,6 +90,16 @@
 		<!-- Create the distribution directory -->
 		<mkdir dir="${distBabel}" />
 
+		<jar jarfile="${distBabel}/stree.jar">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="babel.spanningtrees.Panel" />
+			</manifest>
+			<fileset dir="${buildBabel}">
+				<include name="babel/spanningtrees/*.class" />
+			</fileset>
+            <zipgroupfileset dir="${libBeast2}" includes="itextpdf-5.2.1.jar" />
+		</jar>
 		<!-- Put everything in ${buildBabel} into the beast.jar file -->
 		<jar jarfile="${distBabel}/Babel.jar">
 			<manifest>
@@ -96,7 +107,7 @@
 				<attribute name="Main-Class" value="${main_class_BEAST}" />
 			</manifest>
 			<fileset dir="${buildBabel}">
-				<include name="beast/**/*.class" />
+				<include name="babel/**/*.class" />
 			</fileset>
 			<fileset dir="${beast2classpath}">
 				<include name="beast/**/*.class" />
@@ -108,9 +119,9 @@
 		</jar>
 		<jar jarfile="${distBabel}/Babel.src.jar">
 			<fileset dir="${srcBabel}">
-				<include name="beast/**/*.java" />
-				<include name="beast/**/*.png" />
-				<include name="beast/**/*.xsl" />
+				<include name="babel/**/*.java" />
+				<include name="babel/**/*.png" />
+				<include name="babel/**/*.xsl" />
 			</fileset>
         </jar>
 		<jar jarfile="${distBabel}/Babel.addon.jar">
@@ -118,8 +129,7 @@
 				<attribute name="Built-By" value="${user.name}" />
 			</manifest>
 			<fileset dir="${buildBabel}">
-				<include name="beast/**/*.class" />
-				<include name="util/**/*.class" />
+				<include name="babel/**/*.class" />
 				<include name="**/*.properties" />
 			</fileset>
 		</jar>
