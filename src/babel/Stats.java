@@ -23,7 +23,7 @@ public class Stats extends beast.core.Runnable {
 	public ConsoleApp consoleApp = null;
 
     @Override
-	public void initAndValidate() throws Exception {
+	public void initAndValidate() {
 	}
 
 	@Override
