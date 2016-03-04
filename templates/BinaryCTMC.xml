@@ -1,6 +1,6 @@
 <beast version='2.0'
        namespace='beast.app.beauti:beast.core:beast.evolution.branchratemodel:beast.evolution.speciation:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution:beast.math.distributions'
-	templateinfo='Binary continuous timem Monte Carlo model for binary data&lt;br>useful for linguistic analysis'>
+	templateinfo='Binary continuous time Monte Carlo model for binary data&lt;br>useful for linguistic analysis'>
 
 <map name='connect'>beast.app.beauti.BeautiConnector</map>
 <map name='subtemplate'>beast.app.beauti.BeautiSubTemplate</map>
