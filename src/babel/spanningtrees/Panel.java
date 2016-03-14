@@ -176,8 +176,8 @@ public class Panel extends JPanel implements KeyListener {
 
 		double m_fScaleX = 10;
 		double m_fScaleY = 10;
-		int nW = (int) getWidth();
-		int nH = (int) getHeight();
+		int nW = getWidth();
+		int nH = getHeight();
 		m_fScaleX = (nW + 0.0f) / (m_fMaxLong - m_fMinLong);
 		m_fScaleY = (nH + 0.0f) / (m_fMaxLat - m_fMinLat);
 

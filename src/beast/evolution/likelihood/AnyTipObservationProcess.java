@@ -81,12 +81,14 @@ public class AnyTipObservationProcess extends AbstractObservationProcess {
     protected double[] u0;
     protected double[] p;
 
-    public void init(String modelName, Tree treeModel, Alignment patterns, SiteModel siteModel,
+    @Override
+	public void init(String modelName, Tree treeModel, Alignment patterns, SiteModel siteModel,
                                     BranchRateModel branchRateModel, RealParameter mu, RealParameter lam, boolean integrateGainRate) {
         super.init(modelName, treeModel, patterns, siteModel, branchRateModel, mu, lam, integrateGainRate);
     }
 
-    public double calculateLogTreeWeight() {
+    @Override
+	public double calculateLogTreeWeight() {
         int L = treeModel.getNodeCount();
         if (u0 == null || p == null) {
             u0 = new double[L];    // probability that the trait at node i survives to no leaf
@@ -169,7 +171,8 @@ public class AnyTipObservationProcess extends AbstractObservationProcess {
         }
     }
 
-    public void setNodePatternInclusion() {
+    @Override
+	public void setNodePatternInclusion() {
 
         if (postOrderNodeList == null) {
             postOrderNodeList = new int[nodeCount];         

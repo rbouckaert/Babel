@@ -27,6 +27,7 @@
 package beast.evolution.likelihood;
 
 
+
 import java.util.Set;
 
 import beast.core.*;
@@ -168,7 +169,7 @@ public class AbstractObservationProcess extends CalculationNode {
         gammaNorm = -GammaFunction.lnGamma(totalPatterns + 1);
 
         dataType = (MutationDeathType) patterns.getDataType();
-        this.deathState = dataType.DEATHSTATE;
+        this.deathState = MutationDeathType.DEATHSTATE;
         setNodePatternInclusion();
         cumLike = new double[patternCount];
         nodeLikelihoods = new double[patternCount];
@@ -347,8 +348,14 @@ public class AbstractObservationProcess extends CalculationNode {
     }
 
 
-    public boolean requiresRecalculation() {
-      if (siteModel.isDirtyCalculation()) {
+    @Override
+	public boolean requiresRecalculation() {
+    	if (mu.somethingIsDirty()) {
+      	  averageRateKnown = false;
+    	  weightKnown = false;
+    	  nodePatternInclusionKnown = false;
+    	}
+    	if (siteModel.isDirtyCalculation()) {
     	  averageRateKnown = false;
       }
       if (treeModel.somethingIsDirty()) {
@@ -381,13 +388,15 @@ public class AbstractObservationProcess extends CalculationNode {
 //        }
 //    }
 //
-    public void store() {
+    @Override
+	public void store() {
 //        storedAverageRate = averageRate;
         storedLogTreeWeight = logTreeWeight;
         System.arraycopy(nodePatternInclusion, 0, storedNodePatternInclusion, 0, storedNodePatternInclusion.length);
     }
 
-    public void restore() {
+    @Override
+	public void restore() {
 //        averageRate = storedAverageRate;
         averageRateKnown = false;
         logTreeWeight = storedLogTreeWeight;
@@ -405,7 +414,6 @@ public class AbstractObservationProcess extends CalculationNode {
 
     private boolean integrateGainRate = false;
 
-    private double storedAverageRate;
     private double averageRate;
     private boolean averageRateKnown = false;
 

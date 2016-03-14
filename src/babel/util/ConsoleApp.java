@@ -49,7 +49,8 @@ public class ConsoleApp {
 
         Handler handler = new MessageLogHandler();
         handler.setFilter(new Filter() {
-            public boolean isLoggable(final LogRecord record) {
+            @Override
+			public boolean isLoggable(final LogRecord record) {
                 return record.getLevel().intValue() < Level.SEVERE.intValue();
             }
         });
@@ -69,7 +70,8 @@ public class ConsoleApp {
             getDefaultFrame().setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         }
 
-        public void doStop() {
+        @Override
+		public void doStop() {
             // thread.stop is deprecated so need to send a message to running threads...
         }
 

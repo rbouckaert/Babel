@@ -53,7 +53,8 @@ public class SingleTipObservationProcess extends AnyTipObservationProcess{
 
     //dr.evomodel.MSSD.AnyTipObservationProcess singletipobservationprocess;
 
-    public void initAndValidate() {
+    @Override
+	public void initAndValidate() {
         init(treeModelInput.get(),
                 patternsInput.get(),
                 siteModelInput.get(),
@@ -77,7 +78,8 @@ public class SingleTipObservationProcess extends AnyTipObservationProcess{
         this.sourceTaxon = sourceTaxon;
     }
 
-    public double calculateLogTreeWeight() {
+    @Override
+	public double calculateLogTreeWeight() {
         return -lam.getValue(0) / (getAverageRate() * mu.getValue(0));
     }
 }
