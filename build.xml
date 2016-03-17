@@ -77,8 +77,7 @@
 		       fork="true"
 		       memoryinitialsize="256m"
 		       memorymaximumsize="256m">
-			   <!--source="1.6"
-		       target="1.6"-->
+                        <include name="beast/**/**" />
 			<include name="babel/**/**" />
 			<!-- compile JUnit test classes -->
 			<include name="test/babel/**" />
@@ -130,7 +129,7 @@
 				<attribute name="Built-By" value="${user.name}" />
 			</manifest>
 			<fileset dir="${buildBabel}">
-				<include name="babel/**/*.class" />
+				<include name="beast/**/*.class" />
 				<include name="**/*.properties" />
 			</fileset>
 		</jar>
@@ -191,6 +190,9 @@
 		</copy>
 		<copy todir="${Add_on_dir}/examples">
 			<fileset dir="examples" />
+		</copy>
+		<copy todir="${Add_on_dir}/templates">
+			<fileset dir="templates" />
 		</copy>
 		<copy todir="${Add_on_dir}/lib">
 			<fileset dir="${distBabel}" includes="Babel.addon.jar" />
