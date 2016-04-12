@@ -31,14 +31,18 @@ oscan	000000000010000000000000001????????????????????????10000000000000001000000
 ;
 End;
 
+# Define monophyletic clades
 begin sets;
 taxset germanic = oldnorse oldhighgerman oldprussian oldenglish;
 taxset tocharian = tocharian_a tocharian_b;
 taxset anatolian = hittite lycian luvian;
 end;
 
+# Define time calibrations on tips, and clades.
+# Note that since anatolian does not have a calibration, 
+# only a monophyletic MRCAPrior is created in BEAUti
 begin assumptions;
-calibrate oldnorse = normal(0.775,40)
+calibrate oldnorse = normal(775,40)
 calibrate avestan = normal(2500,50)
 calibrate gothic = normal(1650,25)
 calibrate luvian = normal(3350,75)
