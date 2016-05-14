@@ -18,7 +18,7 @@ import javafx.embed.swing.JFXPanel;
 import babel.util.NexusParser;
 
 @Description("Tool to print statistics on cognate data, useful for identifyng potential anomalies in the alignment.")
-public class Stats extends beast.core.Runnable {
+public class CognateStats extends beast.core.Runnable {
 	final public Input<File> nexusFileInput = new Input<>("nexusFile", "nexus file containing sequence alignment, charsetlabels and partition information", new File("examples/nexus/ringe.nex"));
     
 	public static ConsoleApp app = null;
@@ -110,7 +110,7 @@ public class Stats extends beast.core.Runnable {
 		Application main = null;
 		try {
 			// create the class with application that we want to launch
-			Stats sampler = new Stats();
+			CognateStats sampler = new CognateStats();
 			
 			if (args.length == 0) {
 				// try the GUI version
