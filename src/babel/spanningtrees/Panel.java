@@ -189,6 +189,17 @@ public class Panel extends JPanel implements KeyListener {
 				x1,
 				y1, 
 				null);
+		if (m_fMaxLong > 180) {
+			x0 = (int)(nW2 * (-360+m_fMinLong- m_fBGImageBox[0])/(m_fBGImageBox[2] - m_fBGImageBox[0]));
+			x1 = (int)(nW2 * (-360+m_fMaxLong- m_fBGImageBox[0])/(m_fBGImageBox[2] - m_fBGImageBox[0]));
+			g.drawImage(m_bgImage,
+					0, 0, getWidth(), getHeight(),
+					x0, 
+					y0, 
+					x1,
+					y1, 
+					null);			
+		}
 		
 		g2.setColor(Color.red);
 		g2.setFont(new Font(Font.DIALOG, Font.BOLD, 20));
@@ -312,8 +323,8 @@ case DRAW_GLOSS:
 	static public String COGNATE_FILE = "/home/remco/data/beast/ie/saskyY3/geo/cognates.dat";
 
 	
-	void loadLocations() {
-		locations = CognateIO.loadKMLFile(KML_FILE);
+	void loadLocations(String kmlFile) {
+		locations = CognateIO.loadKMLFile(kmlFile);
 
 		m_fMinLat = 90;
 		m_fMinLong = 180;
@@ -381,10 +392,18 @@ case DRAW_GLOSS:
 				BufferedReader fin = new BufferedReader(new FileReader(file));
 				int k = 0;
 				int gloss = 0;
+				String prev = "";
 				while (fin.ready()) {
 					str = fin.readLine();
-					if (str.matches(".*_group,")) {
-						str = str.replaceAll("\\s+\\d+\\s", "");
+					if (str.replaceAll("[0-9\\s]", "").equals(prev)) {
+						str = str.replaceAll("\\s*\\d+\\s", "");
+						mapPositionToCognate.add(str);
+						str = str.replaceAll("_.*", "");
+						mapPositionToGloss.add(str);
+						mapPositionToGlossID.add(gloss);
+						mapPositionToState.add(k++);
+					} else if (str.matches(".*_group,")) {
+						str = str.replaceAll("\\s*\\d+\\s", "");
 						mapPositionToCognate.add(str);
 						mapPositionToGloss.add("groupcode");
 						k = 0;
@@ -392,13 +411,15 @@ case DRAW_GLOSS:
 						mapPositionToGlossID.add(gloss);
 						mapPositionToState.add(k++);
 					} else {
-						str = str.replaceAll("\\s+\\d+\\s", "");
+						str = str.replaceAll("\\s*\\d+\\s", "");
 						mapPositionToCognate.add(str);
-						str = str.replaceAll("_.*", "");
 						mapPositionToGloss.add(str);
+						k = 0;
+						gloss++;
 						mapPositionToGlossID.add(gloss);
 						mapPositionToState.add(k++);
 					}
+					prev = str.replaceAll("[0-9\\s]", "");
 				}
 				fin.close();
 				
@@ -409,7 +430,7 @@ case DRAW_GLOSS:
 				// eat up header
 				do {
 					sStr = fin.readLine();
-				} while (!sStr.matches(".*matrix.*"));
+				} while (!sStr.toLowerCase().matches(".*matrix.*"));
 				do {
 					sStr = fin.readLine();
 				} while (sStr.matches(".*\\[.*"));
@@ -545,7 +566,7 @@ case DRAW_GLOSS:
 		JFrame frame = new JFrame();
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(args);
-		pane.loadLocations();
+		pane.loadLocations(KML_FILE);
 		pane.loadData(NEXUS_FILE, COGNATE_FILE);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);

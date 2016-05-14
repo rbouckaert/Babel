@@ -193,7 +193,7 @@ public class CognateData {
 
 		
 		DecimalFormat format = new DecimalFormat("####");
-		System.out.print(cognate.GlossID + " " + getLink(splitCognates.get(0).word.get(0)) + " " + format.format(minDist) + " " + splitCognates.size());
+		//System.out.print(cognate.GlossID + " " + getLink(splitCognates.get(0).word.get(0)) + " " + format.format(minDist) + " " + splitCognates.size());
 		for (Cognate c: splitCognates) {
 			System.out.print(" (");
 			for (int k = 0; k < c.languages.size(); k++) {
