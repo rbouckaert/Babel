@@ -10,10 +10,10 @@ import beast.app.beauti.BeautiDoc;
 import beast.app.draw.BEASTObjectDialog;
 import beast.app.draw.BEASTObjectPanel;
 import beast.app.util.Application;
+import beast.app.util.ConsoleApp;
 import beast.core.Input;
 import beast.core.Input.Validate;
-import beastfxml.app.ConsoleApp;
-import javafx.embed.swing.JFXPanel;
+//import javafx.embed.swing.JFXPanel;
 import beast.core.Runnable;
 
 public class SpanningTree extends Runnable {
@@ -48,12 +48,15 @@ public class SpanningTree extends Runnable {
 	public static void main(String[] args) throws Exception {
 		{
 			// initialise JavaFX for console
-			JFXPanel jfxPanel = new JFXPanel();
+			//JFXPanel jfxPanel = new JFXPanel();
 		}
 		SpanningTree app = new SpanningTree();
 		app.setID("Filter clades from tree set");
 	
-		if (args.length == 0) {
+		if (args.length == 0 || true) {
+			Application main = new Application(app);
+			main.parseArgs(args, false);
+
 			// create BeautiDoc and beauti configuration
 			BeautiDoc doc = new BeautiDoc();
 			doc.beautiConfig = new BeautiConfig();

@@ -29,7 +29,7 @@ public class ConsoleApp {
         System.setProperty("beast.useWindow", "true");
 
         int maxErrorCount = 100;
-        final javax.swing.Icon icon = IconUtils.getIcon(babel.Stats.class, "ps.png");
+        final javax.swing.Icon icon = IconUtils.getIcon(babel.CognateStats.class, "ps.png");
 
         BEASTVersion version = new BEASTVersion();
         

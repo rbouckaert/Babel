@@ -14,7 +14,6 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.util.Log;
 import beast.evolution.alignment.Alignment;
-import javafx.embed.swing.JFXPanel;
 import babel.util.NexusParser;
 
 @Description("Tool to print statistics on cognate data, useful for identifyng potential anomalies in the alignment.")
@@ -105,7 +104,7 @@ public class CognateStats extends beast.core.Runnable {
 	public static void main(final String[] args) throws Exception {
 		{
 			// initialise JavaFX for console
-			JFXPanel jfxPanel = new JFXPanel();
+			//JFXPanel jfxPanel = new JFXPanel();
 		}
 		Application main = null;
 		try {

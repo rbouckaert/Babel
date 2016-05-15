@@ -1,3 +1,19 @@
-<addon name='Babel' version='0.1.0'>
+<addon name='Babel' version='0.1.1'>
 	<depends on='beast2' atleast='2.4.0'/>
+	<depends on='BEASTLabs' atleast='1.5.3'/>
+	<addonapp description="CognateStats"
+              class="babel.CognateStats"
+              args=""
+              icon="babel/icons/CognateStats.png"
+            />
+    <addonapp description="SpanningTree"
+              class="babel.spanningtrees.SpanningTree"
+              args=""
+              icon="babel/icons/SpanningTree.png"
+            />
+    <addonapp description="FamilyFilter"
+              class="babel.tools.FamilyFilter"
+              args=""
+            />
+
 </addon>

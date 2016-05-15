@@ -17,8 +17,9 @@
 	<property name="libBeast2" location="${beast2path}/lib" />
 	<property name="srcBeast2" location="${beast2path}/src" />
 	<property name="beast2classpath" location="${beast2path}/build" />
+    <property name="BEASTLabsclasspath" location="../BEASTLabs/build" />
 	<property name="Add_on_dir" value="${release_dir}/add-on" />
-	<property name="version" value="0.1.0" />
+	<property name="version" value="0.1.1" />
 
     <import file="${beast2path}/build.xml" />
 
@@ -31,9 +32,10 @@
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
 		<fileset dir="${libBabel}" includes="itextpdf-5.2.1.jar"/>
 		<fileset dir="${libBeast2}" includes="antlr-runtime-4.5.jar"/>
-		<fileset dir="${libBeast2}" includes="beagle.jar"/>
-                <fileset dir="${libBeast2}" includes="jam.jar"/>
+		<fileset dir="${libBeast2}" includes="beagle.jar"/> 
+		<fileset dir="${libBeast2}" includes="jam.jar"/>
         <pathelement path="${beast2classpath}"/>
+        <pathelement path="${BEASTLabsclasspath}"/>
 	</path>
 
 	<!-- start -->
@@ -112,16 +114,15 @@
 			<fileset dir="${beast2classpath}">
 				<include name="beast/**/*.class" />
 				<include name="beast/**/*.properties" />
-				<include name="beast/**/*.png" />
+				<include name="**/*.png" />
 				<include name="beagle/**/*.class" />
 				<include name="org/**/*.class" />
 			</fileset>
 		</jar>
 		<jar jarfile="${distBabel}/Babel.src.jar">
 			<fileset dir="${srcBabel}">
-				<include name="babel/**/*.java" />
-				<include name="babel/**/*.png" />
-				<include name="babel/**/*.xsl" />
+				<include name="**/*.java" />
+				<include name="**/*.png" />
 			</fileset>
         </jar>
 		<jar jarfile="${distBabel}/Babel.addon.jar">
@@ -129,8 +130,12 @@
 				<attribute name="Built-By" value="${user.name}" />
 			</manifest>
 			<fileset dir="${buildBabel}">
-				<include name="beast/**/*.class" />
+				<include name="**/*.class" />
+				<include name="**/*.png" />
 				<include name="**/*.properties" />
+			</fileset>
+			<fileset dir="${srcBabel}">
+				<include name="**/*.png" />
 			</fileset>
 		</jar>
 	</target>
@@ -196,6 +201,9 @@
 		</copy>
 		<copy todir="${Add_on_dir}/lib">
 			<fileset dir="${distBabel}" includes="Babel.addon.jar" />
+		</copy>
+		<copy todir="${Add_on_dir}/lib">
+			<fileset dir="${libBabel}" includes="itextpdf-5.2.1.jar" />
 		</copy>
 		<copy todir="${Add_on_dir}">
 			<fileset dir="${distBabel}" includes="Babel.src.jar" />

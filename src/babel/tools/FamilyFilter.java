@@ -13,6 +13,7 @@ import beast.app.beauti.BeautiDoc;
 import beast.app.draw.BEASTObjectDialog;
 import beast.app.draw.BEASTObjectPanel;
 import beast.app.util.Application;
+import beast.app.util.ConsoleApp;
 //import beast.app.util.ConsoleApp;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
@@ -24,7 +25,6 @@ import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 import beast.util.NexusParser;
-import beastfxml.app.ConsoleApp;
 import beast.core.Input.Validate;
 
 @Description("filters leafs out of a tree file based on clade membership")

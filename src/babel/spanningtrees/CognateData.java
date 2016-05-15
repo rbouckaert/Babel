@@ -12,12 +12,12 @@ import java.util.Set;
 public class CognateData {
 
     // map GlossID to Gloss
-	Map<Integer, String> glosses;
+	Map<Integer, String> mapGlossIDtoMeaningClassName;
     // map GlossID to map of MultistateCode to Cognate
 	Map<Integer, Map<Integer,Cognate>> cognateGlossMap;
 	
-	String getGloss(int GlossID) {
-		return glosses.get(GlossID);
+	String getMeaningClassName(int GlossID) {
+		return mapGlossIDtoMeaningClassName.get(GlossID);
 	}
 	
 	Map<Integer,Cognate> getCognates(int GlossID) {
@@ -26,13 +26,13 @@ public class CognateData {
 	
 	void loadCognateData(String fileName) throws Exception {
 		System.err.println("Loading " + fileName);
-		glosses = new HashMap<Integer, String>();
+		mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
 		cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
 
 		List<Entry> entries = CognateIO.readCognates(new File(fileName));
 		
 		for (Entry entry : entries) {
-			glosses.put(entry.GlossID, entry.Gloss);
+			mapGlossIDtoMeaningClassName.put(entry.GlossID, entry.Gloss);
 			if (cognateGlossMap.containsKey(entry.GlossID)) {
 				Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
 				if (cognateMap.containsKey(entry.MultistateCode)) {
@@ -77,11 +77,11 @@ public class CognateData {
 	
 	private List<Cognate> calcSpanningTree(Cognate cognate, Map<String, Location> locations, Set<Integer> MultistateCodes) {
 		List<Cognate> splitCognates = new ArrayList<Cognate>();
-		if (cognate.MultistateCode == 0) {
-			// missing data
-			splitCognates.add(cognate);
-			return splitCognates;
-		}
+//		if (cognate.MultistateCode == 0) {
+//			// missing data
+//			splitCognates.add(cognate);
+//			return splitCognates;
+//		}
 		// collect locations associated with languages
 		List<Location> locs = new ArrayList<Location>();
 		for (String language : cognate.languages) {
