@@ -52,9 +52,9 @@ public class SpanningTree extends Runnable {
 		}
 		SpanningTree app = new SpanningTree();
 		app.setID("Filter clades from tree set");
+		Application main = new Application(app);
 	
 		if (args.length == 0 || true) {
-			Application main = new Application(app);
 			main.parseArgs(args, false);
 
 			// create BeautiDoc and beauti configuration
@@ -79,7 +79,6 @@ public class SpanningTree extends Runnable {
 			return;
 		}
 
-		Application main = new Application(app);
 		main.parseArgs(args, false);
 		app.initAndValidate();
 		app.run();
