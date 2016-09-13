@@ -394,7 +394,7 @@ case DRAW_GLOSS:
 				System.err.println("Loading " + cognateFile);
 				BufferedReader fin = new BufferedReader(new FileReader(file));
 				int k = 0;
-				int meanginClassID = 0;
+				int meaningClassID = 0;
 				String prev = "";
 				while (fin.ready()) {
 					str = fin.readLine();
@@ -409,27 +409,27 @@ case DRAW_GLOSS:
 						//mapPositionToCognate.add(str);
 						//str = str.replaceAll("_.*", "");
 						//mapPositionToGloss.add(str);
-						mapPositionToGlossID.add(meanginClassID);
+						mapPositionToGlossID.add(meaningClassID);
 						mapPositionToState.add(k++);
 					} else if (str.matches(".*_group,")) {
 						//str = str.replaceAll("\\s*\\d+\\s", "");
 						//mapPositionToCognate.add(str);
 						//mapPositionToGloss.add("groupcode");
 						k = 0;
-						meanginClassID++;
-						mapPositionToGlossID.add(meanginClassID);
+						meaningClassID++;
+						mapPositionToGlossID.add(meaningClassID);
 						mapPositionToState.add(k++);
 					} else {
 						k = 0;
-						meanginClassID++;
-						mapPositionToGlossID.add(meanginClassID);
+						meaningClassID++;
+						mapPositionToGlossID.add(meaningClassID);
 						mapPositionToState.add(k++);
 					}
 					prev = str.replaceAll("[0-9\\s]", "");
 				}
 				fin.close();
 				
-				CognateIO.NGLOSSIDS = meanginClassID;
+				CognateIO.NGLOSSIDS = meaningClassID;
 				
 				List<Entry> entries = new ArrayList<Entry>();
 				file = new File(nexusFile);
