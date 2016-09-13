@@ -217,6 +217,9 @@ public class CognateData {
 	}
 
 	static public double distance(Location location, Location location2) {
+		if(location == null || location2 == null){
+			return Double.POSITIVE_INFINITY;
+		}
 		// great cirlce distance
 		double fLat1 = location.latitude;
 		double fLong1 = location.longitude;
