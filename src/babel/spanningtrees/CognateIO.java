@@ -283,7 +283,7 @@ public class CognateIO {
 						}
 					}
 				}
-				if (nX.size() > 0) {
+				if (nX.size() > 0 && nY.size() > 0) {
 					Location poly = new Location();
 					poly.latitude = nY.get(0);
 					poly.longitude = nX.get(0);
