@@ -1,7 +1,6 @@
 package babel.spanningtrees;
 
 import java.io.File;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -176,23 +175,6 @@ public class CognateData {
 			splits[groupID].edges.add(edgeID);
 		}
 		
-		// print to stdout
-//		DecimalFormat format = new DecimalFormat("####");
-//		System.out.print(cognate.GlossID + " " + getGloss(cognate.GlossID) + " " + cognate.MultistateCode + " " + format.format(minDist) + " " + splitCognates.size());
-//		for (Cognate c: splitCognates) {
-//			System.out.print(" (");
-//			for (int k = 0; k < c.languages.size(); k++) {
-//				System.out.print(c.languages.get(k) + " " + c.word.get(k++));
-//				if (k < c.languages.size() - 1) {
-//					System.out.print(", ");
-//				}
-//			}
-//			System.out.print(")");
-//		}
-//		System.out.println();
-
-		
-		DecimalFormat format = new DecimalFormat("####");
 		//System.out.print(cognate.GlossID + " " + getLink(splitCognates.get(0).word.get(0)) + " " + format.format(minDist) + " " + splitCognates.size());
 		for (Cognate c: splitCognates) {
 			System.out.print(" (");
