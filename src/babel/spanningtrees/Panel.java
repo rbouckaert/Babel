@@ -281,6 +281,7 @@ case DRAW_GLOSS:
 				g2.setColor(color);
 				for (int i = 0; i < c.languages.size(); i++) {
 					if (c.MultistateCode > 0) {
+// FIXME revisit this code to make it useful or remove
 //						Location loc = locations.get(c.languages.get(i));
 //						int x0 = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
 //						int y0 = (int) ((m_fMaxLat - loc.latitude) * m_fScaleY);
@@ -305,8 +306,9 @@ case DRAW_GLOSS:
 					y0 += rand.nextInt(JITTER) - JITTER/2;
 					y1 += rand.nextInt(JITTER) - JITTER/2;
 					g2.drawLine(x0, y0, x1, y1);
-					double dist = CognateData.distance(loc0, loc1);
-					//g.drawString((dist + "     ").substring(0,6) , (x0 + x1)/2, (y0+y1)/2);
+//FIXME revisit this piece of code to remove or keep
+//					double dist = CognateData.distance(loc0, loc1);
+//					g.drawString((dist + "     ").substring(0,6) , (x0 + x1)/2, (y0+y1)/2);
 				}
 			}
 		}
