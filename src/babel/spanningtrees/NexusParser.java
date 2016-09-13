@@ -88,8 +88,7 @@ public class NexusParser {
 	 * This method will work as a small and simple test of the NexusParser class.
 	 * It shall:
 	 * 1.: Open and parse a Nexus file
-	 * 2.: List the names of blocks in the Nexus file
-	 * 3.: List the contents a block in the Nexus file
+	 * 2.: List the names of blocks (and lines) found in the Nexus file
 	 * */
 	public static void main(String[] args) {
 		String testFile = "./examples/x/2016-09-12_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
@@ -97,15 +96,7 @@ public class NexusParser {
 			NexusParser parser = NexusParser.parseFile(testFile);
 			System.out.println("Nexus file parsed. Blocks are:");
 			for(String blockName : parser.getBlockNames()){
-				System.out.println("\t'" + blockName + "'");
-			}
-			for(String blockName : parser.getBlockNames()){
-				System.out.println("Content of the first block (" + blockName + ") is:");
-				for(String line : parser.getBlock(blockName)){
-					System.out.println("\t" + line);
-				}
-				break;
-				
+				System.out.println(String.format("\t%s: %s lines.", blockName, parser.getBlock(blockName).length));
 			}
 		} catch (FileNotFoundException e) {
 			System.err.println("NexusParser.main could not read the test file.");

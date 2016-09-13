@@ -26,7 +26,6 @@ public class SpanningTree extends Runnable {
 	@Override
 	public void initAndValidate() {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
