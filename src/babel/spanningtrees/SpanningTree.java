@@ -54,34 +54,27 @@ public class SpanningTree extends Runnable {
 		app.setID("Filter clades from tree set");
 		Application main = new Application(app);
 	
-		if (args.length == 0 || true) {
-			main.parseArgs(args, false);
-
-			// create BeautiDoc and beauti configuration
-			BeautiDoc doc = new BeautiDoc();
-			doc.beautiConfig = new BeautiConfig();
-			doc.beautiConfig.initAndValidate();
-					
-			// create panel with entries for the application
-			BEASTObjectPanel panel = new BEASTObjectPanel(app, app.getClass(), doc);
-			
-			// wrap panel in a dialog
-			BEASTObjectDialog dialog = new BEASTObjectDialog(panel, null);
-	
-			// show the dialog
-			if (dialog.showDialog()) {
-				dialog.accept(app, doc);
-				// create a console to show standard error and standard output
-				consoleapp = new ConsoleApp("Cognate Spanning Tree", "SpanningTree", null);
-				app.initAndValidate();
-				app.run();
-			}
-			return;
-		}
-
 		main.parseArgs(args, false);
-		app.initAndValidate();
-		app.run();
+
+		// create BeautiDoc and beauti configuration
+		BeautiDoc doc = new BeautiDoc();
+		doc.beautiConfig = new BeautiConfig();
+		doc.beautiConfig.initAndValidate();
+				
+		// create panel with entries for the application
+		BEASTObjectPanel panel = new BEASTObjectPanel(app, app.getClass(), doc);
+		
+		// wrap panel in a dialog
+		BEASTObjectDialog dialog = new BEASTObjectDialog(panel, null);
+
+		// show the dialog
+		if (dialog.showDialog()) {
+			dialog.accept(app, doc);
+			// create a console to show standard error and standard output
+			consoleapp = new ConsoleApp("Cognate Spanning Tree", "SpanningTree", null);
+			app.initAndValidate();
+			app.run();
+		}
 	}
 
 }
