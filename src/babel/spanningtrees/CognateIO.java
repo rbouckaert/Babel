@@ -145,30 +145,6 @@ public class CognateIO {
 		        				}
 	        				}
 	        			}
-
-//	        			// mark zero's as 'death' if sufficiently far away
-//	        			for (String language : missing) {
-//        					code[mapLanguageToSequence.get(language)] = -1;
-//	        			}
-//	        			for (int i = 0; i < code.length; i++) {
-//	        				if (code[i] == 0) {
-//	        					String language = languages.get(i);  
-//		        				Location loc1 = locations.get(language);
-//		        				if (loc1 != null) {
-//			        				double minDist = Double.MAX_VALUE;
-//			        				for (Location loc2 : cognateLocations) {
-//			        					double dist = CognateData.distance(loc1, loc2);
-//			        					minDist = Math.min(minDist, dist);
-//			        				}
-//			        				if (minDist >= MISSING_DATA_THRESHOLD) {
-//			        					code[mapLanguageToSequence.get(language)] = -2;
-//			        				}
-//		        				}
-//	        				}
-//	        			}
-	        			
-	        			
-	        			
         			} else {
 	        			for (String language : missing) {
         					code[mapLanguageToSequence.get(language)] = -1;
@@ -316,7 +292,6 @@ public class CognateIO {
 					long g = (color/256) % 256;
 					long b = color/(256*256)% 256;
 					poly.color = new Color((int)r, (int)g, (int)b);
-//					System.out.println(sPlacemarkName + " " + poly.color.getRed() + " " +poly.color.getGreen() + " " + poly.color.getBlue() );
 					map.put(sPlacemarkName, poly);
 				}
 			}
