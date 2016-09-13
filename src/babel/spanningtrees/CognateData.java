@@ -59,7 +59,7 @@ public class CognateData {
 		}
 	}
 	
-	void calcSpanningTrees(Map<String,Location> locations) {
+	void calcSpanningTrees(LocationParser locations) {
 		for (Map<Integer, Cognate> cognateMap : cognateGlossMap.values()) {
 			List<Cognate> cognates = new ArrayList<Cognate>();
 			cognates.addAll(cognateMap.values());
@@ -74,7 +74,7 @@ public class CognateData {
 
 	
 	
-	private List<Cognate> calcSpanningTree(Cognate cognate, Map<String, Location> locations, Set<Integer> MultistateCodes) {
+	private List<Cognate> calcSpanningTree(Cognate cognate, LocationParser locations, Set<Integer> MultistateCodes) {
 		List<Cognate> splitCognates = new ArrayList<Cognate>();
 //		if (cognate.MultistateCode == 0) {
 //			// missing data
@@ -84,9 +84,9 @@ public class CognateData {
 		// collect locations associated with languages
 		List<Location> locs = new ArrayList<Location>();
 		for (String language : cognate.languages) {
-			Location loc = locations.get(language);
+			Location loc = locations.getLocation(language);
 			if (loc == null) {
-				loc = locations.get(language);
+				loc = locations.getLocation(language);
 			}
 			locs.add(loc);
 		}

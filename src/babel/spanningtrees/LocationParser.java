@@ -3,8 +3,8 @@ package babel.spanningtrees;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -169,9 +169,8 @@ public class LocationParser {
 		return this.locations.keySet();
 	}
 
-	@Deprecated
-	public Map<String, Location> getRawMap() {
-		return this.locations;
+	public Collection<Location> getLocations() {
+		return this.locations.values();
 	}
 
 	public static void main(String[] args) {

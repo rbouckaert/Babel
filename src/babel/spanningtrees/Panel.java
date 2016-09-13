@@ -42,7 +42,7 @@ public class Panel extends JPanel implements KeyListener {
 	/** extreme values for position information **/
 	public float m_fMaxLong, m_fMaxLat, m_fMinLong, m_fMinLat;
 	
-	Map<String,Location> locations;
+	LocationParser locations;
 	CognateData data;
 	
 	int [][] edgecount;
@@ -208,8 +208,8 @@ public class Panel extends JPanel implements KeyListener {
 		}
 		System.err.println(meaningClassID + ": " + data.getMeaningClassName(meaningClassID));
 
-		for (String language: locations.keySet()) {
-			Location loc = locations.get(language);
+		for (String language: locations.getLocationNames()) {
+			Location loc = locations.getLocation(language);
 			g.setColor(loc.color);
 			g.setColor(new Color(0x5050a0));
 			int gx = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
@@ -295,8 +295,8 @@ case DRAW_GLOSS:
 				for (int i = 0; i < edges.size(); i += 2) {
 					int p0 = edges.get(i);
 					int p1 = edges.get(i + 1);
-					Location loc0 = locations.get(c.languages.get(p0));
-					Location loc1 = locations.get(c.languages.get(p1));
+					Location loc0 = locations.getLocation(c.languages.get(p0));
+					Location loc1 = locations.getLocation(c.languages.get(p1));
 					int x0 = (int) ((loc0.longitude - m_fMinLong) * m_fScaleX);
 					int y0 = (int) ((m_fMaxLat - loc0.latitude) * m_fScaleY);
 					int x1 = (int) ((loc1.longitude - m_fMinLong) * m_fScaleX);
@@ -326,13 +326,13 @@ case DRAW_GLOSS:
 
 	
 	void loadLocations(LocationParser locations) {
-		this.locations = locations.getRawMap();
+		this.locations = locations;
 
 		m_fMinLat = 90;
 		m_fMinLong = 180;
 		m_fMaxLat = -90;
 		m_fMaxLong = -180;
-		for (Location loc: this.locations.values()) {
+		for (Location loc: locations.getLocations()) {
 			m_fMinLat = Math.min(m_fMinLat, (float) loc.latitude);
 			m_fMaxLat = Math.max(m_fMaxLat, (float) loc.latitude);
 			m_fMinLong = Math.min(m_fMinLong, (float) loc.longitude);

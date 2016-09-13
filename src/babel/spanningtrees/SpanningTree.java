@@ -18,7 +18,7 @@ import beast.core.Runnable;
 
 public class SpanningTree extends Runnable {
 	public Input<File> nexusFileInput = new Input<>("nexus","nexus file containing cognate data in binary format",Validate.REQUIRED);
-	public Input<File> kmlFileInput = new Input<>("kml","kml file containing point locations of languages",Validate.OPTIONAL);
+	public Input<File> kmlFileInput = new Input<>("kml", "kml file containing point locations of languages");
 	public Input<File> cognateFileInput = new Input<>("cognate","cognate file listing labels for each column",Validate.REQUIRED);
 	public Input<File> backgroundFileInput = new Input<>("background","image map in mercator projection used for background", Validate.REQUIRED);
 	public Input<Double> maxDistInput = new Input<>("maximumDistance", "maximum distance to split on", CognateIO.COGNATE_SPLIT_THRESHOLD);
