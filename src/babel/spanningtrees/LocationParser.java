@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -155,8 +156,8 @@ public class LocationParser {
 		}
 		return parser;
 	}
-	
-	public boolean hasLocation(String name){
+
+	public boolean hasLocation(String name) {
 		return this.locations.containsKey(name);
 	}
 
@@ -166,6 +167,11 @@ public class LocationParser {
 
 	public Set<String> getLocationNames() {
 		return this.locations.keySet();
+	}
+
+	@Deprecated
+	public Map<String, Location> getRawMap() {
+		return this.locations;
 	}
 
 	public static void main(String[] args) {

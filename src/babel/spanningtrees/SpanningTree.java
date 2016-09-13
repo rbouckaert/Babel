@@ -18,7 +18,7 @@ import beast.core.Runnable;
 
 public class SpanningTree extends Runnable {
 	public Input<File> nexusFileInput = new Input<>("nexus","nexus file containing cognate data in binary format",Validate.REQUIRED);
-	public Input<File> kmlFileInput = new Input<>("kml","kml file containing point locations of languages",Validate.REQUIRED);
+	public Input<File> kmlFileInput = new Input<>("kml","kml file containing point locations of languages",Validate.OPTIONAL);
 	public Input<File> cognateFileInput = new Input<>("cognate","cognate file listing labels for each column",Validate.REQUIRED);
 	public Input<File> backgroundFileInput = new Input<>("background","image map in mercator projection used for background", Validate.REQUIRED);
 	public Input<Double> maxDistInput = new Input<>("maximumDistance", "maximum distance to split on", CognateIO.COGNATE_SPLIT_THRESHOLD);
@@ -34,9 +34,18 @@ public class SpanningTree extends Runnable {
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(new String[]{});
 		CognateIO.COGNATE_SPLIT_THRESHOLD = maxDistInput.get();
-		pane.loadLocations(kmlFileInput.get().getPath());
+		//Parsing data:
+		NexusParser nexus = NexusParser.parseFile(nexusFileInput.get());
+		LocationParser locations = LocationParser.parseNexus(nexus);
+		if(locations.getLocationNames().size() == 0){
+			//Only parsing KML if nexus didn't provide locations.
+			locations = LocationParser.parseKMLFile(kmlFileInput.get().getPath());
+		}
+		//Pane setup:
+		pane.loadLocations(locations);
 		pane.loadData(nexusFileInput.get().getPath(), cognateFileInput.get().getPath());
 		pane.loadBGImage(backgroundFileInput.get().getPath());
+		// Frame setup:
 		frame.add(pane);
 		frame.addKeyListener(pane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	

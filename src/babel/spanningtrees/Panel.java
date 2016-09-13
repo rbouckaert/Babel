@@ -325,14 +325,14 @@ case DRAW_GLOSS:
 	static public String COGNATE_FILE = "/home/remco/data/beast/ie/saskyY3/geo/cognates.dat";
 
 	
-	void loadLocations(String kmlFile) {
-		locations = CognateIO.loadKMLFile(kmlFile);
+	void loadLocations(LocationParser locations) {
+		this.locations = locations.getRawMap();
 
 		m_fMinLat = 90;
 		m_fMinLong = 180;
 		m_fMaxLat = -90;
 		m_fMaxLong = -180;
-		for (Location loc: locations.values()) {
+		for (Location loc: this.locations.values()) {
 			m_fMinLat = Math.min(m_fMinLat, (float) loc.latitude);
 			m_fMaxLat = Math.max(m_fMaxLat, (float) loc.latitude);
 			m_fMinLong = Math.min(m_fMinLong, (float) loc.longitude);
@@ -574,7 +574,7 @@ case DRAW_GLOSS:
 		JFrame frame = new JFrame();
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(args);
-		pane.loadLocations(KML_FILE);
+		pane.loadLocations(LocationParser.parseKMLFile(KML_FILE));
 		pane.loadData(NEXUS_FILE, COGNATE_FILE);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
