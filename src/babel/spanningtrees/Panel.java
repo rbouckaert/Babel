@@ -281,11 +281,11 @@ case DRAW_GLOSS:
 				g2.setColor(color);
 				for (int i = 0; i < c.languages.size(); i++) {
 					if (c.MultistateCode > 0) {
-						Location loc = locations.get(c.languages.get(i));
-						int x0 = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
-						int y0 = (int) ((m_fMaxLat - loc.latitude) * m_fScaleY);
-						String word =  c.word.get(i) + ":" + c.MultistateCode;
-						//g2.drawString(word, x0, y0);
+//						Location loc = locations.get(c.languages.get(i));
+//						int x0 = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
+//						int y0 = (int) ((m_fMaxLat - loc.latitude) * m_fScaleY);
+//						String word =  c.word.get(i) + ":" + c.MultistateCode;
+//						g2.drawString(word, x0, y0);
 					}
 				}
 				
