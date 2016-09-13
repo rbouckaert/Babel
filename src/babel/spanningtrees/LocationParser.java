@@ -31,7 +31,7 @@ public class LocationParser {
 
 	public static LocationParser parseNexus(NexusParser nexus) {
 		LocationParser parser = new LocationParser();
-		if (nexus.getBlockNames().contains(LocationParser.blockName)) {
+		if (nexus.hasBlock(LocationParser.blockName)) {
 			for (String line : nexus.getBlock(LocationParser.blockName)) {
 				Matcher matcher = LocationParser.locationMarker.matcher(line);
 				if (matcher.matches()) {
@@ -174,7 +174,7 @@ public class LocationParser {
 	}
 
 	public static void main(String[] args) {
-		String testFile = "./examples/x/2016-09-12_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
+		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
 			NexusParser nexus = NexusParser.parseFile(testFile);
 			LocationParser locations = LocationParser.parseNexus(nexus);

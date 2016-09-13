@@ -60,7 +60,7 @@ public class NexusParser {
     public List<MRCAPrior> calibrations;
 
     
-    public List<String> taxa = new ArrayList();
+    public List<String> taxa = new ArrayList<>();
     public List<Tree> trees;
 
     static Set<String> g_sequenceIDs;

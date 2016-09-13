@@ -76,6 +76,10 @@ public class NexusParser {
 		return parser;
 	}
 	
+	public boolean hasBlock(String name){
+		return this.blocks.containsKey(name);
+	}
+	
 	public Set<String> getBlockNames(){
 		return this.blocks.keySet();
 	}
@@ -91,7 +95,7 @@ public class NexusParser {
 	 * 2.: List the names of blocks (and lines) found in the Nexus file
 	 * */
 	public static void main(String[] args) {
-		String testFile = "./examples/x/2016-09-12_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
+		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
 			NexusParser parser = NexusParser.parseFile(testFile);
 			System.out.println("Nexus file parsed. Blocks are:");

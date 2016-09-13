@@ -72,8 +72,6 @@ public class CognateData {
 		}
 	}
 
-	
-	
 	private List<Cognate> calcSpanningTree(Cognate cognate, LocationParser locations, Set<Integer> MultistateCodes) {
 		List<Cognate> splitCognates = new ArrayList<Cognate>();
 //		if (cognate.MultistateCode == 0) {
