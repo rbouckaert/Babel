@@ -321,128 +321,8 @@ case DRAW_GLOSS:
 	}
 
 	void loadData(final String nexusFile, final String cognateFile) throws Exception {
-		data = new CognateData() {
-			@Override
-			void loadCognateData(String fileName) throws Exception {
-				System.err.println("Loading " + fileName);
-				mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
-				cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
-
-				List<Entry> entries = readCognates();
-				
-				for (Entry entry : entries) {
-					mapGlossIDtoMeaningClassName.put(entry.GlossID, entry.Gloss);
-					if (cognateGlossMap.containsKey(entry.GlossID)) {
-						Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
-						if (cognateMap.containsKey(entry.MultistateCode)) {
-							Cognate cognate = cognateMap.get(entry.MultistateCode);
-							cognate.languages.add(entry.Language);
-							cognate.word.add(entry.Word);
-						} else {
-							Cognate cognate = new Cognate();
-							cognate.GlossID = entry.GlossID;
-							cognate.MultistateCode = entry.MultistateCode;
-							cognate.languages.add(entry.Language);
-							cognate.word.add(entry.Word);
-							cognateMap.put(entry.MultistateCode, cognate);
-						}				
-					} else {
-						Map<Integer, Cognate> cognateMap = new HashMap<Integer, Cognate>();
-						Cognate cognate = new Cognate();
-						cognate.GlossID = entry.GlossID;
-						cognate.MultistateCode = entry.MultistateCode;
-						cognate.languages.add(entry.Language);
-						cognate.word.add(entry.Word);
-						cognateMap.put(entry.MultistateCode, cognate);
-						cognateGlossMap.put(entry.GlossID, cognateMap);
-					}
-				}
-			}
-			
-			public List<Entry> readCognates() throws Exception {
-				String str = null;
-				List<String> mapPositionToCognate = new ArrayList<>();
-				List<String> mapPositionToGloss = new ArrayList<>();
-				List<Integer> mapPositionToGlossID = new ArrayList<>();
-				List<Integer> mapPositionToState = new ArrayList<>();
-				File file = new File(cognateFile);
-				System.err.println("Loading " + cognateFile);
-				BufferedReader fin = new BufferedReader(new FileReader(file));
-				int k = 0;
-				int meaningClassID = 0;
-				String prev = "";
-				while (fin.ready()) {
-					str = fin.readLine();
-					String str2 = str.replaceAll("\\s*\\d+\\s", "");
-					str2 = str2.replaceAll(",", "");
-					mapPositionToCognate.add(str2);
-					str2 = str2.replaceAll("(.*)_.*", "$1");
-					mapPositionToGloss.add(str2);
-
-					if (str.replaceAll("[0-9\\s]", "").equals(prev)) {
-						mapPositionToGlossID.add(meaningClassID);
-						mapPositionToState.add(k++);
-					} else if (str.matches(".*_group,")) {
-						k = 0;
-						meaningClassID++;
-						mapPositionToGlossID.add(meaningClassID);
-						mapPositionToState.add(k++);
-					} else {
-						k = 0;
-						meaningClassID++;
-						mapPositionToGlossID.add(meaningClassID);
-						mapPositionToState.add(k++);
-					}
-					prev = str.replaceAll("[0-9\\s]", "");
-				}
-				fin.close();
-				
-				CognateIO.NGLOSSIDS = meaningClassID;
-				
-				List<Entry> entries = new ArrayList<Entry>();
-				file = new File(nexusFile);
-				fin = new BufferedReader(new FileReader(file));
-				String sStr = null;
-				// eat up header
-				do {
-					sStr = fin.readLine();
-				} while (!sStr.toLowerCase().matches(".*matrix.*"));
-				do {
-					sStr = fin.readLine();
-				} while (sStr.matches(".*\\[.*"));
-
-				// process data
-				while (fin.ready()) {
-					sStr = sStr.trim();
-					String [] strs = sStr.split("\\s+");
-					if (strs.length != 1) {
-						String lang = strs[0].replaceAll("'", "");
-						String cognates = strs[1].trim();
-						for (int i = 0; i < cognates.length(); i++) {
-							char c = cognates.charAt(i);
-							if (c == '1') {
-								Entry entry = new Entry();
-								entry.GlossID = mapPositionToGlossID.get(i);
-								entry.Gloss = mapPositionToGloss.get(i);
-								entry.Subgroup = "x";
-								entry.Language = lang;
-								entry.Word = mapPositionToCognate.get(i);
-								entry.MultistateCode = mapPositionToState.get(i);
-								entries.add(entry);
-							}
-						}
-					}
-					sStr = fin.readLine();
-					if (sStr.matches(";")) {
-						fin.close();
-						return entries;
-					}
-				}
-				fin.close();
-				return entries;
-			}
-		};
-		data.loadCognateData(nexusFile);
+		data = new CognateData();
+		data.loadCognateData(nexusFile, cognateFile);
 		data.calcSpanningTrees(locations);
 		
 		edgecount = new int[CognateIO.NTAX][CognateIO.NTAX];
@@ -474,7 +354,6 @@ case DRAW_GLOSS:
 			}
 		}
 		meaningClassID = 1;
-	
 	}
 
 	
