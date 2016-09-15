@@ -33,30 +33,26 @@ public class CognateData {
 		List<Entry> entries = this.readCognates(cognateFile, nexusFile);
 		
 		for (Entry entry : entries) {
+			//Link GlossId to Gloss:
 			mapGlossIDtoMeaningClassName.put(entry.GlossID, entry.Gloss);
-			if (cognateGlossMap.containsKey(entry.GlossID)) {
-				Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
-				if (cognateMap.containsKey(entry.MultistateCode)) {
-					Cognate cognate = cognateMap.get(entry.MultistateCode);
-					cognate.languages.add(entry.Language);
-					cognate.word.add(entry.Word);
-				} else {
-					Cognate cognate = new Cognate();
-					cognate.GlossID = entry.GlossID;
-					cognate.MultistateCode = entry.MultistateCode;
-					cognate.languages.add(entry.Language);
-					cognate.word.add(entry.Word);
-					cognateMap.put(entry.MultistateCode, cognate);
-				}				
+			//Get cognateMap from cognateGlossMap:
+			Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
+			if(cognateMap == null){
+				cognateMap = new HashMap<>();
+				cognateGlossMap.put(entry.GlossID, cognateMap);
+			}
+			//Insert into existing cognate or create new one:
+			if (cognateMap.containsKey(entry.MultistateCode)) {
+				Cognate cognate = cognateMap.get(entry.MultistateCode);
+				cognate.languages.add(entry.Language);
+				cognate.word.add(entry.Word);
 			} else {
-				Map<Integer, Cognate> cognateMap = new HashMap<Integer, Cognate>();
 				Cognate cognate = new Cognate();
 				cognate.GlossID = entry.GlossID;
 				cognate.MultistateCode = entry.MultistateCode;
 				cognate.languages.add(entry.Language);
 				cognate.word.add(entry.Word);
 				cognateMap.put(entry.MultistateCode, cognate);
-				cognateGlossMap.put(entry.GlossID, cognateMap);
 			}
 		}
 	}
