@@ -58,48 +58,38 @@ public class CognateData {
 	}
 	
 	public List<Entry> readCognates(String cognateFile, String nexusFile) throws Exception {
-		String str = null;
-		List<String> mapPositionToCognate = new ArrayList<>();
-		List<String> mapPositionToGloss = new ArrayList<>();
+		List<String> mapPositionToCognate = new ArrayList<>(); // Entries like 'year_747'
+		List<String> mapPositionToGloss = new ArrayList<>(); // Entries like 'year'
 		List<Integer> mapPositionToGlossID = new ArrayList<>();
 		List<Integer> mapPositionToState = new ArrayList<>();
-		File file = new File(cognateFile);
 		System.err.println("Loading " + cognateFile);
-		BufferedReader fin = new BufferedReader(new FileReader(file));
+		BufferedReader fin = new BufferedReader(new FileReader(new File(cognateFile)));
 		int k = 0;
 		int meaningClassID = 0;
 		String prev = "";
 		while (fin.ready()) {
-			str = fin.readLine();
-			String str2 = str.replaceAll("\\s*\\d+\\s", "");
+			String line = fin.readLine();
+			String str2 = line.replaceAll("\\s*\\d+\\s", "");
 			str2 = str2.replaceAll(",", "");
 			mapPositionToCognate.add(str2);
 			str2 = str2.replaceAll("(.*)_.*", "$1");
 			mapPositionToGloss.add(str2);
 
-			if (str.replaceAll("[0-9\\s]", "").equals(prev)) {
-				mapPositionToGlossID.add(meaningClassID);
-				mapPositionToState.add(k++);
-			} else if (str.matches(".*_group,")) {
+			if (!line.replaceAll("[0-9\\s]", "").equals(prev)) {
 				k = 0;
 				meaningClassID++;
-				mapPositionToGlossID.add(meaningClassID);
-				mapPositionToState.add(k++);
-			} else {
-				k = 0;
-				meaningClassID++;
-				mapPositionToGlossID.add(meaningClassID);
-				mapPositionToState.add(k++);
 			}
-			prev = str.replaceAll("[0-9\\s]", "");
+			mapPositionToGlossID.add(meaningClassID);
+			mapPositionToState.add(k);
+			k++;
+			prev = line.replaceAll("[0-9\\s]", "");
 		}
 		fin.close();
 		
 		CognateIO.NGLOSSIDS = meaningClassID;
 		
 		List<Entry> entries = new ArrayList<Entry>();
-		file = new File(nexusFile);
-		fin = new BufferedReader(new FileReader(file));
+		fin = new BufferedReader(new FileReader(new File(nexusFile)));
 		String sStr = null;
 		// eat up header
 		do {
