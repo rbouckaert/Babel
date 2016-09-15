@@ -86,7 +86,7 @@ public class Panel extends JPanel implements KeyListener {
     				log("-kml argument requires another argument");
     				printUsageAndExit();
     			}
-    			KML_FILE = args[i+1];
+    			this.locations = LocationParser.parseKMLFile(args[i+1]);
     			i += 2;
     			break;
     		case "-bg":
@@ -245,25 +245,6 @@ case DRAW_GLOSS:
 		
 }
 
-
-//}
-
-//		g.setColor(Color.black);
-//		((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-//		for (int i = 0; i < edgecount.length; i++) {
-//			for (int j = i; j < edgecount.length; j++) {
-//				if (edgecount[i][j] > 10) {
-//					Location loc0 = locations.get(languages.get(i));
-//					Location loc1 = locations.get(languages.get(j));
-//					x0 = (int) ((loc0.longitude - m_fMinLong) * m_fScaleX);
-//					y0 = (int) ((m_fMaxLat - loc0.latitude) * m_fScaleY);
-//					x1 = (int) ((loc1.longitude - m_fMinLong) * m_fScaleX);
-//					y1 = (int) ((m_fMaxLat - loc1.latitude) * m_fScaleY);
-//					g.drawString(edgecount[i][j] + "", (x0+x1)/2, (y0+y1)/2);
-//				}
-//				
-//			}
-//		}
 	}
 
 	void plot(Graphics2D g2, int JITTER, double m_fScaleX, double m_fScaleY) {
@@ -314,15 +295,9 @@ case DRAW_GLOSS:
 		}
 	}
 
-	
-	static public String KML_FILE = "/home/remco/data/beast/ie/saskyY3/geo/ie.kml";
-	static public String BG_FILE = "/home/remco/data/map/IEsmall.png";
-	//static public String NEXUSFILE = "filtered.nex";
-	//final static public String DATAFILE = "cognates7recoded.dat";
-	//public static final int NTAX = 194;
-	//public static final int NGLOSSIDS = 205;
-	static public String NEXUS_FILE = "/home/remco/data/beast/ie/saskyY3/geo/IELex.nex";
-	static public String COGNATE_FILE = "/home/remco/data/beast/ie/saskyY3/geo/cognates.dat";
+	static public String BG_FILE = "/home/mushu/dev/shk/Babel/examples/World98.png";
+	static public String NEXUS_FILE = "/home/mushu/dev/shk/Babel/examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
+	static public String COGNATE_FILE = "/home/mushu/dev/shk/Babel/examples/x/cognates.dat";
 
 	
 	void loadLocations(LocationParser locations) {
@@ -332,7 +307,7 @@ case DRAW_GLOSS:
 		m_fMinLong = 180;
 		m_fMaxLat = -90;
 		m_fMaxLong = -180;
-		for (Location loc: locations.getLocations()) {
+		for (Location loc : locations.getLocations()) {
 			m_fMinLat = Math.min(m_fMinLat, (float) loc.latitude);
 			m_fMaxLat = Math.max(m_fMaxLat, (float) loc.latitude);
 			m_fMinLong = Math.min(m_fMinLong, (float) loc.longitude);
@@ -405,16 +380,9 @@ case DRAW_GLOSS:
 					mapPositionToGloss.add(str2);
 
 					if (str.replaceAll("[0-9\\s]", "").equals(prev)) {
-						//str = str.replaceAll("\\s*\\d+\\s", "");
-						//mapPositionToCognate.add(str);
-						//str = str.replaceAll("_.*", "");
-						//mapPositionToGloss.add(str);
 						mapPositionToGlossID.add(meaningClassID);
 						mapPositionToState.add(k++);
 					} else if (str.matches(".*_group,")) {
-						//str = str.replaceAll("\\s*\\d+\\s", "");
-						//mapPositionToCognate.add(str);
-						//mapPositionToGloss.add("groupcode");
 						k = 0;
 						meaningClassID++;
 						mapPositionToGlossID.add(meaningClassID);
@@ -473,12 +441,9 @@ case DRAW_GLOSS:
 				fin.close();
 				return entries;
 			}
-
 		};
 		data.loadCognateData(nexusFile);
 		data.calcSpanningTrees(locations);
-		//CognateIO.writeCognatesToNexus(new File(CognateIO.NEXUSFILE), data.cognateGlossMap, locations);
-
 		
 		edgecount = new int[CognateIO.NTAX][CognateIO.NTAX];
 		languages = new ArrayList<String>();
@@ -536,15 +501,6 @@ case DRAW_GLOSS:
 	        	doc.setPageSize(new com.itextpdf.text.Rectangle(getWidth(), getHeight()));
 	        	doc.open();
 	        	PdfContentByte cb = writer.getDirectContent();
-
-//	        	for (int i = 1; i < CognateIO.NGLOSSIDS; i++) {
-//	        		Graphics2D g2d = new PdfGraphics2D(cb, getWidth(), getHeight());
-//	        		GlossID = i;
-//	        		paint(g2d);
-//	        		g2d.dispose();
-//	        		doc.newPage();
-//	        		System.err.println("page " + i);
-//	        	}
         		Graphics2D g2d = new PdfGraphics2D(cb, getWidth(), getHeight());
         		paint(g2d);
         		g2d.dispose();
@@ -554,7 +510,6 @@ case DRAW_GLOSS:
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-
 		}
 	}
 
@@ -574,45 +529,14 @@ case DRAW_GLOSS:
 		JFrame frame = new JFrame();
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(args);
-		pane.loadLocations(LocationParser.parseKMLFile(KML_FILE));
+		NexusParser nexus = NexusParser.parseFile(NEXUS_FILE);
+		LocationParser locations = LocationParser.parseNexus(nexus);
+		pane.loadLocations(locations);
 		pane.loadData(NEXUS_FILE, COGNATE_FILE);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
 		frame.addKeyListener(pane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		frame.setVisible(true);
-		
-		if (false)
-		try {
-        	com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
-    		String label = CognateIO.KML_FILE;
-    		label = label.substring(label.lastIndexOf('/') + 1, label.lastIndexOf('.'));
-
-        	PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream("/tmp/" + label + ".pdf"));
-        	doc.setPageSize(new com.itextpdf.text.Rectangle(pane.getWidth(), pane.getHeight()));
-        	doc.open();
-        	PdfContentByte cb = writer.getDirectContent();
-
-        	for (int i = 1; i < CognateIO.NGLOSSIDS; i++) {
-        		Graphics2D g2d = new PdfGraphics2D(cb, pane.getWidth(), pane.getHeight());
-        		pane.meaningClassID = i;
-        		pane.paint(g2d);
-        		g2d.dispose();
-        		doc.newPage();
-        		System.err.println("page " + i);
-        	}
-//    		Graphics2D g2d = new PdfGraphics2D(cb, pane.getWidth(), pane.getHeight());
-//    		pane.paint(g2d);
-//    		g2d.dispose();
-//    		g2d.dispose();
-        	
-        	doc.close();
-        	System.exit(0);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-
 	}
-
 }

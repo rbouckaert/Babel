@@ -74,11 +74,6 @@ public class CognateData {
 
 	private List<Cognate> calcSpanningTree(Cognate cognate, LocationParser locations, Set<Integer> MultistateCodes) {
 		List<Cognate> splitCognates = new ArrayList<Cognate>();
-//		if (cognate.MultistateCode == 0) {
-//			// missing data
-//			splitCognates.add(cognate);
-//			return splitCognates;
-//		}
 		// collect locations associated with languages
 		List<Location> locs = new ArrayList<Location>();
 		for (String language : cognate.languages) {
@@ -92,11 +87,7 @@ public class CognateData {
 		double [][] dist = new double[locs.size()][locs.size()];
 		for (int i = 0; i < locs.size(); i++) {
 			for (int j = i+1; j < locs.size(); j++) {
-				dist[i][j] = distance(locs.get(i), locs.get(j));
-//				double averageLong = (locs.get(i).longitude + locs.get(j).longitude) / 2.0;
-//				double delta = 500 * (averageLong - 113.7199742531)/(153.5701790672 - 113.7199742531);
-//				dist[i][j] += delta;
-//				dist[j][i] = dist[i][j]; 
+				dist[i][j] = distance(locs.get(i), locs.get(j)); 
 			}
 		}
 		// find  spanning tree
@@ -188,13 +179,6 @@ public class CognateData {
 		return splitCognates;
 	}
 
-	private String getLink(String word) {
-		String link = "<a href='http://ielex.mpi.nl/";
-		String [] strs = word.split("_");
-		strs[2] = strs[2].replaceAll(",", "");
-		link += strs[1] + "/" + strs[2] + "'>" + strs[0] + " " + strs[2] + "</a>";
-		return link;
-	}
 
 	static public double distance(Location location, Location location2) {
 		if(location == null || location2 == null){
