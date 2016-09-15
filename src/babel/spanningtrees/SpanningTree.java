@@ -55,35 +55,7 @@ public class SpanningTree extends Runnable {
 
 	static ConsoleApp consoleapp;
 	public static void main(String[] args) throws Exception {
-		{
-			// initialise JavaFX for console
-			//JFXPanel jfxPanel = new JFXPanel();
-		}
-		SpanningTree app = new SpanningTree();
-		app.setID("Filter clades from tree set");
-		Application main = new Application(app);
-	
-		main.parseArgs(args, false);
-
-		// create BeautiDoc and beauti configuration
-		BeautiDoc doc = new BeautiDoc();
-		doc.beautiConfig = new BeautiConfig();
-		doc.beautiConfig.initAndValidate();
-				
-		// create panel with entries for the application
-		BEASTObjectPanel panel = new BEASTObjectPanel(app, app.getClass(), doc);
-		
-		// wrap panel in a dialog
-		BEASTObjectDialog dialog = new BEASTObjectDialog(panel, null);
-
-		// show the dialog
-		if (dialog.showDialog()) {
-			dialog.accept(app, doc);
-			// create a console to show standard error and standard output
-			consoleapp = new ConsoleApp("Cognate Spanning Tree", "SpanningTree", null);
-			app.initAndValidate();
-			app.run();
-		}
+		new Application(new SpanningTree(), "SpanningTree", args);
 	}
 
 }
