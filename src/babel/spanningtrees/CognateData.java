@@ -25,7 +25,7 @@ public class CognateData {
 		return cognateGlossMap.get(GlossID);
 	}
 	
-	void loadCognateData(String nexusFile, String cognateFile) throws Exception {
+	void loadCognateData(NexusBlockParser nexusFile, String cognateFile) throws Exception {
 		System.err.println("Loading " + nexusFile);
 		mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
 		cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
@@ -57,7 +57,7 @@ public class CognateData {
 		}
 	}
 	
-	public List<Entry> readCognates(String cognateFile, String nexusFile) throws Exception {
+	public List<Entry> readCognates(String cognateFile, NexusBlockParser nexus) throws Exception {
 		List<String> mapPositionToCognate = new ArrayList<>(); // Entries like 'year_747'
 		List<String> mapPositionToGloss = new ArrayList<>(); // Entries like 'year'
 		List<Integer> mapPositionToGlossID = new ArrayList<>();
@@ -89,44 +89,24 @@ public class CognateData {
 		CognateIO.NGLOSSIDS = meaningClassID;
 		
 		List<Entry> entries = new ArrayList<Entry>();
-		fin = new BufferedReader(new FileReader(new File(nexusFile)));
-		String sStr = null;
-		// eat up header
-		do {
-			sStr = fin.readLine();
-		} while (!sStr.toLowerCase().matches(".*matrix.*"));
-		do {
-			sStr = fin.readLine();
-		} while (sStr.matches(".*\\[.*"));
-
-		// process data
-		while (fin.ready()) {
-			sStr = sStr.trim();
-			String [] strs = sStr.split("\\s+");
-			if (strs.length != 1) {
-				String lang = strs[0].replaceAll("'", "");
-				String cognates = strs[1].trim();
-				for (int i = 0; i < cognates.length(); i++) {
-					char c = cognates.charAt(i);
-					if (c == '1') {
-						Entry entry = new Entry();
-						entry.GlossID = mapPositionToGlossID.get(i);
-						entry.Gloss = mapPositionToGloss.get(i);
-						entry.Subgroup = "x";
-						entry.Language = lang;
-						entry.Word = mapPositionToCognate.get(i);
-						entry.MultistateCode = mapPositionToState.get(i);
-						entries.add(entry);
-					}
+		NexusMatrixParser matrix = NexusMatrixParser.parseNexus(nexus);
+		for(String lang : matrix.languageStatusCodes.keySet()){
+			String cognates = matrix.languageStatusCodes.get(lang);
+			for (int i = 0; i < cognates.length(); i++) {
+				char c = cognates.charAt(i);
+				if (c == '1') {
+					Entry entry = new Entry();
+					entry.GlossID = mapPositionToGlossID.get(i);
+					entry.Gloss = mapPositionToGloss.get(i);
+					entry.Subgroup = "x";
+					entry.Language = lang;
+					entry.Word = mapPositionToCognate.get(i);
+					entry.MultistateCode = mapPositionToState.get(i);
+					entries.add(entry);
 				}
 			}
-			sStr = fin.readLine();
-			if (sStr.matches(";")) {
-				fin.close();
-				return entries;
-			}
 		}
-		fin.close();
+
 		return entries;
 	}
 	

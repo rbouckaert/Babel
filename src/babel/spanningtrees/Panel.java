@@ -320,7 +320,7 @@ case DRAW_GLOSS:
 		m_fMinLat = m_fMinLat - fOffset;
 	}
 
-	void loadData(final String nexusFile, final String cognateFile) throws Exception {
+	void loadData(NexusBlockParser nexusFile, final String cognateFile) throws Exception {
 		data = new CognateData();
 		data.loadCognateData(nexusFile, cognateFile);
 		data.calcSpanningTrees(locations);
@@ -411,7 +411,7 @@ case DRAW_GLOSS:
 		NexusBlockParser nexus = NexusBlockParser.parseFile(NEXUS_FILE);
 		LocationParser locations = LocationParser.parseNexus(nexus);
 		pane.loadLocations(locations);
-		pane.loadData(NEXUS_FILE, COGNATE_FILE);
+		pane.loadData(nexus, COGNATE_FILE);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
 		frame.addKeyListener(pane);

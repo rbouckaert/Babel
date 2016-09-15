@@ -41,10 +41,9 @@ public class SpanningTree extends Runnable {
 			//Only parsing KML if nexus didn't provide locations.
 			locations = LocationParser.parseKMLFile(kmlFileInput.get().getPath());
 		}
-		CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
 		//Pane setup:
 		pane.loadLocations(locations);
-		pane.loadData(nexusFileInput.get().getPath(), cognateFileInput.get().getPath()); // FIXME WIP HERE
+		pane.loadData(nexus, cognateFileInput.get().getPath()); // FIXME WIP HERE
 		pane.loadBGImage(backgroundFileInput.get().getPath());
 		// Frame setup:
 		frame.add(pane);
