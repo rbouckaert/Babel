@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  * 1.: Get the names of blocks defined in the Nexus file.
  * 2.: Get the lines of a block by the blocks name.
  * */
-public class NexusParser {
+public class NexusBlockParser {
 	
 	//Marker regexes to find begin/end of a nexus block:
 	private static final Pattern beginMarker = Pattern.compile("begin (.+);?"); 
@@ -28,9 +28,9 @@ public class NexusParser {
 	
 	private HashMap<String, String[]> blocks = new HashMap<>();
 
-	public static NexusParser parseFile(File file) throws FileNotFoundException{
+	public static NexusBlockParser parseFile(File file) throws FileNotFoundException{
 		BufferedReader input = new BufferedReader(new FileReader(file));
-		NexusParser parser = NexusParser.parseLines(input.lines());
+		NexusBlockParser parser = NexusBlockParser.parseLines(input.lines());
 		try {
 			input.close();
 		} catch (IOException e) {
@@ -43,19 +43,19 @@ public class NexusParser {
 	 * Proxy for parseFile(File f)
 	 * @throws FileNotFoundException 
 	 * */
-	public static NexusParser parseFile(String fileName) throws FileNotFoundException{
-		return NexusParser.parseFile(new File(fileName));
+	public static NexusBlockParser parseFile(String fileName) throws FileNotFoundException{
+		return NexusBlockParser.parseFile(new File(fileName));
 	}
 	
-	public static NexusParser parseLines(Stream<String> lines){
+	public static NexusBlockParser parseLines(Stream<String> lines){
 		
-		NexusParser parser = new NexusParser();
+		NexusBlockParser parser = new NexusBlockParser();
 		String blockName = null; // Only set if inside a block
 		ArrayList<String> currentBlock = new ArrayList<>();
 		for(String line : lines.collect(Collectors.toList())){
 			if(blockName == null){
 				//Searching for next block to start.
-				Matcher matcher = NexusParser.beginMarker.matcher(line);
+				Matcher matcher = NexusBlockParser.beginMarker.matcher(line);
 				if(matcher.matches()){
 					blockName = matcher.group(1);
 					if(blockName.length() > 0 && blockName.charAt(blockName.length() - 1) == ';'){
@@ -63,7 +63,7 @@ public class NexusParser {
 					}
 				}
 				//else this line is ignored.
-			}else if(line.matches(NexusParser.endMarker)){
+			}else if(line.matches(NexusBlockParser.endMarker)){
 				//End of a block.
 				parser.blocks.put(blockName, currentBlock.toArray(new String[currentBlock.size()]));
 				blockName = null;
@@ -89,7 +89,7 @@ public class NexusParser {
 	}
 	
 	/**
-	 * This method will work as a small and simple test of the NexusParser class.
+	 * This method will work as a small and simple test of the NexusBlockParser class.
 	 * It shall:
 	 * 1.: Open and parse a Nexus file
 	 * 2.: List the names of blocks (and lines) found in the Nexus file
@@ -97,7 +97,7 @@ public class NexusParser {
 	public static void main(String[] args) {
 		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
-			NexusParser parser = NexusParser.parseFile(testFile);
+			NexusBlockParser parser = NexusBlockParser.parseFile(testFile);
 			System.out.println("Nexus file parsed. Blocks are:");
 			for(String blockName : parser.getBlockNames()){
 				System.out.println(String.format("\t%s: %s lines.", blockName, parser.getBlock(blockName).length));

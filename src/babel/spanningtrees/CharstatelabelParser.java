@@ -42,7 +42,7 @@ public class CharstatelabelParser {
 		}
 	}
 
-	public static CharstatelabelParser parseNexus(NexusParser nexus) {
+	public static CharstatelabelParser parseNexus(NexusBlockParser nexus) {
 		CharstatelabelParser parser = new CharstatelabelParser();
 		if (nexus.hasBlock(CharstatelabelParser.blockName)) {
 			for (String line : nexus.getBlock(CharstatelabelParser.blockName)) {
@@ -78,7 +78,7 @@ public class CharstatelabelParser {
 	public static void main(String[] args) {
 		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
-			NexusParser nexus = NexusParser.parseFile(testFile);
+			NexusBlockParser nexus = NexusBlockParser.parseFile(testFile);
 			CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
 			//Print prove of work:
 			for(String meaning : charstatelabels.meaningCognateMap.keySet()){

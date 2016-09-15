@@ -35,7 +35,7 @@ public class SpanningTree extends Runnable {
 		Panel pane = new Panel(new String[]{});
 		CognateIO.COGNATE_SPLIT_THRESHOLD = maxDistInput.get();
 		//Parsing data:
-		NexusParser nexus = NexusParser.parseFile(nexusFileInput.get());
+		NexusBlockParser nexus = NexusBlockParser.parseFile(nexusFileInput.get());
 		LocationParser locations = LocationParser.parseNexus(nexus);
 		if(locations.getLocationNames().size() == 0){
 			//Only parsing KML if nexus didn't provide locations.

@@ -20,8 +20,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author Jakob Runge This class aims to parse a `locations` block from a
- *         NexusParser. To do this it makes use of the NexusParser class.
+ * @author Jakob Runge
+ * This class aims to parse a `locations` block from a NexusBlockParser.
  */
 public class LocationParser {
 
@@ -29,7 +29,7 @@ public class LocationParser {
 	private static final Pattern locationMarker = Pattern.compile(" *([^ ]+) = ([^ ]+) (.+);");
 	private HashMap<String, Location> locations = new HashMap<>();
 
-	public static LocationParser parseNexus(NexusParser nexus) {
+	public static LocationParser parseNexus(NexusBlockParser nexus) {
 		LocationParser parser = new LocationParser();
 		if (nexus.hasBlock(LocationParser.blockName)) {
 			for (String line : nexus.getBlock(LocationParser.blockName)) {
@@ -176,7 +176,7 @@ public class LocationParser {
 	public static void main(String[] args) {
 		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
-			NexusParser nexus = NexusParser.parseFile(testFile);
+			NexusBlockParser nexus = NexusBlockParser.parseFile(testFile);
 			LocationParser locations = LocationParser.parseNexus(nexus);
 			System.out.println("Locations parsed. Found locations for:");
 			for (String name : locations.getLocationNames()) {

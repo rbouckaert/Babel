@@ -20,7 +20,7 @@ public class NexusMatrixParser {
 	// languageStatusCodes maps language names to the status lines of the matrix.
 	public Map<String, String> languageStatusCodes = new HashMap<>();
 
-	public static NexusMatrixParser parseNexus(NexusParser nexus) {
+	public static NexusMatrixParser parseNexus(NexusBlockParser nexus) {
 		NexusMatrixParser parser = new NexusMatrixParser();
 		/*
 		 * The matrix will be parsed in several stages:
@@ -53,7 +53,7 @@ public class NexusMatrixParser {
 	public static void main(String[] args) {
 		String testFile = "./examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 		try {
-			NexusParser nexus = NexusParser.parseFile(testFile);
+			NexusBlockParser nexus = NexusBlockParser.parseFile(testFile);
 			NexusMatrixParser matrix = NexusMatrixParser.parseNexus(nexus);
 			System.out.println("Matrix parsed. Found lines for:");
 			for (String name : matrix.languageStatusCodes.keySet()) {

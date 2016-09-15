@@ -408,7 +408,7 @@ case DRAW_GLOSS:
 		JFrame frame = new JFrame();
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(args);
-		NexusParser nexus = NexusParser.parseFile(NEXUS_FILE);
+		NexusBlockParser nexus = NexusBlockParser.parseFile(NEXUS_FILE);
 		LocationParser locations = LocationParser.parseNexus(nexus);
 		pane.loadLocations(locations);
 		pane.loadData(NEXUS_FILE, COGNATE_FILE);
