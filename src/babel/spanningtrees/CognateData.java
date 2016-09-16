@@ -1,8 +1,6 @@
 package babel.spanningtrees;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,42 +55,35 @@ public class CognateData {
 		}
 	}
 	
-	public List<Entry> readCognates(String cognateFile, NexusBlockParser nexus) throws Exception {
+	public List<Entry> readCognates(String cognateFile, NexusBlockParser nexus) throws IOException {
 		List<String> mapPositionToCognate = new ArrayList<>(); // Entries like 'year_747'
 		List<String> mapPositionToGloss = new ArrayList<>(); // Entries like 'year'
 		List<Integer> mapPositionToGlossID = new ArrayList<>();
 		List<Integer> mapPositionToState = new ArrayList<>();
-		System.err.println("Loading " + cognateFile);
-		BufferedReader fin = new BufferedReader(new FileReader(new File(cognateFile)));
 		int k = 0;
 		int meaningClassID = 0;
 		String prev = "";
-		while (fin.ready()) {
-			String line = fin.readLine();
-			String str2 = line.replaceAll("\\s*\\d+\\s", "");
-			str2 = str2.replaceAll(",", "");
-			mapPositionToCognate.add(str2);
-			str2 = str2.replaceAll("(.*)_.*", "$1");
-			mapPositionToGloss.add(str2);
-
-			if (!line.replaceAll("[0-9\\s]", "").equals(prev)) {
+		CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
+		for(Charstatelabel label : charstatelabels.labels) {
+			mapPositionToCognate.add(label.meaning + "_" + label.labelId);
+			mapPositionToGloss.add(label.meaning);
+			if(!label.meaning.equals(prev)){
 				k = 0;
 				meaningClassID++;
 			}
 			mapPositionToGlossID.add(meaningClassID);
 			mapPositionToState.add(k);
 			k++;
-			prev = line.replaceAll("[0-9\\s]", "");
+			prev = label.meaning;
 		}
-		fin.close();
-		
+
 		CognateIO.NGLOSSIDS = meaningClassID;
 		
 		List<Entry> entries = new ArrayList<Entry>();
 		NexusMatrixParser matrix = NexusMatrixParser.parseNexus(nexus);
 		for(String lang : matrix.languageStatusCodes.keySet()){
 			String cognates = matrix.languageStatusCodes.get(lang);
-			for (int i = 0; i < cognates.length(); i++) {
+			for (int i = 0; i < Math.min(cognates.length(), mapPositionToGlossID.size()); i++) {
 				char c = cognates.charAt(i);
 				if (c == '1') {
 					Entry entry = new Entry();
