@@ -5,10 +5,6 @@ import java.io.File;
 
 import javax.swing.JFrame;
 
-import beast.app.beauti.BeautiConfig;
-import beast.app.beauti.BeautiDoc;
-import beast.app.draw.BEASTObjectDialog;
-import beast.app.draw.BEASTObjectPanel;
 import beast.app.util.Application;
 import beast.app.util.ConsoleApp;
 import beast.core.Input;
@@ -19,7 +15,6 @@ import beast.core.Runnable;
 public class SpanningTree extends Runnable {
 	public Input<File> nexusFileInput = new Input<>("nexus","nexus file containing cognate data in binary format",Validate.REQUIRED);
 	public Input<File> kmlFileInput = new Input<>("kml", "kml file containing point locations of languages");
-	public Input<File> cognateFileInput = new Input<>("cognate","cognate file listing labels for each column",Validate.REQUIRED);
 	public Input<File> backgroundFileInput = new Input<>("background","image map in mercator projection used for background", Validate.REQUIRED);
 	public Input<Double> maxDistInput = new Input<>("maximumDistance", "maximum distance to split on", CognateIO.COGNATE_SPLIT_THRESHOLD);
 	
@@ -43,7 +38,7 @@ public class SpanningTree extends Runnable {
 		}
 		//Pane setup:
 		pane.loadLocations(locations);
-		pane.loadData(nexus, cognateFileInput.get().getPath()); // FIXME WIP HERE
+		pane.loadData(nexus);
 		pane.loadBGImage(backgroundFileInput.get().getPath());
 		// Frame setup:
 		frame.add(pane);

@@ -10,10 +10,8 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,14 +101,6 @@ public class Panel extends JPanel implements KeyListener {
     				printUsageAndExit();
     			}
     			NEXUS_FILE = args[i+1];
-    			i += 2;
-    			break;
-    		case "-cognates":
-    			if (i+1 >= args.length) {
-    				log("-cognates argument requires another argument");
-    				printUsageAndExit();
-    			}
-    			COGNATE_FILE = args[i+1];
     			i += 2;
     			break;
     		case "-h":
@@ -297,8 +287,6 @@ case DRAW_GLOSS:
 
 	static public String BG_FILE = "/home/mushu/dev/shk/Babel/examples/World98.png";
 	static public String NEXUS_FILE = "/home/mushu/dev/shk/Babel/examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
-	static public String COGNATE_FILE = "/home/mushu/dev/shk/Babel/examples/x/cognates.dat";
-
 	
 	void loadLocations(LocationParser locations) {
 		this.locations = locations;
@@ -320,9 +308,9 @@ case DRAW_GLOSS:
 		m_fMinLat = m_fMinLat - fOffset;
 	}
 
-	void loadData(NexusBlockParser nexusFile, final String cognateFile) throws Exception {
+	void loadData(NexusBlockParser nexusFile) throws Exception {
 		data = new CognateData();
-		data.loadCognateData(nexusFile, cognateFile);
+		data.loadCognateData(nexusFile);
 		data.calcSpanningTrees(locations);
 		
 		edgecount = new int[CognateIO.NTAX][CognateIO.NTAX];
@@ -411,7 +399,7 @@ case DRAW_GLOSS:
 		NexusBlockParser nexus = NexusBlockParser.parseFile(NEXUS_FILE);
 		LocationParser locations = LocationParser.parseNexus(nexus);
 		pane.loadLocations(locations);
-		pane.loadData(nexus, COGNATE_FILE);
+		pane.loadData(nexus);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
 		frame.addKeyListener(pane);
