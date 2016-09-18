@@ -101,9 +101,9 @@ public class CognateIO {
         for (int i = 0; i < languages.size(); i++) {
         	mapLanguageToSequence.put(languages.get(i), i);
         }
-        List<Integer> [] sequences = new List[languages.size()];
+        ArrayList<ArrayList<Integer>> sequences = new ArrayList<>(languages.size());
         for (int i = 0; i < languages.size(); i++) {
-        	sequences[i] = new ArrayList<Integer>();
+        	sequences.set(i, new ArrayList<>());
         }
         
         int [] count = new int [250];
@@ -128,7 +128,7 @@ public class CognateIO {
             			System.err.println(cognate.languages.size() + " " + cognate.GlossID + " " + cognate.MultistateCode);
             		}
             		
-        			int [] code = new int[sequences.length];
+        			int [] code = new int[sequences.size()];
         			// mark those less than THRESHOLD distance as missing, 
         			// and keep the remainder at zero
         			if (FILL_IN_MISSING_DATA) {
@@ -145,30 +145,6 @@ public class CognateIO {
 		        				}
 	        				}
 	        			}
-
-//	        			// mark zero's as 'death' if sufficiently far away
-//	        			for (String language : missing) {
-//        					code[mapLanguageToSequence.get(language)] = -1;
-//	        			}
-//	        			for (int i = 0; i < code.length; i++) {
-//	        				if (code[i] == 0) {
-//	        					String language = languages.get(i);  
-//		        				Location loc1 = locations.get(language);
-//		        				if (loc1 != null) {
-//			        				double minDist = Double.MAX_VALUE;
-//			        				for (Location loc2 : cognateLocations) {
-//			        					double dist = CognateData.distance(loc1, loc2);
-//			        					minDist = Math.min(minDist, dist);
-//			        				}
-//			        				if (minDist >= MISSING_DATA_THRESHOLD) {
-//			        					code[mapLanguageToSequence.get(language)] = -2;
-//			        				}
-//		        				}
-//	        				}
-//	        			}
-	        			
-	        			
-	        			
         			} else {
 	        			for (String language : missing) {
         					code[mapLanguageToSequence.get(language)] = -1;
@@ -178,7 +154,7 @@ public class CognateIO {
         				code[mapLanguageToSequence.get(language)] = 1;
         			}
         	        for (int i = 0; i < languages.size(); i++) {
-        	        	sequences[i].add(code[i]);
+        	        	sequences.get(i).add(code[i]);
         	        }
         		}
         	}
@@ -191,13 +167,13 @@ public class CognateIO {
         PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
         out.println("#NEXUS");
         out.println("Begin data;");
-        out.println("Dimensions ntax=" + languages.size() +" nchar=" + sequences[0].size() +";");
+        out.println("Dimensions ntax=" + languages.size() +" nchar=" + sequences.get(0).size() +";");
         out.println("Format datatype=binary symbols=\"01\" gap=-;");
         out.println("Matrix");
         for (int i = 0; i < languages.size(); i++) {
         	out.print("\"" + l2l.get(languages.get(i)).replace(" ", "") + "\" ");
-        	for (int j = 0; j < sequences[0].size(); j++) {
-        		switch (sequences[i].get(j)) {
+        	for (int j = 0; j < sequences.get(0).size(); j++) {
+        		switch (sequences.get(i).get(j)) {
         		case -1 :
         			out.print('-');
         			break;
@@ -211,7 +187,7 @@ public class CognateIO {
         			out.print('1');
         			break;
         		default:
-        			out.print(sequences[i].get(j));
+        			out.print(sequences.get(i).get(j));
         			break;
         		}
 			}
@@ -307,7 +283,7 @@ public class CognateIO {
 						}
 					}
 				}
-				if (nX.size() > 0) {
+				if (nX.size() > 0 && nY.size() > 0) {
 					Location poly = new Location();
 					poly.latitude = nY.get(0);
 					poly.longitude = nX.get(0);
@@ -316,7 +292,6 @@ public class CognateIO {
 					long g = (color/256) % 256;
 					long b = color/(256*256)% 256;
 					poly.color = new Color((int)r, (int)g, (int)b);
-//					System.out.println(sPlacemarkName + " " + poly.color.getRed() + " " +poly.color.getGreen() + " " + poly.color.getBlue() );
 					map.put(sPlacemarkName, poly);
 				}
 			}

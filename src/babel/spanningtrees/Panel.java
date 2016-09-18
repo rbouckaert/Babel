@@ -10,10 +10,8 @@ import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +40,7 @@ public class Panel extends JPanel implements KeyListener {
 	/** extreme values for position information **/
 	public float m_fMaxLong, m_fMaxLat, m_fMinLong, m_fMinLat;
 	
-	Map<String,Location> locations;
+	LocationParser locations;
 	CognateData data;
 	
 	int [][] edgecount;
@@ -86,7 +84,7 @@ public class Panel extends JPanel implements KeyListener {
     				log("-kml argument requires another argument");
     				printUsageAndExit();
     			}
-    			KML_FILE = args[i+1];
+    			this.locations = LocationParser.parseKMLFile(args[i+1]);
     			i += 2;
     			break;
     		case "-bg":
@@ -103,14 +101,6 @@ public class Panel extends JPanel implements KeyListener {
     				printUsageAndExit();
     			}
     			NEXUS_FILE = args[i+1];
-    			i += 2;
-    			break;
-    		case "-cognates":
-    			if (i+1 >= args.length) {
-    				log("-cognates argument requires another argument");
-    				printUsageAndExit();
-    			}
-    			COGNATE_FILE = args[i+1];
     			i += 2;
     			break;
     		case "-h":
@@ -208,8 +198,8 @@ public class Panel extends JPanel implements KeyListener {
 		}
 		System.err.println(meaningClassID + ": " + data.getMeaningClassName(meaningClassID));
 
-		for (String language: locations.keySet()) {
-			Location loc = locations.get(language);
+		for (String language: locations.getLocationNames()) {
+			Location loc = locations.getLocation(language);
 			g.setColor(loc.color);
 			g.setColor(new Color(0x5050a0));
 			int gx = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
@@ -245,25 +235,6 @@ case DRAW_GLOSS:
 		
 }
 
-
-//}
-
-//		g.setColor(Color.black);
-//		((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-//		for (int i = 0; i < edgecount.length; i++) {
-//			for (int j = i; j < edgecount.length; j++) {
-//				if (edgecount[i][j] > 10) {
-//					Location loc0 = locations.get(languages.get(i));
-//					Location loc1 = locations.get(languages.get(j));
-//					x0 = (int) ((loc0.longitude - m_fMinLong) * m_fScaleX);
-//					y0 = (int) ((m_fMaxLat - loc0.latitude) * m_fScaleY);
-//					x1 = (int) ((loc1.longitude - m_fMinLong) * m_fScaleX);
-//					y1 = (int) ((m_fMaxLat - loc1.latitude) * m_fScaleY);
-//					g.drawString(edgecount[i][j] + "", (x0+x1)/2, (y0+y1)/2);
-//				}
-//				
-//			}
-//		}
 	}
 
 	void plot(Graphics2D g2, int JITTER, double m_fScaleX, double m_fScaleY) {
@@ -281,11 +252,12 @@ case DRAW_GLOSS:
 				g2.setColor(color);
 				for (int i = 0; i < c.languages.size(); i++) {
 					if (c.MultistateCode > 0) {
-						Location loc = locations.get(c.languages.get(i));
-						int x0 = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
-						int y0 = (int) ((m_fMaxLat - loc.latitude) * m_fScaleY);
-						String word =  c.word.get(i) + ":" + c.MultistateCode;
-						//g2.drawString(word, x0, y0);
+// FIXME revisit this code to make it useful or remove
+//						Location loc = locations.get(c.languages.get(i));
+//						int x0 = (int) ((loc.longitude - m_fMinLong) * m_fScaleX);
+//						int y0 = (int) ((m_fMaxLat - loc.latitude) * m_fScaleY);
+//						String word =  c.word.get(i) + ":" + c.MultistateCode;
+//						g2.drawString(word, x0, y0);
 					}
 				}
 				
@@ -294,8 +266,8 @@ case DRAW_GLOSS:
 				for (int i = 0; i < edges.size(); i += 2) {
 					int p0 = edges.get(i);
 					int p1 = edges.get(i + 1);
-					Location loc0 = locations.get(c.languages.get(p0));
-					Location loc1 = locations.get(c.languages.get(p1));
+					Location loc0 = locations.getLocation(c.languages.get(p0));
+					Location loc1 = locations.getLocation(c.languages.get(p1));
 					int x0 = (int) ((loc0.longitude - m_fMinLong) * m_fScaleX);
 					int y0 = (int) ((m_fMaxLat - loc0.latitude) * m_fScaleY);
 					int x1 = (int) ((loc1.longitude - m_fMinLong) * m_fScaleX);
@@ -305,32 +277,25 @@ case DRAW_GLOSS:
 					y0 += rand.nextInt(JITTER) - JITTER/2;
 					y1 += rand.nextInt(JITTER) - JITTER/2;
 					g2.drawLine(x0, y0, x1, y1);
-					double dist = CognateData.distance(loc0, loc1);
-					//g.drawString((dist + "     ").substring(0,6) , (x0 + x1)/2, (y0+y1)/2);
+//FIXME revisit this piece of code to remove or keep
+//					double dist = CognateData.distance(loc0, loc1);
+//					g.drawString((dist + "     ").substring(0,6) , (x0 + x1)/2, (y0+y1)/2);
 				}
 			}
 		}
 	}
 
+	static public String BG_FILE = "/home/mushu/dev/shk/Babel/examples/World98.png";
+	static public String NEXUS_FILE = "/home/mushu/dev/shk/Babel/examples/x/2016-09-13_CoBL-IE_Lgs101_Mgs172_Current_Jena200_BEAUti.nex";
 	
-	static public String KML_FILE = "/home/remco/data/beast/ie/saskyY3/geo/ie.kml";
-	static public String BG_FILE = "/home/remco/data/map/IEsmall.png";
-	//static public String NEXUSFILE = "filtered.nex";
-	//final static public String DATAFILE = "cognates7recoded.dat";
-	//public static final int NTAX = 194;
-	//public static final int NGLOSSIDS = 205;
-	static public String NEXUS_FILE = "/home/remco/data/beast/ie/saskyY3/geo/IELex.nex";
-	static public String COGNATE_FILE = "/home/remco/data/beast/ie/saskyY3/geo/cognates.dat";
-
-	
-	void loadLocations(String kmlFile) {
-		locations = CognateIO.loadKMLFile(kmlFile);
+	void loadLocations(LocationParser locations) {
+		this.locations = locations;
 
 		m_fMinLat = 90;
 		m_fMinLong = 180;
 		m_fMaxLat = -90;
 		m_fMaxLong = -180;
-		for (Location loc: locations.values()) {
+		for (Location loc : locations.getLocations()) {
 			m_fMinLat = Math.min(m_fMinLat, (float) loc.latitude);
 			m_fMaxLat = Math.max(m_fMaxLat, (float) loc.latitude);
 			m_fMinLong = Math.min(m_fMinLong, (float) loc.longitude);
@@ -343,140 +308,10 @@ case DRAW_GLOSS:
 		m_fMinLat = m_fMinLat - fOffset;
 	}
 
-	void loadData(final String nexusFile, final String cognateFile) throws Exception {
-		data = new CognateData() {
-			@Override
-			void loadCognateData(String fileName) throws Exception {
-				System.err.println("Loading " + fileName);
-				mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
-				cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
-
-				List<Entry> entries = readCognates();
-				
-				for (Entry entry : entries) {
-					mapGlossIDtoMeaningClassName.put(entry.GlossID, entry.Gloss);
-					if (cognateGlossMap.containsKey(entry.GlossID)) {
-						Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
-						if (cognateMap.containsKey(entry.MultistateCode)) {
-							Cognate cognate = cognateMap.get(entry.MultistateCode);
-							cognate.languages.add(entry.Language);
-							cognate.word.add(entry.Word);
-						} else {
-							Cognate cognate = new Cognate();
-							cognate.GlossID = entry.GlossID;
-							cognate.MultistateCode = entry.MultistateCode;
-							cognate.languages.add(entry.Language);
-							cognate.word.add(entry.Word);
-							cognateMap.put(entry.MultistateCode, cognate);
-						}				
-					} else {
-						Map<Integer, Cognate> cognateMap = new HashMap<Integer, Cognate>();
-						Cognate cognate = new Cognate();
-						cognate.GlossID = entry.GlossID;
-						cognate.MultistateCode = entry.MultistateCode;
-						cognate.languages.add(entry.Language);
-						cognate.word.add(entry.Word);
-						cognateMap.put(entry.MultistateCode, cognate);
-						cognateGlossMap.put(entry.GlossID, cognateMap);
-					}
-				}
-			}
-			
-			public List<Entry> readCognates() throws Exception {
-				String str = null;
-				List<String> mapPositionToCognate = new ArrayList<>();
-				List<String> mapPositionToGloss = new ArrayList<>();
-				List<Integer> mapPositionToGlossID = new ArrayList<>();
-				List<Integer> mapPositionToState = new ArrayList<>();
-				File file = new File(cognateFile);
-				System.err.println("Loading " + cognateFile);
-				BufferedReader fin = new BufferedReader(new FileReader(file));
-				int k = 0;
-				int meanginClassID = 0;
-				String prev = "";
-				while (fin.ready()) {
-					str = fin.readLine();
-					String str2 = str.replaceAll("\\s*\\d+\\s", "");
-					str2 = str2.replaceAll(",", "");
-					mapPositionToCognate.add(str2);
-					str2 = str2.replaceAll("(.*)_.*", "$1");
-					mapPositionToGloss.add(str2);
-
-					if (str.replaceAll("[0-9\\s]", "").equals(prev)) {
-						//str = str.replaceAll("\\s*\\d+\\s", "");
-						//mapPositionToCognate.add(str);
-						//str = str.replaceAll("_.*", "");
-						//mapPositionToGloss.add(str);
-						mapPositionToGlossID.add(meanginClassID);
-						mapPositionToState.add(k++);
-					} else if (str.matches(".*_group,")) {
-						//str = str.replaceAll("\\s*\\d+\\s", "");
-						//mapPositionToCognate.add(str);
-						//mapPositionToGloss.add("groupcode");
-						k = 0;
-						meanginClassID++;
-						mapPositionToGlossID.add(meanginClassID);
-						mapPositionToState.add(k++);
-					} else {
-						k = 0;
-						meanginClassID++;
-						mapPositionToGlossID.add(meanginClassID);
-						mapPositionToState.add(k++);
-					}
-					prev = str.replaceAll("[0-9\\s]", "");
-				}
-				fin.close();
-				
-				CognateIO.NGLOSSIDS = meanginClassID;
-				
-				List<Entry> entries = new ArrayList<Entry>();
-				file = new File(nexusFile);
-				fin = new BufferedReader(new FileReader(file));
-				String sStr = null;
-				// eat up header
-				do {
-					sStr = fin.readLine();
-				} while (!sStr.toLowerCase().matches(".*matrix.*"));
-				do {
-					sStr = fin.readLine();
-				} while (sStr.matches(".*\\[.*"));
-
-				// process data
-				while (fin.ready()) {
-					sStr = sStr.trim();
-					String [] strs = sStr.split("\\s+");
-					if (strs.length != 1) {
-						String lang = strs[0].replaceAll("'", "");
-						String cognates = strs[1].trim();
-						for (int i = 0; i < cognates.length(); i++) {
-							char c = cognates.charAt(i);
-							if (c == '1') {
-								Entry entry = new Entry();
-								entry.GlossID = mapPositionToGlossID.get(i);
-								entry.Gloss = mapPositionToGloss.get(i);
-								entry.Subgroup = "x";
-								entry.Language = lang;
-								entry.Word = mapPositionToCognate.get(i);
-								entry.MultistateCode = mapPositionToState.get(i);
-								entries.add(entry);
-							}
-						}
-					}
-					sStr = fin.readLine();
-					if (sStr.matches(";")) {
-						fin.close();
-						return entries;
-					}
-				}
-				fin.close();
-				return entries;
-			}
-
-		};
+	void loadData(NexusBlockParser nexusFile) throws Exception {
+		data = new CognateData();
 		data.loadCognateData(nexusFile);
 		data.calcSpanningTrees(locations);
-		//CognateIO.writeCognatesToNexus(new File(CognateIO.NEXUSFILE), data.cognateGlossMap, locations);
-
 		
 		edgecount = new int[CognateIO.NTAX][CognateIO.NTAX];
 		languages = new ArrayList<String>();
@@ -507,7 +342,6 @@ case DRAW_GLOSS:
 			}
 		}
 		meaningClassID = 1;
-	
 	}
 
 	
@@ -534,15 +368,6 @@ case DRAW_GLOSS:
 	        	doc.setPageSize(new com.itextpdf.text.Rectangle(getWidth(), getHeight()));
 	        	doc.open();
 	        	PdfContentByte cb = writer.getDirectContent();
-
-//	        	for (int i = 1; i < CognateIO.NGLOSSIDS; i++) {
-//	        		Graphics2D g2d = new PdfGraphics2D(cb, getWidth(), getHeight());
-//	        		GlossID = i;
-//	        		paint(g2d);
-//	        		g2d.dispose();
-//	        		doc.newPage();
-//	        		System.err.println("page " + i);
-//	        	}
         		Graphics2D g2d = new PdfGraphics2D(cb, getWidth(), getHeight());
         		paint(g2d);
         		g2d.dispose();
@@ -552,7 +377,6 @@ case DRAW_GLOSS:
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-
 		}
 	}
 
@@ -572,45 +396,14 @@ case DRAW_GLOSS:
 		JFrame frame = new JFrame();
 		frame.setSize(1024, 728);
 		Panel pane = new Panel(args);
-		pane.loadLocations(KML_FILE);
-		pane.loadData(NEXUS_FILE, COGNATE_FILE);
+		NexusBlockParser nexus = NexusBlockParser.parseFile(NEXUS_FILE);
+		LocationParser locations = LocationParser.parseNexus(nexus);
+		pane.loadLocations(locations);
+		pane.loadData(nexus);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
 		frame.addKeyListener(pane);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		frame.setVisible(true);
-		
-		if (false)
-		try {
-        	com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
-    		String label = CognateIO.KML_FILE;
-    		label = label.substring(label.lastIndexOf('/') + 1, label.lastIndexOf('.'));
-
-        	PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream("/tmp/" + label + ".pdf"));
-        	doc.setPageSize(new com.itextpdf.text.Rectangle(pane.getWidth(), pane.getHeight()));
-        	doc.open();
-        	PdfContentByte cb = writer.getDirectContent();
-
-        	for (int i = 1; i < CognateIO.NGLOSSIDS; i++) {
-        		Graphics2D g2d = new PdfGraphics2D(cb, pane.getWidth(), pane.getHeight());
-        		pane.meaningClassID = i;
-        		pane.paint(g2d);
-        		g2d.dispose();
-        		doc.newPage();
-        		System.err.println("page " + i);
-        	}
-//    		Graphics2D g2d = new PdfGraphics2D(cb, pane.getWidth(), pane.getHeight());
-//    		pane.paint(g2d);
-//    		g2d.dispose();
-//    		g2d.dispose();
-        	
-        	doc.close();
-        	System.exit(0);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-
 	}
-
 }

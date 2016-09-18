@@ -1,7 +1,6 @@
 package babel.spanningtrees;
 
-import java.io.File;
-import java.text.DecimalFormat;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,43 +23,85 @@ public class CognateData {
 		return cognateGlossMap.get(GlossID);
 	}
 	
-	void loadCognateData(String fileName) throws Exception {
-		System.err.println("Loading " + fileName);
+	void loadCognateData(NexusBlockParser nexusFile) throws Exception {
+		System.err.println("Loading " + nexusFile);
 		mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
 		cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
 
-		List<Entry> entries = CognateIO.readCognates(new File(fileName));
+		List<Entry> entries = this.readCognates(nexusFile);
 		
 		for (Entry entry : entries) {
+			//Link GlossId to Gloss:
 			mapGlossIDtoMeaningClassName.put(entry.GlossID, entry.Gloss);
-			if (cognateGlossMap.containsKey(entry.GlossID)) {
-				Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
-				if (cognateMap.containsKey(entry.MultistateCode)) {
-					Cognate cognate = cognateMap.get(entry.MultistateCode);
-					cognate.languages.add(entry.Language);
-					cognate.word.add(entry.Word);
-				} else {
-					Cognate cognate = new Cognate();
-					cognate.GlossID = entry.GlossID;
-					cognate.MultistateCode = entry.MultistateCode;
-					cognate.languages.add(entry.Language);
-					cognate.word.add(entry.Word);
-					cognateMap.put(entry.MultistateCode, cognate);
-				}				
+			//Get cognateMap from cognateGlossMap:
+			Map<Integer, Cognate> cognateMap = cognateGlossMap.get(entry.GlossID);
+			if(cognateMap == null){
+				cognateMap = new HashMap<>();
+				cognateGlossMap.put(entry.GlossID, cognateMap);
+			}
+			//Insert into existing cognate or create new one:
+			if (cognateMap.containsKey(entry.MultistateCode)) {
+				Cognate cognate = cognateMap.get(entry.MultistateCode);
+				cognate.languages.add(entry.Language);
+				cognate.word.add(entry.Word);
 			} else {
-				Map<Integer, Cognate> cognateMap = new HashMap<Integer, Cognate>();
 				Cognate cognate = new Cognate();
 				cognate.GlossID = entry.GlossID;
 				cognate.MultistateCode = entry.MultistateCode;
 				cognate.languages.add(entry.Language);
 				cognate.word.add(entry.Word);
 				cognateMap.put(entry.MultistateCode, cognate);
-				cognateGlossMap.put(entry.GlossID, cognateMap);
 			}
 		}
 	}
 	
-	void calcSpanningTrees(Map<String,Location> locations) {
+	public List<Entry> readCognates(NexusBlockParser nexus) throws IOException {
+		List<String> mapPositionToCognate = new ArrayList<>(); // Entries like 'year_747'
+		List<String> mapPositionToGloss = new ArrayList<>(); // Entries like 'year'
+		List<Integer> mapPositionToGlossID = new ArrayList<>();
+		List<Integer> mapPositionToState = new ArrayList<>();
+		int k = 0;
+		int meaningClassID = 0;
+		String prev = "";
+		CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
+		for(Charstatelabel label : charstatelabels.labels) {
+			mapPositionToCognate.add(label.meaning + "_" + label.labelId);
+			mapPositionToGloss.add(label.meaning);
+			if(!label.meaning.equals(prev)){
+				k = 0;
+				meaningClassID++;
+			}
+			mapPositionToGlossID.add(meaningClassID);
+			mapPositionToState.add(k);
+			k++;
+			prev = label.meaning;
+		}
+
+		CognateIO.NGLOSSIDS = meaningClassID;
+		
+		List<Entry> entries = new ArrayList<Entry>();
+		NexusMatrixParser matrix = NexusMatrixParser.parseNexus(nexus);
+		for(String lang : matrix.languageStatusCodes.keySet()){
+			String cognates = matrix.languageStatusCodes.get(lang);
+			for (int i = 0; i < Math.min(cognates.length(), mapPositionToGlossID.size()); i++) {
+				char c = cognates.charAt(i);
+				if (c == '1') {
+					Entry entry = new Entry();
+					entry.GlossID = mapPositionToGlossID.get(i);
+					entry.Gloss = mapPositionToGloss.get(i);
+					entry.Subgroup = "x";
+					entry.Language = lang;
+					entry.Word = mapPositionToCognate.get(i);
+					entry.MultistateCode = mapPositionToState.get(i);
+					entries.add(entry);
+				}
+			}
+		}
+
+		return entries;
+	}
+	
+	void calcSpanningTrees(LocationParser locations) {
 		for (Map<Integer, Cognate> cognateMap : cognateGlossMap.values()) {
 			List<Cognate> cognates = new ArrayList<Cognate>();
 			cognates.addAll(cognateMap.values());
@@ -73,21 +114,14 @@ public class CognateData {
 		}
 	}
 
-	
-	
-	private List<Cognate> calcSpanningTree(Cognate cognate, Map<String, Location> locations, Set<Integer> MultistateCodes) {
+	private List<Cognate> calcSpanningTree(Cognate cognate, LocationParser locations, Set<Integer> MultistateCodes) {
 		List<Cognate> splitCognates = new ArrayList<Cognate>();
-//		if (cognate.MultistateCode == 0) {
-//			// missing data
-//			splitCognates.add(cognate);
-//			return splitCognates;
-//		}
 		// collect locations associated with languages
 		List<Location> locs = new ArrayList<Location>();
 		for (String language : cognate.languages) {
-			Location loc = locations.get(language);
+			Location loc = locations.getLocation(language);
 			if (loc == null) {
-				loc = locations.get(language);
+				loc = locations.getLocation(language);
 			}
 			locs.add(loc);
 		}
@@ -95,11 +129,7 @@ public class CognateData {
 		double [][] dist = new double[locs.size()][locs.size()];
 		for (int i = 0; i < locs.size(); i++) {
 			for (int j = i+1; j < locs.size(); j++) {
-				dist[i][j] = distance(locs.get(i), locs.get(j));
-//				double averageLong = (locs.get(i).longitude + locs.get(j).longitude) / 2.0;
-//				double delta = 500 * (averageLong - 113.7199742531)/(153.5701790672 - 113.7199742531);
-//				dist[i][j] += delta;
-//				dist[j][i] = dist[i][j]; 
+				dist[i][j] = distance(locs.get(i), locs.get(j)); 
 			}
 		}
 		// find  spanning tree
@@ -176,23 +206,6 @@ public class CognateData {
 			splits[groupID].edges.add(edgeID);
 		}
 		
-		// print to stdout
-//		DecimalFormat format = new DecimalFormat("####");
-//		System.out.print(cognate.GlossID + " " + getGloss(cognate.GlossID) + " " + cognate.MultistateCode + " " + format.format(minDist) + " " + splitCognates.size());
-//		for (Cognate c: splitCognates) {
-//			System.out.print(" (");
-//			for (int k = 0; k < c.languages.size(); k++) {
-//				System.out.print(c.languages.get(k) + " " + c.word.get(k++));
-//				if (k < c.languages.size() - 1) {
-//					System.out.print(", ");
-//				}
-//			}
-//			System.out.print(")");
-//		}
-//		System.out.println();
-
-		
-		DecimalFormat format = new DecimalFormat("####");
 		//System.out.print(cognate.GlossID + " " + getLink(splitCognates.get(0).word.get(0)) + " " + format.format(minDist) + " " + splitCognates.size());
 		for (Cognate c: splitCognates) {
 			System.out.print(" (");
@@ -208,15 +221,11 @@ public class CognateData {
 		return splitCognates;
 	}
 
-	private String getLink(String word) {
-		String link = "<a href='http://ielex.mpi.nl/";
-		String [] strs = word.split("_");
-		strs[2] = strs[2].replaceAll(",", "");
-		link += strs[1] + "/" + strs[2] + "'>" + strs[0] + " " + strs[2] + "</a>";
-		return link;
-	}
 
 	static public double distance(Location location, Location location2) {
+		if(location == null || location2 == null){
+			return Double.POSITIVE_INFINITY;
+		}
 		// great cirlce distance
 		double fLat1 = location.latitude;
 		double fLong1 = location.longitude;
