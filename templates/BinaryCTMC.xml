@@ -186,11 +186,13 @@
             </plugin>
 
             <!--plugin spec='beast.evolution.tree.RandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)' initial='@Tree.t:tree'-->
-            <plugin spec='beast.evolution.tree.RandomTree' id='RandomTree.t:tree' estimate='false' initial='@Tree.t:tree'>
+            <plugin spec='beast.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' initial='@Tree.t:tree'>
                 <taxa spec='Alignment' idref='data'/>
+                <!--
                 <populationModel id='ConstantPopulation0.t:tree' spec='ConstantPopulation'>
             		<popSize id='randomPopSize.t:tree' spec='parameter.RealParameter' value='1'/>
 	            </populationModel>
+	            -->
             </plugin>
 
             <!-- default tree prior -->
@@ -298,13 +300,15 @@
 <!-- Tree initialisation -->
 <!-- Random tree -->
 
-        <subtemplate id='RandomTree' class='beast.evolution.tree.RandomTree' mainid='RandomTree.t:tree'>
+        <subtemplate id='RandomTree' class='beast.evolution.tree.SimpleRandomTree' mainid='RandomTree.t:tree'>
 <![CDATA[
-            <tree spec='beast.evolution.tree.RandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)'>
+            <tree spec='beast.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)'>
                 <taxa spec='Alignment' idref='data'/>
+                <!--
                 <populationModel id='ConstantPopulation0.t:tree' spec='ConstantPopulation'>
             		<popSize id='randomPopSize.t:tree' spec='parameter.RealParameter' value='1'/>
 	            </populationModel>
+	            -->
             </tree>
 ]]>
         </subtemplate>
