@@ -158,7 +158,7 @@
 	should be set to false when every meaning class is pooled -->
 		            <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='true'/>
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
-					<substModel spec="MutationDeathModel" id="SDollo">
+					<substModel spec="ComplexMutationDeathModel" id="SDollo">
 						<parameter name='deathprob' id='deathRate.SDollo' lower="0.0" value="1e-4" estimate="true"/>
 						<frequencies id='freqs.s:$(n)' spec='Frequencies'>
 							<frequencies spec='parameter.RealParameter' value='1 0'/>

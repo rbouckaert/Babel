@@ -19,7 +19,7 @@ import beast.evolution.likelihood.ALSTreeLikelihood;
 import beast.evolution.likelihood.AnyTipObservationProcess;
 import beast.evolution.sitemodel.SiteModel;
 import beast.evolution.substitutionmodel.Frequencies;
-import beast.evolution.substitutionmodel.MutationDeathModel;
+import beast.evolution.substitutionmodel.ComplexMutationDeathModel;
 import beast.evolution.tree.Tree;
 import beast.util.TreeParser;
 
@@ -56,7 +56,7 @@ public class ConstantTwoPartDolloModelTest {
 		als = new ALSTreeLikelihood();
 		dollo = new AnyTipObservationProcess();
 		SiteModel sites = new SiteModel();
-		MutationDeathModel subst = new MutationDeathModel();
+		ComplexMutationDeathModel subst = new ComplexMutationDeathModel();
 		// NOTE: The encoding of the basic MutationDeatType is "1"→0 and
 		// "0"→1, and the frequencies are noted in ENCODING order, not in
 		// CHARACTER order!
