@@ -47,19 +47,23 @@ public class LocationParser {
 		return parser;
 	}
 
+	public static LocationParser parseKMLFile(String sFileName) {
+		return LocationParser.parseKMLFile(new File(sFileName));
+	}
+
 	/**
 	 * This method makes it possible to parse locations from a KML file. It is
 	 * mostly a copy of the former CognateIO.loadKmlFile.
 	 */
-	public static LocationParser parseKMLFile(String sFileName) {
+	public static LocationParser parseKMLFile(File file) {
 		Random rand = new Random(10);
 
-		System.err.println("Loading " + sFileName);
+		System.err.println("Loading " + file.getPath());
 		LocationParser parser = new LocationParser();
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
-			org.w3c.dom.Document doc = factory.newDocumentBuilder().parse(new File(sFileName));
+			org.w3c.dom.Document doc = factory.newDocumentBuilder().parse(file);
 			doc.normalize();
 
 			// grab styles out of the KML file

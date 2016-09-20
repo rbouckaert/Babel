@@ -15,6 +15,7 @@ import beast.core.Runnable;
 public class SpanningTree extends Runnable {
 	public Input<File> nexusFileInput = new Input<>("nexus","nexus file containing cognate data in binary format",Validate.REQUIRED);
 	public Input<File> kmlFileInput = new Input<>("kml", "kml file containing point locations of languages");
+	public Input<File> cognateFileInput = new Input<>("cognate","cognate file listing labels for each column");
 	public Input<File> backgroundFileInput = new Input<>("background","image map in mercator projection used for background", Validate.REQUIRED);
 	public Input<Double> maxDistInput = new Input<>("maximumDistance", "maximum distance to split on", CognateIO.COGNATE_SPLIT_THRESHOLD);
 	
@@ -31,14 +32,23 @@ public class SpanningTree extends Runnable {
 		CognateIO.COGNATE_SPLIT_THRESHOLD = maxDistInput.get();
 		//Parsing data:
 		NexusBlockParser nexus = NexusBlockParser.parseFile(nexusFileInput.get());
-		LocationParser locations = LocationParser.parseNexus(nexus);
-		if(locations.getLocationNames().size() == 0){
-			//Only parsing KML if nexus didn't provide locations.
-			locations = LocationParser.parseKMLFile(kmlFileInput.get().getPath());
+
+		LocationParser locations = null;
+		if(kmlFileInput.get() == null){
+			locations = LocationParser.parseNexus(nexus);
+		}else{
+			locations = LocationParser.parseKMLFile(kmlFileInput.get());
+		}
+
+		CharstatelabelParser charstatelabels;
+		if(cognateFileInput.get() == null){
+			charstatelabels = CharstatelabelParser.parseNexus(nexus);
+		}else{
+			charstatelabels = CharstatelabelParser.parseCognateFile(cognateFileInput.get());
 		}
 		//Pane setup:
 		pane.loadLocations(locations);
-		pane.loadData(nexus);
+		pane.loadData(nexus, charstatelabels);
 		pane.loadBGImage(backgroundFileInput.get().getPath());
 		// Frame setup:
 		frame.add(pane);

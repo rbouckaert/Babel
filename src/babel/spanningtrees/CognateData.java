@@ -23,12 +23,12 @@ public class CognateData {
 		return cognateGlossMap.get(GlossID);
 	}
 	
-	void loadCognateData(NexusBlockParser nexusFile) throws Exception {
+	void loadCognateData(NexusBlockParser nexusFile, CharstatelabelParser charstatelabels) throws Exception {
 		System.err.println("Loading " + nexusFile);
 		mapGlossIDtoMeaningClassName = new HashMap<Integer, String>();
 		cognateGlossMap = new HashMap<Integer, Map<Integer,Cognate>>();
 
-		List<Entry> entries = this.readCognates(nexusFile);
+		List<Entry> entries = this.readCognates(nexusFile, charstatelabels);
 		
 		for (Entry entry : entries) {
 			//Link GlossId to Gloss:
@@ -55,7 +55,7 @@ public class CognateData {
 		}
 	}
 	
-	public List<Entry> readCognates(NexusBlockParser nexus) throws IOException {
+	public List<Entry> readCognates(NexusBlockParser nexus, CharstatelabelParser charstatelabels) throws IOException {
 		List<String> mapPositionToCognate = new ArrayList<>(); // Entries like 'year_747'
 		List<String> mapPositionToGloss = new ArrayList<>(); // Entries like 'year'
 		List<Integer> mapPositionToGlossID = new ArrayList<>();
@@ -63,7 +63,6 @@ public class CognateData {
 		int k = 0;
 		int meaningClassID = 0;
 		String prev = "";
-		CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
 		for(Charstatelabel label : charstatelabels.labels) {
 			mapPositionToCognate.add(label.meaning + "_" + label.labelId);
 			mapPositionToGloss.add(label.meaning);
