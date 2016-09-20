@@ -308,9 +308,9 @@ case DRAW_GLOSS:
 		m_fMinLat = m_fMinLat - fOffset;
 	}
 
-	void loadData(NexusBlockParser nexusFile) throws Exception {
+	void loadData(NexusBlockParser nexusFile, CharstatelabelParser charstatelabels) throws Exception {
 		data = new CognateData();
-		data.loadCognateData(nexusFile);
+		data.loadCognateData(nexusFile, charstatelabels);
 		data.calcSpanningTrees(locations);
 		
 		edgecount = new int[CognateIO.NTAX][CognateIO.NTAX];
@@ -398,8 +398,9 @@ case DRAW_GLOSS:
 		Panel pane = new Panel(args);
 		NexusBlockParser nexus = NexusBlockParser.parseFile(NEXUS_FILE);
 		LocationParser locations = LocationParser.parseNexus(nexus);
+		CharstatelabelParser charstatelabels = CharstatelabelParser.parseNexus(nexus);
 		pane.loadLocations(locations);
-		pane.loadData(nexus);
+		pane.loadData(nexus, charstatelabels);
 		pane.loadBGImage(BG_FILE);
 		frame.add(pane);
 		frame.addKeyListener(pane);
