@@ -34,7 +34,7 @@ public class SpanningTree extends Runnable {
 		LocationParser locations = LocationParser.parseNexus(nexus);
 		if(locations.getLocationNames().size() == 0){
 			//Only parsing KML if nexus didn't provide locations.
-			locations = LocationParser.parseKMLFile(kmlFileInput.get().getPath());
+			locations = LocationParser.parseKMLFile(kmlFileInput.get());
 		}
 		//Pane setup:
 		pane.loadLocations(locations);
