@@ -8,9 +8,9 @@
 	</description>
 
 	<!-- set global properties for this build -->
-	<property name="srcBabel" location="src" />
-	<property name="buildBabel" location="build" />
-	<property name="libBabel" location="lib" />
+	<property name="srcBabel" location="../Babel/src" />
+	<property name="buildBabel" location="../Babel/build" />
+	<property name="libBabel" location="../Babel/lib" />
 	<property name="release_dir" value="release" />
 	<property name="distBabel" location="${buildBabel}/dist" />
 	<property name="beast2path" location="../beast2" />
@@ -19,7 +19,7 @@
 	<property name="beast2classpath" location="${beast2path}/build" />
     <property name="BEASTLabsclasspath" location="../BEASTLabs/build" />
 	<property name="Add_on_dir" value="${release_dir}/add-on" />
-	<property name="version" value="0.1.2" />
+	<property name="version" value="0.1.3" />
 
     <import file="${beast2path}/build.xml" />
 
@@ -30,7 +30,7 @@
         <pathelement path="${buildBabel}"/>
 		<fileset dir="${libBeast2}" includes="junit-4.8.2.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
-		<fileset dir="${libBabel}" includes="itextpdf-5.2.1.jar"/>
+		<fileset dir="${libBabel}" includes="itextpdf-5.5.9.jar"/>
 		<fileset dir="${libBeast2}" includes="antlr-runtime-4.5.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/> 
 		<fileset dir="${libBeast2}" includes="jam.jar"/>
@@ -203,7 +203,7 @@
 			<fileset dir="${distBabel}" includes="Babel.addon.jar" />
 		</copy>
 		<copy todir="${Add_on_dir}/lib">
-			<fileset dir="${libBabel}" includes="itextpdf-5.2.1.jar" />
+			<fileset dir="${libBabel}" includes="itextpdf-5.5.9.jar" />
 		</copy>
 		<copy todir="${Add_on_dir}">
 			<fileset dir="${distBabel}" includes="Babel.src.jar" />
