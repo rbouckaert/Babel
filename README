@@ -3,3 +3,15 @@ BEAST analysis backing effective linguistics
 A BEAST package for performing linguistic analysis. BEAST can be obtained from http://beast2.org.
 
 
+To install Babel through BEAUti, first add the extra repositories to the package manager like so:
+- start BEAUti, 
+- choose File/Manage packages
+- click ‘Package repositories’
+- Add URL https://raw.githubusercontent.com/CompEvol/CBAN/master/packages-extra.xml, click DONE
+
+Babel now appears in the list of packages
+- Select Babel
+- Click install
+- restart BEAUti
+
+
