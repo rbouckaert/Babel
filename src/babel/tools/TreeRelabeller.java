@@ -114,6 +114,7 @@ public class TreeRelabeller extends Runnable {
 		if (out != System.out) {
 			out.close();
 		}
+		Log.warning("All done. " + (outputInput.get() != null ? "Results in " + outputInput.get().getPath() : ""));
 
 	}
 
