@@ -41,7 +41,7 @@ public class BinaryToMultiState extends Runnable {
 		List<String> taxanames = parser.m_alignment.getTaxaNames();
 		
 		List<String> seqs = new ArrayList<>();
-		for (String taxon : taxanames) {
+		for (int j = 0; j < taxanames.size(); j++) {
 			seqs.add("");
 		}
 		
@@ -66,45 +66,73 @@ public class BinaryToMultiState extends Runnable {
 		
 		
 		int nchar = parser.filteredAlignments.size();
-		int n = 0;
-		for (Alignment a : parser.filteredAlignments) {
+		for (int k = 0; k < parser.filteredAlignments.size(); k++) {
+			Alignment a = parser.filteredAlignments.get(k);
 			int i0 = 0;
 			boolean [] used = new boolean[65];
+			List<String> sites = new ArrayList<>();
+			for (int j = 0; j < taxanames.size(); j++) {
+				sites.add("");
+			}
 			for (int i = (isAscertainedInput.get() ? 1 : 0); i < Math.min(65, a.getSiteCount()); i++) {
 				int [] pattern = a.getPattern(a.getPatternIndex(i));
+
+				boolean atLeastUsedOnce = false;
 				for (int j = 0; j < pattern.length; j++) {
 					if (pattern[j] == 1) {
-						String seq = seqs.get(j);
-						if (seq.length() == n) {
-							seq = seq + character[i0];
-							seqs.set(j, seq);
-							used[i0] = true;
-						} else {
-							Log.warning("ambiguity found at " + a.getID() + " " + taxanames.get(j));
-						}
+						String site = sites.get(j);
+						site = site + character[i0];
+						sites.set(j, site);
+						used[i0] = true;
+						atLeastUsedOnce = true;
+//						} else {
+//							Log.warning("ambiguity found at " + a.getID() + " " + taxanames.get(j));
+//						}
 					}
 				}
-				i0++;
-				
+				if (!atLeastUsedOnce && isAscertainedInput.get()) {
+					Log.warning("Column " + i + " in " + a.getID() + " contains no data");
+				}
+				i0++;				
 			}
 			int usedCount = 0;
 			for (boolean b : used) {
 				if (b) usedCount++;
 			}
 			if (usedCount <= 1) {
+				Log.warning("removing column \"" + a.getID() + "\" since it only has a single entry");
 				nchar--;
-				for (int j = 0; j < taxanames.size(); j++) {
-					if (seqs.get(j).length() > n) {
-						seqs.set(j, seqs.get(j).substring(0, n));
-					}
-				}
 			} else {
+				// update sites
 				for (int j = 0; j < taxanames.size(); j++) {
-					if (seqs.get(j).length() == n) {
-						seqs.set(j, seqs.get(j) + "?");
+					if (sites.get(j).length() == 0) {
+						sites.set(j, "?");
+					}
+					if (sites.get(j).length() > 1) {
+						sites.set(j, "{" + sites.get(j)+ "}");
 					}
 				}
-				n++;
+				// sanity check
+				boolean [] b = new boolean[65];
+				for (String s : sites) {
+					for (int j = 0; j < s.length(); j++) {
+						char c = s.charAt(j);
+						int code = indexOf(c, character);
+						if (code >= 0) {
+							b[code] = true;
+						}
+					}
+				}
+				for (int j = 1; j < b.length; j++) {
+					if (b[j] && ! b[j-1]) {
+						Log.warning("non-consecutive code");
+					}
+				}
+				
+				// update sequences
+				for (int j = 0; j < taxanames.size(); j++) {
+					seqs.set(j, seqs.get(j) + sites.get(j));
+				}
 			}
 		}
 		
@@ -148,6 +176,16 @@ public class BinaryToMultiState extends Runnable {
 		out.println(oldNexus);
 		
 		Log.warning("Done!");
+	}
+
+	private int indexOf(char c, String[] character) {
+		String ch = c + "";
+		for (int i = 0; i < character.length; i++) {
+			if (character[i].equals(ch)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	public static void main(String[] args) throws Exception {
