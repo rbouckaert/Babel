@@ -26,6 +26,9 @@ public class BinaryToMultiState extends Runnable {
 	public void initAndValidate() {
 	}
 
+	// note, if increasing MAX_STATE_SIZE then the character array in run() needs to be extended as well
+	final static int MAX_STATE_SIZE = 65;
+	
 	@Override
 	public void run() throws Exception {
 		File nexusfile = nexusFileInput.get();
@@ -45,7 +48,7 @@ public class BinaryToMultiState extends Runnable {
 			seqs.add("");
 		}
 		
-		String [] character = new String[65];
+		String [] character = new String[MAX_STATE_SIZE];
 		for (int i = 0; i < 10; i++) {
 			character[i + 0] = ""+(char)('0'+i);
 		}
@@ -55,7 +58,7 @@ public class BinaryToMultiState extends Runnable {
 		for (int i = 0; i < 26; i++) {
 			character[i + 36] = ""+(char)('A'+i);
 		}
-		character[62] = "@";
+		character[62] = "#";
 		character[63] = "!";
 		character[64] = "~";
 		
@@ -69,12 +72,12 @@ public class BinaryToMultiState extends Runnable {
 		for (int k = 0; k < parser.filteredAlignments.size(); k++) {
 			Alignment a = parser.filteredAlignments.get(k);
 			int i0 = 0;
-			boolean [] used = new boolean[65];
+			boolean [] used = new boolean[MAX_STATE_SIZE];
 			List<String> sites = new ArrayList<>();
 			for (int j = 0; j < taxanames.size(); j++) {
 				sites.add("");
 			}
-			for (int i = (isAscertainedInput.get() ? 1 : 0); i < Math.min(65, a.getSiteCount()); i++) {
+			for (int i = (isAscertainedInput.get() ? 1 : 0); i < Math.min(MAX_STATE_SIZE, a.getSiteCount()); i++) {
 				int [] pattern = a.getPattern(a.getPatternIndex(i));
 
 				boolean atLeastUsedOnce = false;
@@ -113,7 +116,7 @@ public class BinaryToMultiState extends Runnable {
 					}
 				}
 				// sanity check
-				boolean [] b = new boolean[65];
+				boolean [] b = new boolean[MAX_STATE_SIZE];
 				for (String s : sites) {
 					for (int j = 0; j < s.length(); j++) {
 						char c = s.charAt(j);
@@ -144,11 +147,11 @@ public class BinaryToMultiState extends Runnable {
 		
 		xml.append("<data id=\"data\">\n" +
 				"<userDataType id=\"MultiStateType\" spec=\"beast.evolution.datatype.UserDataType\"\n" + 
-                "states='65'\n" +
+                "states='MAX_STATE_SIZE'\n" +
                 "codelength='1'\n" + 
                 "codeMap='");
-		for (int i = 0; i < 65; i++) {
-			xml.append(character[i] + " = " + i + (i < 64 ? ", " : ""));
+		for (int i = 0; i < MAX_STATE_SIZE; i++) {
+			xml.append(character[i] + " = " + i + (i < MAX_STATE_SIZE - 1 ? ", " : ""));
 		}
 		xml.append("'/> ");
 		
