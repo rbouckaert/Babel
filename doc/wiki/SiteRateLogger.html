@@ -14,7 +14,7 @@ $w_1,\ldots,w_K$ then for each site $i$ and category $j$ we can calculate the pr
 of the data at site $i$ when the tree's branch lengths are weighted with rate $r_i$.
 Let $p_{ij}$ be that probability, then the average rate for site $i$ is
 
-$$ R_i =\int_{r=0}^\infty r_j p(r) p_i(r) dr 
+$$ R_i =\frac{\int_{r=0}^\infty r_j p(r) p_i(r) dr }{\int_{r=0}^\infty p(r) p_i(r) dr }
 \approx\frac{\sum_{j=1}^Kr_j w_j p_{ij}}{\sum_{j=1}^Kw_j p_{ij}} $$
 
 (where $p_i(r)$ is the site probability at rate r, and $p(r)$ the probability of sampling rate $r$).
