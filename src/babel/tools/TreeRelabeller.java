@@ -98,7 +98,13 @@ public class TreeRelabeller extends Runnable {
         	if (translate.length() > 0) {
         		translate.append(",\n");
         	}
-        	translate.append("\t\t" + key.toString() + " " + label);
+        	
+        	translate.append("\t\t" + key.toString() + " ");
+        	if (label.indexOf(' ') >= 0) {
+        		translate.append("'" + label + "'");
+        	} else {
+        		translate.append(label);
+        	}
         }
         out.println(translate.toString());
         out.println(";");
