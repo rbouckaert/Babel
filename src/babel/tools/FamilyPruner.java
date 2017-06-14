@@ -24,14 +24,15 @@ import beast.core.util.Log;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
+import beast.math.distributions.MRCAPrior;
 import beast.util.NexusParser;
 import beast.core.Input.Validate;
 
-@Description("filters all leafs from specified taxon sets out of a tree file based on clade membership")
-public class FamilyFilter extends Runnable {
+@Description("Cut out all branches underneath clades, leaving only family MRCA nodes")
+public class FamilyPruner extends Runnable {
 	public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	public Input<File> familyInput = new Input<>("families","NEXUS file containing taxon sets", Validate.REQUIRED);
-	public Input<File> subsetInput = new Input<>("subset","text file with list of clades (defined in families) to include", Validate.REQUIRED);
+	//public Input<File> subsetInput = new Input<>("subset","text file with list of clades (defined in families) to include", Validate.REQUIRED);
 	public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
 	public Input<Boolean> verboseInput = new Input<>("verbose","print out extra information while processing", true);
 
@@ -54,33 +55,6 @@ public class FamilyFilter extends Runnable {
         	taxonset.initAndValidate();
         }
 
-		// get taxa in subsets
-		Set<String> taxaToInclude = new HashSet<>();
-		BufferedReader fin = new BufferedReader(new FileReader(subsetInput.get()));
-        String str = null;
-        while (fin.ready()) {
-            str = fin.readLine();
-            str = str.trim();
-            boolean found = false;
-            for (TaxonSet taxonset : taxonsets) {
-            	if (taxonset.getID().equals(str)) {
-            		for (String taxon : taxonset.asStringList()) {
-            			taxaToInclude.add(taxon);
-            		}
-            		found = true;
-            	}
-            }
-            if (!found) {
-            	Log.warning.println("Could not find taxonset " + str + ". Typo perhaps?");
-            	Log.warning.print("available taxon sets:");
-                for (TaxonSet taxonset : taxonsets) {
-                	Log.warning.print(taxonset.getID() + " ");
-                }
-            	Log.warning.println();
-            }
-        }
-        fin.close();
-
 		// get trees
 		NexusParser parser = new NexusParser();
 		parser.parseFile(treesInput.get());
@@ -88,39 +62,6 @@ public class FamilyFilter extends Runnable {
 			Log.err.println("File does not contain any trees " + treesInput.get().getName());
 			return;
 		}
-
-		// sanity check
-        Set<String> taxaInTree = new HashSet<>();
-        for (String taxon :	parser.trees.get(0).getTaxaNames()) {
-        	taxaInTree.add(taxon);
-        }
-        StringBuilder buf = new StringBuilder();
-        buf.append("Taxa in subset, but not in tree:");
-        for (String taxon : taxaToInclude) {
-        	if (!taxaInTree.contains(taxon)) {
-        		buf.append(' ');
-        		buf.append(taxon);
-        	}
-        }
-        Log.warning.println(buf.toString());
-        buf = new StringBuilder();
-        buf.append("Taxa to be removed:");
-        StringBuilder buf2 = new StringBuilder();
-        int k = 0;
-        for (String taxon : taxaInTree) {
-        	if (!taxaToInclude.contains(taxon)) {
-        		buf.append(' ');
-        		buf.append(taxon);
-        	} else {
-        		buf2.append(' ');
-        		buf2.append(taxon);
-        		k++;
-        	}
-        }
-        Log.warning.println(buf.toString());
-		
-        Log.warning.println("Expecting " + k + " taxa to be left:" + buf2.toString());
-		
         
         // filter trees, and print out newick trees
         PrintStream out = System.out;
@@ -129,9 +70,8 @@ public class FamilyFilter extends Runnable {
         }
         
 		for (Tree tree : parser.trees) {
+			filter(tree, taxonsets);
 			Node root = tree.getRoot();
-			root = filter(root, taxaToInclude);
-			// print filtered tree
         	out.println(toNewick(root));
 		}
 		
@@ -146,7 +86,7 @@ public class FamilyFilter extends Runnable {
     		return toNewick(node.getChild(0));
     	}
         final StringBuilder buf = new StringBuilder();
-        if (node.getLeft() != null) {
+        if (node.getLeft() != null && node.getID() == null) {
             buf.append("(");
             buf.append(toNewick(node.getLeft()));
             if (node.getRight() != null) {
@@ -170,38 +110,20 @@ public class FamilyFilter extends Runnable {
 
 
 	
-	private Node filter(Node node, Set<String> taxaToInclude) {
-		if (node.isLeaf()) {
-			if (taxaToInclude.contains(node.getID())) {
-				return node;
-			} else {
-				return null;
-			}
-		} else {
-			Node left_ = node.getLeft(); 
-			Node right_ = node.getRight(); 
-			left_ = filter(left_, taxaToInclude);
-			right_ = filter(right_, taxaToInclude);
-			if (left_ == null && right_ == null) {
-				return null;
-			}
-			if (left_ == null) {
-				return right_;
-			}
-			if (right_ == null) {
-				return left_;
-			}
-			node.removeAllChildren(false);
-			node.addChild(left_);
-			node.addChild(right_);
-			return node;
+	private void filter(Tree tree, List<TaxonSet> taxonsets) {
+		for (TaxonSet set : taxonsets) {
+			MRCAPrior prior = new MRCAPrior();
+			prior.initByName("tree", tree, "taxonset", set, "monophyletic", true);
+			Node node = prior.getCommonAncestor();
+			node.setID(set.getID());
 		}
+
 	}
 
 
 	static ConsoleApp consoleapp;
 	public static void main(String[] args) throws Exception {
-		FamilyFilter app = new FamilyFilter();
+		FamilyPruner app = new FamilyPruner();
 		app.setID("Filter clades from tree set");
 	
 		if (args.length == 0) {
