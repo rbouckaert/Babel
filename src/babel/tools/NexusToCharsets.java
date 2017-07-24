@@ -17,11 +17,12 @@ import beast.evolution.alignment.Alignment;
 
 @Description("Load nexus file and based on blocks of missing data, produce nexus file with charsets")
 public class NexusToCharsets extends Runnable {
-	public Input<File> nexusInput = new Input<>("nex", "nexus file with charsetlabels encoding for character sets",
+	final public Input<File> nexusInput = new Input<>("nex", "nexus file with charsetlabels encoding for character sets",
 			new File("file.nex"));
-	public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
+	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
-	public Input<Boolean> sortInput = new Input<>("sort","whether to sort the sites so mathcing missing data patternes group together", true);
+	final public Input<Boolean> sortInput = new Input<>("sort","whether to sort the sites so mathcing missing data patternes group together", true);
+    final public Input<Boolean> stripZeroColumnsInput = new Input<>("strip", "remove columns with only zeros (or questions marks) in them", false);
 	
 	@Override
 	public void initAndValidate() {
@@ -64,14 +65,32 @@ public class NexusToCharsets extends Runnable {
 		StringBuilder buf = new StringBuilder();
 		int start = 0;
 		int k = 0;
+		boolean strip = stripZeroColumnsInput.get();
+		if (strip) {
+			buf.append("charset concept" + k + " = 1,");
+		}
 		for (int i = 1; i < n; i++) {
 			if (!matches(seqs, i, i-1)) {
-				buf.append("charset concept" + k + " = " + (start+1) + "-" + i + ";\n");
+				if (!strip) {
+					buf.append("charset concept" + k + " = " + (start+1) + "-" + i + ";\n");
+				} else {
+					buf.deleteCharAt(buf.length()-1);
+					buf.append(";\n");
+					buf.append("charset concept" + (k+1) + " = ");
+				}
 				start = i;
 				k++;
 			}
+			if (strip && has1(seqs, i)) {
+				buf.append((i + 1) + ",");
+			}
 		}
-		buf.append("charset concept" + k + " = " + (start+1) + "-" + n + ";\n");
+		if (!strip) {
+			buf.append("charset concept" + k + " = " + (start+1) + "-" + n + ";\n");
+		} else {
+			buf.deleteCharAt(buf.length()-1);
+			buf.append(";\n");
+		}
 		
 		// output
 		PrintStream out = System.out;
@@ -105,6 +124,15 @@ public class NexusToCharsets extends Runnable {
 
 		Log.warning(k + " charsets");
 		Log.warning("Done!");
+	}
+
+	private boolean has1(char[][] seqs, int i) {
+		for (int k = 0; k < seqs[0].length; k++) {
+			if (seqs[i][k] != '0' && seqs[i][k] != '?') {
+				return true;
+			}
+ 		}
+		return false;
 	}
 
 	private boolean matches(char[][] seqs, int i, int j) {

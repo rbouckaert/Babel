@@ -50,7 +50,11 @@ public class AddAscertainmentColumn extends Runnable {
 		
 		
 		for (int i = 0; i < taxonCount; i++) {
-			buf.append(data.getTaxaNames().get(i) + " ");
+			String name = data.getTaxaNames().get(i);
+			buf.append(name + " ");
+			if (name.length() < 30) {
+				buf.append("                              ".substring(0, 30-name.length()));
+			}
 			for (int j = 0; j < parser.filteredAlignments.size(); j++) {
 				Alignment subData = parser.filteredAlignments.get(j);
 				DataType dataType = subData.getDataType();
