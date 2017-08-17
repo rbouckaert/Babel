@@ -117,6 +117,11 @@
             isVisible='false'
         />
 		<mergepoint id='aux-initilisation-panels'/>
+       <panel spec='BeautiPanelConfig' panelname="Starting tree" tiptext="Starting tree"
+            path='init'
+            hasPartitions="none" icon='6.png.x' forceExpansion='TRUE'
+            isVisible='false'
+        />
 
 		<panel spec='BeautiPanelConfig' panelname="Priors" tiptext="Other priors"
             path='distribution/distribution[id="prior"]/distribution'
@@ -342,7 +347,7 @@
             <distribution spec="CompoundDistribution" id="prior">
 				<mergepoint id='aux-priors'/>
             </distribution>
-            <distribution spec="CompoundDistribution" id="likelihood">
+            <distribution spec="CompoundDistribution" id="likelihood" useThreads="true">
 				<mergepoint id='aux-likelihoods'/>
             </distribution>
         </distribution>

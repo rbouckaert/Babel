@@ -119,7 +119,11 @@
             isVisible='false'
         />
 		<mergepoint id='aux-initilisation-panels'/>
-
+       <panel spec='BeautiPanelConfig' panelname="Starting tree" tiptext="Starting tree"
+            path='init'
+            hasPartitions="none" icon='6.png.x' forceExpansion='TRUE'
+            isVisible='false'
+        />
 		<panel spec='BeautiPanelConfig' panelname="Priors" tiptext="Other priors"
             path='distribution/distribution[id="prior"]/distribution'
             hasPartitions="none" icon='7.png.x' forceExpansion='TRUE_START_COLLAPSED'
@@ -162,7 +166,7 @@
 						    <alpha idref='bcov_alpha.s:$(n)'/>
 						    <switchRate idref='bcov_s.s:$(n)'/>
 						    <parameter name='vfrequencies' id='frequencies.s:$(n)' value='0.5 0.5' lower='0' upper='1' estimate='true'/>
-						    <parameter name='hfrequencies' id='hiddenfrequencies.s:$(n)' value='0.5 0.5' lower='0' upper='1' estimate='true'/>
+						    <parameter name='hfrequencies' id='hiddenfrequencies.s:$(n)' value='0.5 0.5' lower='0' upper='1' estimate='false'/>
 						    <frequencies id='dummyfrequencies.s:$(n)' spec='Frequencies' estimate='faslse' data='@$(n)'/>
                         </substModel>
 
@@ -380,7 +384,7 @@
             <distribution spec="CompoundDistribution" id="prior">
 				<mergepoint id='aux-priors'/>
             </distribution>
-            <distribution spec="CompoundDistribution" id="likelihood">
+            <distribution spec="CompoundDistribution" id="likelihood" useThreads="true">
 				<mergepoint id='aux-likelihoods'/>
             </distribution>
         </distribution>
