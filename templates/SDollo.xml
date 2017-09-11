@@ -216,13 +216,13 @@
             <operator id='allTipDatesRandomWalker.t:tree' spec='TipDatesRandomWalker' windowSize="1" weight="0" tree="@Tree.t:tree"/>
             <operator id='deatRateSDolloScaler' spec='ScaleOperator' scaleFactor="0.5" weight="3" parameter="@deathRate.SDollo"/>
 
-            <operator id='treeScaler.t:tree' spec='ScaleOperator' scaleFactor="0.5" weight="3" tree="@Tree.t:tree"/>
-            <operator id='treeRootScaler.t:tree' spec='ScaleOperator' scaleFactor="0.5" weight="3" tree="@Tree.t:tree" rootOnly='true'/>
-            <operator id='UniformOperator.t:tree' spec='Uniform' weight="30" tree="@Tree.t:tree"/>
-            <operator id='SubtreeSlide.t:tree' spec='SubtreeSlide' weight="15" gaussian="true" size="1.0" tree="@Tree.t:tree"/>
-            <operator id='narrow.t:tree' spec='Exchange' isNarrow='true' weight="15" tree="@Tree.t:tree"/>
-            <operator id='wide.t:tree' spec='Exchange' isNarrow='false' weight="3" tree="@Tree.t:tree"/>
-            <operator id='WilsonBalding.t:tree' spec='WilsonBalding' weight="3" tree="@Tree.t:tree"/>
+            <operator id='YuleModelTreeScaler.t:tree' spec='ScaleOperator' scaleFactor="0.5" weight="3" tree="@Tree.t:tree"/>
+            <operator id='YuleModelTreeRootScaler.t:tree' spec='ScaleOperator' scaleFactor="0.5" weight="3" tree="@Tree.t:tree" rootOnly='true'/>
+            <operator id='YuleModelUniformOperator.t:tree' spec='Uniform' weight="30" tree="@Tree.t:tree"/>
+            <operator id='YuleModelSubtreeSlide.t:tree' spec='SubtreeSlide' weight="15" gaussian="true" size="1.0" tree="@Tree.t:tree"/>
+            <operator id='YuleModelNarrow.t:tree' spec='Exchange' isNarrow='true' weight="15" tree="@Tree.t:tree"/>
+            <operator id='YuleModelWide.t:tree' spec='Exchange' isNarrow='false' weight="3" tree="@Tree.t:tree"/>
+            <operator id='YuleModelWilsonBalding.t:tree' spec='WilsonBalding' weight="3" tree="@Tree.t:tree"/>
 
 
             <prior id='YuleBirthRatePrior.t:tree' x='@birthRate.t:tree'><distr spec="beast.math.distributions.Uniform" lower='0' upper='Infinity'/></prior>
@@ -264,13 +264,13 @@
 
             <connect srcID='allTipDatesRandomWalker.t:tree'   targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Estimates tip dates for tree t:tree</connect>
 
-            <connect srcID='treeScaler.t:tree'                targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Scales all internal nodes for tree t:tree</connect>
-            <connect srcID='treeRootScaler.t:tree'            targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Scales root node for tree t:tree</connect>
-            <connect srcID='UniformOperator.t:tree'           targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Draws new internal node heights uniformally for tree t:tree</connect>
-            <connect srcID='SubtreeSlide.t:tree'              targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Performs subtree slide rearrangement of tree t:tree</connect>
-            <connect srcID='narrow.t:tree'                    targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Narrow exchange performs local rearrangement of tree t:tree</connect>
-            <connect srcID='wide.t:tree'                      targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Wide exchange performs global rearrangement of tree t:tree</connect>
-            <connect srcID='WilsonBalding.t:tree'             targetID='mcmc' inputName='operator' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'>Performs Wilson-Balding global rearrangement of tree t:tree</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelTreeScaler.t:tree" targetID="mcmc">Scales all internal nodes for tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelTreeRootScaler.t:tree" targetID="mcmc">Scales root node for tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelUniformOperator.t:tree" targetID="mcmc">Draws new internal node heights uniformally for tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelSubtreeSlide.t:tree" targetID="mcmc">Performs subtree slide rearrangement of tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelNarrow.t:tree" targetID="mcmc">Narrow exchange performs local rearrangement of tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelWide.t:tree" targetID="mcmc">Wide exchange performs global rearrangement of tree t:$(n)</connect>
+            <connect if="inposterior(YuleModel.t:tree) and Tree.t:tree/estimate=true" inputName="operator" srcID="YuleModelWilsonBalding.t:tree" targetID="mcmc">Performs Wilson-Balding global rearrangement of tree t:$(n)</connect>
              <connect srcID='strictClockUpDownOperator.c:clock' targetID='mcmc' inputName='operator'
                      if='nooperator(FixMeanRatesOperator) and inlikelihood(clockRate.c:clock) and inlikelihood(Tree.t:tree) and Tree.t:tree/estimate=true and clockRate.c:clock/estimate=true'>
                 Scale up substitution rate c:clock and scale down tree t:($n)
