@@ -82,7 +82,10 @@
             beast.core.Logger.model,
             beast.evolution.tree.coalescent.BayesianSkyline.treeIntervals,
             beast.evolution.tree.coalescent.BayesianSkyline.groupSizes,
-            beast.evolution.tree.coalescent.BayesianSkyline.popSizes
+            beast.evolution.tree.coalescent.BayesianSkyline.popSizes,
+            beast.evolution.substitutionmodel.BirthDeathModel.rates,
+            beast.evolution.substitutionmodel.BirthDeathModel.eigenSystem,
+            beast.evolution.substitutionmodel.BirthDeathModelx.frequencies
             '
         buttonLabelMap='beast.app.beauti.BeautiInitDlg.&gt;&gt; details=Edit parameters'
     >
@@ -175,7 +178,7 @@
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
 					<substModel id="pseudodollo" spec="beast.evolution.substitutionmodel.BirthDeathModel">
 							<frequencies id="PDfrequencies" spec="Frequencies">
-						        <frequencies spec="parameter.RealParameter" dimension="4" id="PDFreqParameter" lower="0.0" upper="1.0">0.95 0.03 0.02 0.0</frequencies>
+						        <frequencies spec="parameter.RealParameter" dimension="4" id="PDFreqParameter" lower="0.0" upper="1.0">0.95 0.03 0.02</frequencies>
 						    </frequencies>
 							<deathprob id='PDCognateDeathRate' spec='parameter.RealParameter' value='0.05' upper="1.0"/>
 					</substModel>
@@ -241,6 +244,9 @@
             <prior id="PDCognateDeathRatePrior" name="distribution" x="@PDCognateDeathRate">
                 <distr spec="beast.math.distributions.Exponential" mean="1.0"/>
             </prior>
+            <prior id="PDFreqParameterPrior" name="distribution" x="@PDFreqParameter">
+                <distr spec="beast.math.distributions.Dirichlet" alpha="5 2 1"/>
+            </prior>
 
 
             <prior id='YuleBirthRatePrior.t:tree' x='@birthRate.t:tree'><distr spec="beast.math.distributions.Uniform" lower='0' upper='Infinity'/></prior>
@@ -258,6 +264,7 @@
 ]]>
             <connect srcID='treeLikelihood.$(n)'            targetID='likelihood' inputName='distribution' if="isInitializing"/>
             <connect srcID='YuleModel.t:tree'               targetID='prior' inputName='distribution' if="isInitializing"/>
+           
             <connect method="beast.app.beauti.SiteModelInputEditor.customConnector"/>
 
             <connect srcID='treelog.t:tree'                   targetID='mcmc' inputName='logger' if='inposterior(Tree.t:tree) and Tree.t:tree/estimate=true'/>
@@ -266,6 +273,7 @@
             <connect srcID='ClockPrior.c:clock'               targetID='prior' inputName='distribution' if='inlikelihood(clockRate.c:clock) and clockRate.c:clock/estimate=true'/>
             <connect srcID='MutationRatePrior.s:$(n)'         targetID='prior' inputName='distribution' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
             <connect srcID='PDCognateDeathRatePrior'          targetID='prior' inputName='distribution' if='inlikelihood(PDCognateDeathRate) and PDCognateDeathRate/estimate=true'/>
+            <connect srcID='PDFreqParameterPrior'             targetID='prior' inputName='distribution' if="inlikelihood(PDFreqParameter) and PDFreqParameter/estimate=true"/>
             <connect srcID='GammaShapePrior.s:$(n)'           targetID='prior' inputName='distribution' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
             <connect srcID='PropInvariantPrior.s:$(n)'        targetID='prior' inputName='distribution' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
             <connect srcID='YuleBirthRatePrior.t:tree'        targetID='prior' inputName='distribution' if='inposterior(YuleModel.t:tree) and inposterior(Tree.t:tree) and birthRate.t:tree/estimate=true'/>
