@@ -25,7 +25,7 @@ public class CharsetlabelsToCharsets extends Runnable {
 	@Override
 	public void run() throws Exception {
 		if (nexusInput.get() == null || nexusInput.get().getName().equals("[[none]]")) {
-			throw new IllegalArgumentException("A valid nesus file must be specified");
+			throw new IllegalArgumentException("A valid nexus file must be specified");
 		}
 		NexusParser parser = new NexusParser();
 		parser.parseFile(nexusInput.get());
