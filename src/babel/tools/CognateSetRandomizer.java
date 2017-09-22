@@ -14,6 +14,7 @@ import beast.core.Input;
 import beast.core.Runnable;
 import beast.core.util.Log;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.Sequence;
 
 @Description("Randomly knock out cognates from cognate alignment")
 public class CognateSetRandomizer extends Runnable {
@@ -54,7 +55,7 @@ public class CognateSetRandomizer extends Runnable {
 			seq  = data.getSequenceAsString(taxa.get(i));
 			for (int j = 0; j < seq.length(); j++) {
 				seqs[j][i] = seq.charAt(j);
-				if (seqs[j][i] == 1) {
+				if (seqs[j][i] == '1') {
 					ones.add(new OnePosition(i,j));
 				}
 			}
@@ -73,9 +74,20 @@ public class CognateSetRandomizer extends Runnable {
 				k = Randomizer.nextInt(oneCount);
 			} while (ones.get(k).done);
 			OnePosition p = ones.get(k);
-			seqs[p.j][p.i] = 0;
+			seqs[p.j][p.i] = '0';
 			p.done = true;
 		}
+		
+		// reconstruct sequences
+		List<Sequence> ss = data.sequenceInput.get();
+		for (int i = 0; i < taxa.size(); i++) {
+			StringBuilder buf = new StringBuilder();
+			for (int j = 0; j < seqs.length; j++) {
+				buf.append(seqs[j][i]);
+			}
+			ss.get(i).dataInput.set(buf.toString());
+		}
+		
 		
 		data.initAndValidate();
 		for (Alignment f : parser.filteredAlignments) {
@@ -92,9 +104,22 @@ public class CognateSetRandomizer extends Runnable {
 		int [] boundaries = new int[parser.filteredAlignments.size()];
 		int k = 0;
 		for (Alignment f : parser.filteredAlignments) {
+			int [] pattern = f.getPattern(f.getPatternIndex(0));
+			for (int j = 0; j < taxa.size(); j++) {
+				if (isAscertainedInput.get()) {
+					if (pattern[j] == 0 || pattern[j] == 1) {
+						newSeqs[j].append(" 0");					
+					} else {
+						newSeqs[j].append(" ?");					
+					}
+				} else {
+					newSeqs[j].append(" ");		
+				}
+			}
+			
 			for (int i = 0; i < f.getSiteCount(); i++) {
 				boolean include = true;
-				int [] pattern = f.getPattern(f.getPatternIndex(i));
+				pattern = f.getPattern(f.getPatternIndex(i));
 				if (isAscertainedInput.get() || i > 0) {
 					boolean allZero = true;
 					for (int d : pattern) {
@@ -115,17 +140,18 @@ public class CognateSetRandomizer extends Runnable {
 					}
 				}
 			}
-			boundaries[k] = newSeqs[0].length();
+			boundaries[k] = newSeqs[0].length() - k - 1;
 			k++;
 		}
 		
 		
 		StringBuilder charSets = new StringBuilder();
-		int prev = 0;
+		int prev = 1;
 		for (k = 0; k < parser.filteredAlignments.size(); k++) {
 			Alignment f = parser.filteredAlignments.get(k);
-			charSets.append("charset " + f.getID() + " = " + prev + "-" + (boundaries[k] - 1));
-			prev = boundaries[k];
+			charSets.append("charset " + f.getID() + " = " + prev + "-" + boundaries[k]);
+			charSets.append(";\n");
+			prev = boundaries[k] + 1;
 		}
 		
 		// output
@@ -137,13 +163,13 @@ public class CognateSetRandomizer extends Runnable {
 
 		out.print("#NEXUS\n");
 		out.print("BEGIN DATA;\n");
-		out.print("DIMENSIONS NTAX=" + taxa.size() + " NCHAR=" + newSeqs[0].length() + ";\n");
-		out.print("FORMAT DATATYPE=STANDARD MISSING=? GAP=-  SYMBOLS=\"01\";\n");
+		out.print("DIMENSIONS NTAX=" + taxa.size() + " NCHAR=" + (newSeqs[0].length() - k) + ";\n");
+		out.print("FORMAT DATATYPE=BINARY MISSING=? GAP=-  SYMBOLS=\"01\";\n");
 		out.print("MATRIX\n");
 		for (int i = 0; i < taxa.size(); i++) {
 			out.print(data.getTaxaNames().get(i) + " ");
 			if (data.getTaxaNames().get(i).length() < 30) {
-				out.print("                              ".substring(30 - data.getTaxaNames().get(i).length()));
+				out.print("                              ".substring(data.getTaxaNames().get(i).length()));
 			}
 			out.print(newSeqs[i].toString());
 			out.println();
@@ -152,7 +178,7 @@ public class CognateSetRandomizer extends Runnable {
 		
 		out.print("BEGIN ASSUMPTIONS;\n");
 		out.print(charSets.toString());
-		out.println(";\nEND;\n");
+		out.println("END;\n");
 
 
 		Log.warning("Done!");	}
