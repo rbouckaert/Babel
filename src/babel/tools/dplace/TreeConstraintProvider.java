@@ -4,8 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import beast.app.beauti.BeautiDoc;
@@ -30,11 +31,62 @@ public class TreeConstraintProvider extends Runnable {
 	public void run() throws Exception {
 		String constraints = processTreeFile();
 		Set<String> taxa = processTaxaFile();
-		constraints = filter(constraints, taxa);
-		Log.warning(constraints);
+		
+		String newick = filterNewick(constraints, taxa);
+		Map<String,String> taxonSets = filterTaxonSets(taxa);
+		Log.warning(newick);
+		for (String fam : taxonSets.keySet()) {
+			Log.warning(fam + " = " + taxonSets.get(fam));
+		}
 	}
 
-	private String filter(String constraints, Set<String> taxa) {
+	private Map<String, String> filterTaxonSets(Set<String> taxa) throws IOException {
+        BufferedReader fin = new BufferedReader(new FileReader(treeFileInput.get()));
+        String str = null;
+        Map<String,String> taxonSets = new LinkedHashMap<>();
+        while (fin.ready()) {
+            str = fin.readLine();
+            String famName = str.substring(str.lastIndexOf(')') + 2);
+            str = str.substring(0, str.lastIndexOf(')') + 1);
+            famName = famName.substring(0, famName.indexOf('[')).trim();
+            str = cleanUp(str);
+            String matches = matches(str, taxa);
+            if (matches.length() > 0) {
+            	taxonSets.put(famName, matches);
+            }
+        }
+        fin.close();
+        return taxonSets;
+	}
+
+	private String cleanUp(String str) {
+        str = str.replaceAll(";", "");
+        str = str.replaceAll("-l-", "");
+        str = str.replaceAll("\\[...\\]", "");
+        str = str.replaceAll("]':1", "");
+        str = str.replaceAll("'[^\\[]+\\[", "");
+		return str;
+	}
+
+	private String matches(String str, Set<String> taxa) {
+		String matches ="";
+		for (int i = 0; i < str.length(); i++) {
+			char c = str.charAt(i);
+			if (!(c == '(' || c == ')' || c ==',')) {
+				String t = str.substring(i, i+8);
+				if (taxa.contains(t)) {
+					if (matches.length() > 7) {
+						matches += ",";
+					}
+					matches += t;
+				}
+				i+=7;
+			}
+		}		
+		return matches;
+	}
+
+	private String filterNewick(String constraints, Set<String> taxa) {
 		StringBuilder buf = new StringBuilder();
 		for (int i = 0; i < constraints.length(); i++) {
 			char c = constraints.charAt(i);
@@ -61,13 +113,11 @@ public class TreeConstraintProvider extends Runnable {
 			c2 = c2.replaceAll("\\(\\(([^\\(\\)])\\)\\)", "$1");
 		} while (len > c2.length());
 		
-		Log.warning(c2);
-		TreeParser parser = new TreeParser(new ArrayList<String>(taxa), c2, 0, false);
+		TreeParser parser = new TreeParser(c2, false, true, true, 0, false);
 		Node root = parser.getRoot();
 		buf = new StringBuilder();
 		toNewick(root, buf);
 		c2 = buf.toString();
-		Log.warning(c2);
 		
 		return c2; 
 	}
@@ -115,14 +165,10 @@ public class TreeConstraintProvider extends Runnable {
             String famName = str.substring(str.lastIndexOf(')') + 2);
             str = str.substring(0, str.lastIndexOf(')') + 1);
             famName = famName.substring(0, famName.indexOf('['));
-            str = str.replaceAll(";", "");
-            str = str.replaceAll("-l-", "");
-            str = str.replaceAll("\\[...\\]", "");
-            str = str.replaceAll("]':1", "");
-            str = str.replaceAll("'[^\\[]+\\[", "");
+            str = cleanUp(str);
             buf.append(str);
             buf.append(',');
-            Log.warning(famName + " " + str);
+            //Log.warning(famName + " " + str);
         }
         // replace comma at end of string
         buf.replace(buf.length()-1, buf.length(), ")");
