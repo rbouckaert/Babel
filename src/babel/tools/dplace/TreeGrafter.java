@@ -1,5 +1,4 @@
-package babel.tools;
-
+package babel.tools.dplace;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,24 +6,30 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import babel.tools.TreeCombiner;
 import beast.app.beauti.BeautiDoc;
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
+import beast.app.util.TreeFile;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
+import beast.util.Randomizer;
 
-@Description("Merge sub-trees into skeleton tree")
-public class TreeMerger extends TreeCombiner {
-	final public Input<File> cgfFileInput = new Input<>("cfg", "tab separated configuration file containing info for one tree set per line. "
-			+ "Firts column is name of tree file, second column a comma separated list of taxa to be transfered to source tree.");
-
-	int subTreeCount;
+@Description("Grafts nodes into a tree above the MRCA of a set of nodes")
+public class TreeGrafter extends TreeCombiner {
+	final public Input<File> cgfFileInput = new Input<>("cfg", "tab separated configuration file containing three columns: "
+			+ "column 1: name of taxon\n"
+			+ "column 2: height (age) of taxon\n"
+			+ "column 3: a comma separated list of taxa determining MRCA to graft above in source tree.");
+	
+	String [] taxonName;
+	double [] taxonHeight;
 	Set<String> [] subTaxonSets;
-	MemoryFriendlyTreeSet [] subTreeSet;
+	
 	
 	@Override
 	public void initAndValidate() {
@@ -36,38 +41,45 @@ public class TreeMerger extends TreeCombiner {
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 		
-		processCfgFile();
-		
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + outputInput.get().getName());
 			out = new PrintStream(outputInput.get());
 		}
 
+		processCfgFile();
+		
 		srcTreeSet.reset();
+		int n = taxonName.length;
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
-			for (int i = 0; i < subTreeCount; i++) {
+			for (int i = 0; i < n; i++) {
 				Node src = getMRCA(tree, subTaxonSets[i]);
 				Node parent = src.getParent();
-				if (subTreeSet[i].hasNext()) {
-					Tree subTree = subTreeSet[i].next();
-					
-					Node replacement = getMRCA(subTree, subTaxonSets[i]);
-					boolean replaced = false;
-					for (int j = 0; j < parent.getChildCount(); j++) {
-						if (parent.getChild(j) == src) {
-							src.getParent().setChild(j, replacement);
-							replacement.setParent(parent);
-							replaced = true;
-						}
-					}
-					if (!replaced) {
-						throw new RuntimeException("Something went wrong replacing node");
-					}
-				} else {
-					throw new IllegalArgumentException("Tree sets are of different sizes: treeset " + i + " is smaler than source set");
+				double len = src.getLength();
+				// create intermediary node on branch
+				double newHeight = src.getHeight() + Randomizer.nextDouble() * len;
+				while (newHeight <= taxonHeight[i]) {
+					newHeight = src.getHeight() + Randomizer.nextDouble() * len;
 				}
+				
+				Node newNode = new Node();
+				newNode.setHeight(newHeight);
+				newNode.setParent(parent);
+				for (int j = 0; j < parent.getChildCount(); j++) {
+					if (parent.getChild(j) == src) {
+						parent.setChild(j, newNode);
+					}
+				}
+				newNode.addChild(src);
+				src.setParent(newNode);
+				
+				// create new leaf node
+				Node leaf = new Node();
+				leaf.setID(taxonName[i]);
+				leaf.setHeight(taxonHeight[i]);
+				newNode.addChild(leaf);
+				leaf.setParent(newNode);
 			}
 			out.print(tree.getRoot().toNewick());
 		}
@@ -75,25 +87,27 @@ public class TreeMerger extends TreeCombiner {
 		Log.err("Done!");
 		out.close();
 	}
-	
+
 	private void processCfgFile() throws IOException {
 		String cfg = BeautiDoc.load(cgfFileInput.get());
 		String [] strs = cfg.split("\n");
-		subTreeCount = 0;
+		int n = 0;
 		for (String str : strs) {
 			if (!str.matches("^\\s*$")) {
-				subTreeCount++;
+				n++;
 			}
 		}
-		subTreeSet = new MemoryFriendlyTreeSet[subTreeCount];
-		subTaxonSets = new Set[subTreeCount];
+		subTaxonSets = new Set[n];
+		taxonName = new String[n];
+		taxonHeight = new double[n];
 		int i = 0;
 		for (String str : strs) {
 			if (!str.matches("^\\s*$")) {
 				String [] strs2 = str.split("\t");
-				subTreeSet[i] = new TreeAnnotator().new MemoryFriendlyTreeSet(strs2[0], 0);
+				taxonName[i] = strs[0];
+				taxonHeight[i] = Double.parseDouble(strs[1]);
 				subTaxonSets[i] = new HashSet<>();
-				for (String taxon : strs2[1].split(",")) {
+				for (String taxon : strs2[2].split(",")) {
 					subTaxonSets[i].add(taxon);					
 				}
 			}
@@ -101,7 +115,7 @@ public class TreeMerger extends TreeCombiner {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new Application(new TreeMerger(), "Tree Merger", args);
+		new Application(new TreeGrafter(), "Tree Grafter", args);
 	}
 
 }
