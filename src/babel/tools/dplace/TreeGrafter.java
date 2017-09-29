@@ -21,7 +21,7 @@ import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 import beast.util.Randomizer;
-import beast.util.TreeParser;
+//import beast.util.TreeParser;
 
 @Description("Grafts nodes into a tree above the MRCA of a set of nodes")
 public class TreeGrafter extends TreeCombiner {
@@ -133,8 +133,8 @@ public class TreeGrafter extends TreeCombiner {
 		
 		if (hasConstraints) {
 			String constraints = BeautiDoc.load(constraintsFileInput.get());
-			TreeParser parser = new TreeParser(constraints, false, true, true, 0, false);
-			Node root = parser.getRoot();
+			ISOTreeParser parser = new ISOTreeParser();
+			Node root = parser.parse(constraints);
 			found = 0;
 			root = filterTaxa(root, taxa);
 			if (found != taxa.size()) {

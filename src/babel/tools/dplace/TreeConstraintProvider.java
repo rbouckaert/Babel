@@ -52,6 +52,8 @@ public class TreeConstraintProvider extends Runnable {
 		String constraints = processTreeFile();
 		taxa = processTaxaFile();
 		
+		Log.warning(getGlottoNewick(constraints));
+
 		String newick = filterNewick(constraints, taxa);
 		Map<String,String> taxonSets = filterTaxonSets(taxa);
 		Map<String,Location> geo = filterGeo(taxa);
@@ -176,7 +178,7 @@ public class TreeConstraintProvider extends Runnable {
 	}
 
 	private String cleanUp(String str) {
-        str = str.replaceAll(";", "");
+		str = str.replaceAll(";", "");
         str = str.replaceAll("-l-", "");
         str = str.replaceAll("\\[...\\]", "");
         str = str.replaceAll("]':1", "");
@@ -217,7 +219,18 @@ public class TreeConstraintProvider extends Runnable {
 			}
 		}
 		
-		String c2 = buf.toString();
+		String c2 = cleanUpNewick(buf.toString());
+
+		TreeParser parser = new TreeParser(c2, false, true, true, 0, false);
+		Node root = parser.getRoot();
+		buf = new StringBuilder();
+		toNewick(root, buf, false);
+		c2 = buf.toString();
+		return c2; 
+	}
+
+	public static String cleanUpNewick(String buf) {
+		String c2 = buf;
 		int len = c2.length();
 		do {
 			len = c2.length();
@@ -225,35 +238,50 @@ public class TreeConstraintProvider extends Runnable {
 			c2 = c2.replaceAll("\\(,", "(");
 			c2 = c2.replaceAll(",\\)", ")");
 			c2 = c2.replaceAll(",,", ",");
-			c2 = c2.replaceAll("\\(([a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9])\\)", "$1");
+			c2 = c2.replaceAll("\\(([a-z][a-z][a-z][a-z][0-9][0-9][0-9][0-9])\\)([,\\(\\)])", "$1$2");
 			c2 = c2.replaceAll("\\(\\(([^\\(\\)])\\)\\)", "$1");
 		} while (len > c2.length());
-		
-		TreeParser parser = new TreeParser(c2, false, true, true, 0, false);
-		Node root = parser.getRoot();
-		buf = new StringBuilder();
-		toNewick(root, buf);
-		c2 = buf.toString();
-		
-		return c2; 
+
+		return c2;
 	}
 
-	private void toNewick(Node node, StringBuilder buf) {
-		if (node.isLeaf()) {
-			buf.append(node.getID());
-		} else {
-			if (node.getChildCount() == 1) {
-				toNewick(node.getChild(0), buf);
+
+	private String getGlottoNewick(String constraints) {
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < constraints.length(); i++) {
+			char c = constraints.charAt(i);
+			if (c == '(' || c == ')' || c ==',') {
+				buf.append(c);
 			} else {
-				buf.append('(');
-				for (Node child : node.getChildren()) {
-					toNewick(child, buf);
-					buf.append(',');
-				}
-		        buf.replace(buf.length()-1, buf.length(), ")");
+				String t = constraints.substring(i, i+3);
+				buf.append(t);
+				i+=2;
 			}
 		}
 		
+		String c2 = cleanUpNewick(buf.toString());		
+		TreeParser parser = new TreeParser(c2, false, true, true, 0, false);
+		Node root = parser.getRoot();
+		buf = new StringBuilder();
+		toNewick(root, buf, true);
+		c2 = buf.toString();
+		return c2; 
+	}
+
+	static public void toNewick(Node node, StringBuilder buf, boolean printInternalIDs) {
+		if (node.isLeaf()) {
+			buf.append(node.getID());
+		} else {
+			buf.append('(');
+			for (Node child : node.getChildren()) {
+				toNewick(child, buf, printInternalIDs);
+				buf.append(',');
+			}
+	        buf.replace(buf.length()-1, buf.length(), ")");
+			if (printInternalIDs && node.getID() != null) {
+				buf.append(node.getID());
+			}						
+		}
 	}
 
 	private Set<String> processTaxaFile() throws IOException {
@@ -290,7 +318,8 @@ public class TreeConstraintProvider extends Runnable {
         // replace comma at end of string
         buf.replace(buf.length()-1, buf.length(), ")");
         fin.close();
-        return buf.toString();
+        String newick = cleanUpNewick(buf.toString());
+        return newick;
 	}
 
 	public static void main(String[] args) throws Exception {
