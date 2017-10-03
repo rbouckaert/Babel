@@ -1,6 +1,7 @@
 package babel.tools.dplace;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,15 +31,11 @@ public class ISOTreeParser extends BEASTObject {
 	}
 	static final boolean [] isLabelChar = new boolean[256];
 	{
-		for (int i = 'a'; i <= 'z'; i++) {
-			isLabelChar[i] = true;
-		}
-		for (int i = 'A'; i <= 'Z'; i++) {
-			isLabelChar[i] = true;
-		}
-		for (int i = '0'; i <= '9'; i++) {
-			isLabelChar[i] = true;
-		}
+		Arrays.fill(isLabelChar, true);
+		isLabelChar['('] = false;
+		isLabelChar[')'] = false;
+		isLabelChar[','] = false;
+		isLabelChar[';'] = false;
 	}
 	
 	@Override

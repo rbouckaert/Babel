@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,8 +30,9 @@ import beast.util.TreeParser;
 public class TreeConstraintProvider extends Runnable {
 	final static String TREE_FILE_NAME = "/tree-glottolog-newick.txt";
 	final static String GEO_FILE_NAME = "/languages-and-dialects-geo.csv";
+	final static String CLADES_FILE_NAME = "/clades-with-calibrations.csv";
 	final public Input<File> glottoSourceDirInput = new Input<>("srcDir","source directory containing glottolog exports. "
-			+ "expected files: " + TREE_FILE_NAME + " " + GEO_FILE_NAME + ".", new File("glotto"));
+			+ "expected files: " + TREE_FILE_NAME + " " + GEO_FILE_NAME + " " + CLADES_FILE_NAME+ "(optional).", new File("glotto"));
 	final public Input<File> taxaFileInput = new Input<>("taxaFile", "file containing list of glottolog codes, one per line", new File("taxa.txt"));
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
@@ -146,11 +149,11 @@ public class TreeConstraintProvider extends Runnable {
 		
 		// next, the families
 		String [] fams = taxonSets.keySet().toArray(new String[]{});
-		Arrays.sort(fams);
+		//Arrays.sort(fams);
 		for (String fam : fams) {
-			buf.append("<taxonset id=\"" + fam + "\" spec=\"TaxonSet\">");
+			buf.append("<taxonset id=\"" + fam.replaceAll(" ", "_") + ".taxa\" spec=\"TaxonSet\">");
 			buf.append("<plate var=\"n\" range=\"" + taxonSets.get(fam) + "\">");		
-			buf.append("<taxon id=\"$(n)\" spec=\"Taxon\"/>");
+			buf.append("<taxon idref=\"$(n)\" spec=\"Taxon\"/>");
 			buf.append("</plate>");
 			buf.append("</taxonset>\n");
 		}
@@ -174,6 +177,43 @@ public class TreeConstraintProvider extends Runnable {
             }
         }
         fin.close();
+        
+		path = glottoSourceDirInput.get().getAbsolutePath() + CLADES_FILE_NAME;
+		if (new File(path).exists()) {
+			str = BeautiDoc.load(path);
+			String [] clades = str.split("\n");
+			for (int i = 0; i < clades.length; i++) {
+				clades[i] = clades[i].trim();
+			}
+	        fin = new BufferedReader(new FileReader(glottoSourceDirInput.get().getAbsolutePath() + TREE_FILE_NAME));
+	        while (fin.ready()) {
+	            str = fin.readLine();
+	            for (String clade : clades) {
+	            	if (str.matches(".*'" + clade + " \\[.*")) {
+	            		ISOTreeParser parser = new ISOTreeParser();
+	            		Node node = parser.parse(str);
+	            		for (Node n : node.getAllChildNodes()) {
+	            			if (n.getID().matches(".*'" + clade + " \\[.*")) {
+	            				String cladeSet = "";	            				
+	            				for (Node c : n.getAllChildNodes()) {
+	            					String glottocode = c.getID();
+	            					if (glottocode.matches(".*\\[........\\].*")) {
+		            					glottocode = glottocode.replaceAll(".*\\[(........)\\].*", "$1");
+		            					if (taxa.contains(glottocode)) {
+		            						cladeSet += "," + glottocode;
+		            					}
+	            					}
+	            				}
+	            				taxonSets.put(clade.replaceAll(" ", "_"), cladeSet.substring(1));
+	            				break;
+	            			}
+	            		}
+	            	}
+	            }
+	        }
+	        fin.close();
+		}
+        
         return taxonSets;
 	}
 
