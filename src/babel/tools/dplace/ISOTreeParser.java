@@ -8,6 +8,7 @@ import java.util.Set;
 
 import beast.core.BEASTObject;
 import beast.evolution.tree.Node;
+import beast.util.Randomizer;
 
 public class ISOTreeParser extends BEASTObject {
 	final static int QUOT = "'".charAt(0);
@@ -230,11 +231,63 @@ public class ISOTreeParser extends BEASTObject {
 		
 	}
 
+	private void toRandomBinary(Node n) {
+		n.setHeight(Randomizer.nextDouble());
+		if (n.isLeaf()) {
+			return;
+		} else {
+			List<Node> children = new ArrayList<>();
+			children.addAll(n.getChildren());
+			for (Node c : children) {
+				toRandomBinary(c);
+			}
+			while (children.size() > 2) {
+				Node left = children.get(Randomizer.nextInt(children.size()));
+				children.remove(left);
+				Node right = children.get(Randomizer.nextInt(children.size()));
+				children.remove(right);
+	
+				Node newNode = new Node();
+				newNode.setHeight(Randomizer.nextDouble());
+				newNode.addChild(left);
+				left.setParent(newNode);
+				newNode.addChild(right);
+				right.setParent(newNode);
+				children.add(newNode);
+			}
+
+			n.removeAllChildren(false);
+			n.addChild(children.get(0));
+			n.addChild(children.get(1));
+			children.get(0).setParent(n);
+			children.get(1).setParent(n);
+		}
+	}
+
+	private double addjustHeights(Node n) {
+		if (n.isLeaf()) {
+			return n.getHeight();
+		} else {
+			double h = 0;
+			for (Node c : n.getChildren()) {
+				h = Math.max(h, addjustHeights(c));
+			}
+			h += n.getHeight();
+			n.setHeight(h);
+			return h;
+		}
+		
+	}
+
+
 	public static void main(String[] args) {
 		ISOTreeParser parser = new ISOTreeParser();
 		//Node n = parser.parse("((xmr),((knw)ctm))");
-		Node n = parser.parseGlottoIsoOnly("('Alavan [aval1237]':1,'Alto Navarro Meridional [alto1237]':1,'Alto Navarro Septentrional [alto1238]':1,'Basque/ Souletin [basq1250]':1,'Biscayan [bisc1236]':1,'Guipuzcoan [guip1235]':1,('Eastern Low Navarrese [east1470]':1,'Labourdin [labo1236]':1,'Western Low Navarrese [west1508]':1)'Navarro-Labourdin Basque [basq1249][bqe]':1,'Roncalese [ronc1236]':1)'Basque [basq1248][eus]-l-':1;");
+		Node n = parser.parse(args[0]);
+		parser.toRandomBinary(n);
+		parser.addjustHeights(n);
 		System.out.println(n.toNewick());
 
 	}
+
 }
