@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import beast.core.BEASTObject;
-import beast.core.util.Log;
 import beast.evolution.tree.Node;
 
 public class ISOTreeParser extends BEASTObject {
@@ -190,7 +189,7 @@ public class ISOTreeParser extends BEASTObject {
 		return current;
 	}
 	
-	private Node removeDeadLeafs(Node node) {
+	public static Node removeDeadLeafs(Node node) {
 		if (node.isLeaf()) {
 			if (node.getID() == null) {
 				return null;

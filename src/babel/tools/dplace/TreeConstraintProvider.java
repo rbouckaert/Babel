@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +30,7 @@ import beast.util.TreeParser;
 @Description("Pre-process glottolog files exported from http://glottolog.org/meta/downloads")
 public class TreeConstraintProvider extends Runnable {
 	final static String TREE_FILE_NAME = "/tree-glottolog-newick.txt";
+	final static String CLADE_CONSTRAINTS_FILE_NAME = "/clade-constraints.trees";
 	final static String GEO_FILE_NAME = "/languages-and-dialects-geo.csv";
 	final static String CLADES_FILE_NAME = "/clades-with-calibrations.csv";
 	final public Input<File> glottoSourceDirInput = new Input<>("srcDir","source directory containing glottolog exports. "
@@ -55,7 +57,8 @@ public class TreeConstraintProvider extends Runnable {
 		String constraints = processTreeFile();
 		taxa = processTaxaFile();
 		
-		Log.warning(getGlottoNewick(constraints));
+		constraints = getGlottoNewick(constraints);
+		Log.warning(constraints);
 
 		String newick = filterNewick(constraints, taxa);
 		Map<String,String> taxonSets = filterTaxonSets(taxa);
@@ -167,10 +170,11 @@ public class TreeConstraintProvider extends Runnable {
         Map<String,String> taxonSets = new LinkedHashMap<>();
         while (fin.ready()) {
             str = fin.readLine();
+            String str0 = str;
             String famName = str.substring(str.lastIndexOf(')') + 2);
             str = str.substring(0, str.lastIndexOf(')') + 1);
             famName = famName.substring(0, famName.indexOf('[')).trim();
-            str = cleanUp(str);
+            str = cleanUp(str0);
             String matches = matches(str, taxa);
             if (matches.length() > 0) {
             	taxonSets.put(famName, matches);
@@ -227,16 +231,18 @@ public class TreeConstraintProvider extends Runnable {
 	}
 
 	private String matches(String str, Set<String> taxa) {
+		Set<String> done = new HashSet<>();
 		String matches ="";
 		for (int i = 0; i < str.length(); i++) {
 			char c = str.charAt(i);
 			if (!(c == '(' || c == ')' || c ==',')) {
 				String t = str.substring(i, i+8);
-				if (taxa.contains(t)) {
+				if (taxa.contains(t) && ! done.contains(t)) {
 					if (matches.length() > 7) {
 						matches += ",";
 					}
 					matches += t;
+					done.add(t);
 				}
 				i+=7;
 			}
@@ -266,6 +272,7 @@ public class TreeConstraintProvider extends Runnable {
 		buf = new StringBuilder();
 		toNewick(root, buf, false);
 		c2 = buf.toString();
+		c2 = c2.replaceAll("\\((........)\\)","$1");
 		return c2; 
 	}
 
@@ -286,27 +293,89 @@ public class TreeConstraintProvider extends Runnable {
 	}
 
 
-	private String getGlottoNewick(String constraints) {
+	private String getGlottoNewick(String constraints) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		for (int i = 0; i < constraints.length(); i++) {
 			char c = constraints.charAt(i);
 			if (c == '(' || c == ')' || c ==',') {
 				buf.append(c);
 			} else {
-				String t = constraints.substring(i, i+3);
-				buf.append(t);
-				i+=2;
+				String t = constraints.substring(i, i+8);
+				if (taxa.contains(t)) {
+					buf.append(t);
+				}
+				i+=7;
 			}
 		}
 		
-		String c2 = cleanUpNewick(buf.toString());		
-		TreeParser parser = new TreeParser(c2, false, true, true, 0, false);
-		Node root = parser.getRoot();
+		String c2 = cleanUpNewick(buf.toString());
+		ISOTreeParser parser = new ISOTreeParser();
+		Node root = parser.parse(c2);	
+
+		// add in clade constraints, if any
+		String path = glottoSourceDirInput.get().getAbsolutePath() + CLADE_CONSTRAINTS_FILE_NAME;
+		if (new File(path).exists()) {
+			String [] strs = BeautiDoc.load(path).split("\n");
+			for (String str : strs) {
+				Node node = parser.parse(str);	
+				addConstraints(node, root);
+			}
+		}
+		
+		root = ISOTreeParser.removeDeadLeafs(root);
 		buf = new StringBuilder();
 		toNewick(root, buf, true);
 		c2 = buf.toString();
 		return c2; 
 	}
+
+	private void addConstraints(Node node, Node root) {
+		if (node.isLeaf()) {
+			return;
+		}
+		List<Node> c = node.getAllChildNodes();
+		addConstraint(c, root);
+		for (Node child : node.getChildren()) {
+			addConstraints(child, root);
+		}
+	}
+
+	private void addConstraint(List<Node> c, Node root) {
+		Set<String> taxa = new HashSet<>();
+		for (Node node : c) {
+			if (node.getID() != null) {
+				taxa.add(node.getID());
+			}
+		}
+		Node node = getMRCA(root, taxa);
+		Node newNode = new Node();
+		for (Node child : node.getChildren()) {
+			if (hasLeafInSet(child, taxa)) {
+				newNode.addChild(child);
+				child.setParent(newNode);
+			}
+		}
+		for (Node child : newNode.getChildren()) {
+			node.removeChild(child);
+		}
+		newNode.setParent(node);
+		System.out.println(" " + newNode.getAllChildNodes().size() + " " + newNode.getAllLeafNodes().size());
+		node.addChild(newNode);
+	}
+
+
+	private boolean hasLeafInSet(Node node, Set<String> taxa) {
+		if (node.getID() != null && taxa.contains(node.getID())) {
+			return true;
+		}
+		for (Node n : node.getAllLeafNodes()) {
+			if (n.getID() != null && taxa.contains(n.getID())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	static public void toNewick(Node node, StringBuilder buf, boolean printInternalIDs) {
 		if (node.isLeaf()) {
@@ -318,9 +387,20 @@ public class TreeConstraintProvider extends Runnable {
 				buf.append(',');
 			}
 	        buf.replace(buf.length()-1, buf.length(), ")");
-			if (printInternalIDs && node.getID() != null) {
-				buf.append(node.getID());
-			}						
+			if (printInternalIDs) {
+				if (node.getID() != null) {
+					buf.append(node.getID());
+				}
+			} else {
+				if (node.getID() != null) {
+					if (node.getChildCount() == 1 && node.getChild(0).getID().equals(node.getID())) {
+						// family name == child name
+					} else {
+						buf.append(',');
+						buf.append(node.getID());
+					}
+				}
+			}
 		}
 	}
 
@@ -348,7 +428,7 @@ public class TreeConstraintProvider extends Runnable {
         while (fin.ready()) {
             str = fin.readLine();
             String famName = str.substring(str.lastIndexOf(')') + 2);
-            str = str.substring(0, str.lastIndexOf(')') + 1);
+            //str = str.substring(0, str.lastIndexOf(')') + 1);
             famName = famName.substring(0, famName.indexOf('['));
             str = cleanUp(str);
             buf.append(str);
@@ -366,4 +446,107 @@ public class TreeConstraintProvider extends Runnable {
 		new Application(new TreeConstraintProvider(), "DPLACE pre-processor", args);
 	}
 
+    protected Node getCommonAncestor(Node n1, Node n2) {
+        // assert n1.getTree() == n2.getTree();
+        if( ! nodesTraversed[n1.getNr()] ) {
+            nodesTraversed[n1.getNr()] = true;
+            nseen += 1;
+        }
+        if( ! nodesTraversed[n2.getNr()] ) {
+            nodesTraversed[n2.getNr()] = true;
+            nseen += 1;
+        }
+        while (n1 != n2) {
+	        double h1 = n1.getHeight();
+	        double h2 = n2.getHeight();
+	        if ( h1 < h2 ) {
+	            n1 = n1.getParent();
+	            if( ! nodesTraversed[n1.getNr()] ) {
+	                nodesTraversed[n1.getNr()] = true;
+	                nseen += 1;
+	            }
+	        } else if( h2 < h1 ) {
+	            n2 = n2.getParent();
+	            if( ! nodesTraversed[n2.getNr()] ) {
+	                nodesTraversed[n2.getNr()] = true;
+	                nseen += 1;
+	            }
+	        } else {
+	            //zero length branches hell
+	            Node n;
+	            double b1 = n1.getLength();
+	            double b2 = n2.getLength();
+	            if( b1 > 0 ) {
+	                n = n2;
+	            } else { // b1 == 0
+	                if( b2 > 0 ) {
+	                    n = n1;
+	                } else {
+	                    // both 0
+	                    n = n1;
+	                    while( n != null && n != n2 ) {
+	                        n = n.getParent();
+	                    }
+	                    if( n == n2 ) {
+	                        // n2 is an ancestor of n1
+	                        n = n1;
+	                    } else {
+	                        // always safe to advance n2
+	                        n = n2;
+	                    }
+	                }
+	            }
+	            if( n == n1 ) {
+                    n = n1 = n.getParent();
+                } else {
+                    n = n2 = n.getParent();
+                }
+	            if( ! nodesTraversed[n.getNr()] ) {
+	                nodesTraversed[n.getNr()] = true;
+	                nseen += 1;
+	            } 
+	        }
+        }
+        return n1;
+    }
+
+    boolean [] nodesTraversed;
+    int nseen;
+
+	protected Node getMRCA(Node root, Set<String> taxa) {
+		List<Node> nodes = root.getAllChildNodes();
+		for (int i = 0; i < nodes.size(); i++) {
+			nodes.get(i).setNr(i);
+		}
+		
+		
+		
+		Set<String> taxa2 = new HashSet<>();
+		taxa2.addAll(taxa);
+		int size = taxa2.size();
+		List<Node> leafs = new ArrayList<>();
+		for (Node node : root.getAllChildNodes()) {
+			if (taxa2.contains(node.getID())) {
+				leafs.add(node);
+				taxa2.remove(node.getID());
+			}
+		}
+
+		if (size != leafs.size()) {
+			for (Node n : leafs) {
+				taxa.remove(n.getID());
+			}
+			System.err.println("Missing; " + taxa);
+		}
+		
+        nodesTraversed = new boolean[root.getNodeCount()];
+        nseen = 0;
+        Node cur = leafs.get(0);
+
+        for (int k = 1; k < leafs.size(); ++k) {
+            cur = getCommonAncestor(cur, leafs.get(k));
+        }
+        System.out.print("nseen = " + nseen + " for " + size + " taxa " + leafs.size());
+		return cur;
+	}
 }
