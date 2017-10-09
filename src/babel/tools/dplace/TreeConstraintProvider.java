@@ -442,19 +442,16 @@ public class TreeConstraintProvider extends Runnable {
         return newick;
 	}
 
-	public static void main(String[] args) throws Exception {
-		new Application(new TreeConstraintProvider(), "DPLACE pre-processor", args);
-	}
 
-    protected Node getCommonAncestor(Node n1, Node n2) {
+	static  Node getCommonAncestor(Node n1, Node n2, final boolean [] nodesTraversed, final int [] nseen) {
         // assert n1.getTree() == n2.getTree();
         if( ! nodesTraversed[n1.getNr()] ) {
             nodesTraversed[n1.getNr()] = true;
-            nseen += 1;
+            nseen[0] += 1;
         }
         if( ! nodesTraversed[n2.getNr()] ) {
             nodesTraversed[n2.getNr()] = true;
-            nseen += 1;
+            nseen[0] += 1;
         }
         while (n1 != n2) {
 	        double h1 = n1.getHeight();
@@ -463,13 +460,13 @@ public class TreeConstraintProvider extends Runnable {
 	            n1 = n1.getParent();
 	            if( ! nodesTraversed[n1.getNr()] ) {
 	                nodesTraversed[n1.getNr()] = true;
-	                nseen += 1;
+	                nseen[0] += 1;
 	            }
 	        } else if( h2 < h1 ) {
 	            n2 = n2.getParent();
 	            if( ! nodesTraversed[n2.getNr()] ) {
 	                nodesTraversed[n2.getNr()] = true;
-	                nseen += 1;
+	                nseen[0] += 1;
 	            }
 	        } else {
 	            //zero length branches hell
@@ -503,17 +500,15 @@ public class TreeConstraintProvider extends Runnable {
                 }
 	            if( ! nodesTraversed[n.getNr()] ) {
 	                nodesTraversed[n.getNr()] = true;
-	                nseen += 1;
+	                nseen[0] += 1;
 	            } 
 	        }
         }
         return n1;
     }
 
-    boolean [] nodesTraversed;
-    int nseen;
 
-	protected Node getMRCA(Node root, Set<String> taxa) {
+	static public Node getMRCA(Node root, Set<String> taxa) {
 		List<Node> nodes = root.getAllChildNodes();
 		for (int i = 0; i < nodes.size(); i++) {
 			nodes.get(i).setNr(i);
@@ -539,14 +534,18 @@ public class TreeConstraintProvider extends Runnable {
 			System.err.println("Missing; " + taxa);
 		}
 		
-        nodesTraversed = new boolean[root.getNodeCount()];
-        nseen = 0;
+        boolean [] nodesTraversed = new boolean[root.getNodeCount()];
+        int [] nseen = new int[1];
         Node cur = leafs.get(0);
 
         for (int k = 1; k < leafs.size(); ++k) {
-            cur = getCommonAncestor(cur, leafs.get(k));
+            cur = getCommonAncestor(cur, leafs.get(k), nodesTraversed, nseen);
         }
-        System.out.print("nseen = " + nseen + " for " + size + " taxa " + leafs.size());
+        System.out.print("nseen = " + nseen[0] + " for " + size + " taxa " + leafs.size());
 		return cur;
+	}
+
+	public static void main(String[] args) throws Exception {
+		new Application(new TreeConstraintProvider(), "DPLACE pre-processor", args);
 	}
 }

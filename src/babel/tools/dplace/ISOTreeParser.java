@@ -1,14 +1,30 @@
 package babel.tools.dplace;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.math.MathException;
+import org.xml.sax.SAXException;
+
+import beast.app.beauti.BeautiDoc;
+import beast.core.BEASTInterface;
 import beast.core.BEASTObject;
+import beast.core.MCMC;
+import beast.evolution.alignment.Taxon;
+import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.Node;
+import beast.math.distributions.MRCAPrior;
+import beast.math.distributions.ParametricDistribution;
 import beast.util.Randomizer;
+import beast.util.XMLParser;
+import beast.util.XMLParserException;
 
 public class ISOTreeParser extends BEASTObject {
 	final static int QUOT = "'".charAt(0);
@@ -45,7 +61,7 @@ public class ISOTreeParser extends BEASTObject {
 	public Node parse(String s) {
 		int i = 0;
 		Node current = new Node();
-		Node org = current;
+		//Node org = current;
 		Node parent = null;
 		while (i < s.length()) {
 			char c = s.charAt(i);
@@ -115,7 +131,7 @@ public class ISOTreeParser extends BEASTObject {
 		
 		int i = 0;
 		Node current = new Node();
-		Node org = current;
+		//Node org = current;
 		Node parent = null;
 		while (i < s.length()) {
 			int j = i;
@@ -232,7 +248,6 @@ public class ISOTreeParser extends BEASTObject {
 	}
 
 	private void toRandomBinary(Node n) {
-		n.setHeight(Randomizer.nextDouble());
 		if (n.isLeaf()) {
 			return;
 		} else {
@@ -248,7 +263,6 @@ public class ISOTreeParser extends BEASTObject {
 				children.remove(right);
 	
 				Node newNode = new Node();
-				newNode.setHeight(Randomizer.nextDouble());
 				newNode.addChild(left);
 				left.setParent(newNode);
 				newNode.addChild(right);
@@ -264,30 +278,75 @@ public class ISOTreeParser extends BEASTObject {
 		}
 	}
 
-	private double addjustHeights(Node n) {
+	private double addjustHeights(Node n, double maxHeight) {
 		if (n.isLeaf()) {
+			n.setHeight(0);
 			return n.getHeight();
 		} else {
 			double h = 0;
 			for (Node c : n.getChildren()) {
-				h = Math.max(h, addjustHeights(c));
+				h = Math.max(h, addjustHeights(c, n.getHeight() < Double.MAX_VALUE ? n.getHeight() : maxHeight));
 			}
-			h += n.getHeight();
-			n.setHeight(h);
-			return h;
+			if (n.getHeight() == Double.MAX_VALUE) {
+				h += (Math.exp(-20*Randomizer.nextDouble())) * (maxHeight - h);
+				n.setHeight(h);
+				return h;
+			}
+			return n.getHeight();
 		}
 		
 	}
 
+	private void setConstrainedHeights(Node n, String xmlfile, String treeID) throws SAXException, IOException, ParserConfigurationException, XMLParserException, MathException {
+		XMLParser parser = new XMLParser();
+		String xml = BeautiDoc.load(xmlfile);
+		MCMC mcmc = (MCMC) parser.parseBareFragment(xml, false);
+		BEASTInterface o = mcmc.posteriorInput.get();
+		BEASTInterface tree = getObjectWithID(treeID, o);
+		for (BEASTInterface o2 : tree.getOutputs()) {
+			if (o2 instanceof MRCAPrior) {
+				MRCAPrior prior = (MRCAPrior) o2;
+				ParametricDistribution distr = prior.distInput.get();
+				if (distr != null && !prior.useOriginateInput.get()) {
+					distr.initAndValidate();
+					double h = distr.inverseCumulativeProbability(0.1 + Randomizer.nextDouble() * 0.4);
+					TaxonSet taxonset = prior.taxonsetInput.get();
+					Set<String> taxa = new HashSet<>();
+					for (Taxon t : taxonset.taxonsetInput.get()) {
+						taxa.add(t.getID());
+					}
+					System.out.print(prior.getID() + " " );
+					Node mrca = TreeConstraintProvider.getMRCA(n, taxa);
+					System.out.println();
+					mrca.setHeight(h);
+				}
+			}
+		}
+	}
 
-	public static void main(String[] args) {
+	private BEASTInterface getObjectWithID(String id, BEASTInterface o) {
+		if (o.getID().equals(id)) {
+			return o;
+		}
+		for (BEASTInterface o2 : o.listActiveBEASTObjects()) {
+			BEASTInterface o3 = getObjectWithID(id, o2);
+			if (o3 != null) {
+				return o3;
+			}
+		}
+		return null;
+	}
+
+	public static void main(String[] args) throws Exception {
 		ISOTreeParser parser = new ISOTreeParser();
 		//Node n = parser.parse("((xmr),((knw)ctm))");
 		Node n = parser.parse(args[0]);
 		parser.toRandomBinary(n);
-		parser.addjustHeights(n);
+		//parser.setConstrainedHeights(n, "/tmp/x.xml", "Tree.t:DPLACE");
+		parser.addjustHeights(n, 8000);
 		System.out.println(n.toNewick());
 
 	}
+
 
 }
