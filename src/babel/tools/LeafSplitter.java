@@ -16,6 +16,7 @@ import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
+import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
 import beast.core.util.Log;
@@ -24,10 +25,13 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 import beast.util.Randomizer;
 
+@Description("Relabels leafs of tree set, and splits leafs into random binary sub-tree with branch lengths exponentially distributed."
+		+ "Output as newick trees (not nexus). "
+		+ "Metadata is not preserved.")
 public class LeafSplitter extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
-	final public Input<File> labelMapInput = new Input<>("labelMap","tab delimited text file with list of source and target labels. "
+	final public Input<File> labelMapInput = new Input<>("labelMap","space delimited text file with list of source and target labels. "
 			+ "For taxa that need splitting, specify a comma separated list of new taxon labels.", Validate.REQUIRED);
 	final public Input<Double> meanLengthInput = new Input<>("meanLength","branch lengths are drawn from an exponential with average meanLength", 0.1);
 	
