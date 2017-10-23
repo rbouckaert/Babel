@@ -1,15 +1,17 @@
 package beast.evolution.substitutionmodel;
 
-import beast.core.BEASTInterface;
+import beast.core.Citation;
+import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
 import beast.evolution.datatype.DataType;
 import beast.evolution.likelihood.TreeLikelihood;
 import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.sitemodel.SiteModelInterface;
 import beast.evolution.tree.Node;
 
+@Description("Pseudo Dollo substitution model")
+@Citation("R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571")
 public class BirthDeathModel extends GeneralSubstitutionModel {
 	//public Input<RealParameter> birthRateInput = new Input<RealParameter>("birthrate","rate at which cognates are created", Validate.REQUIRED);
     public Input<RealParameter> delParameter = new Input<RealParameter>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);
