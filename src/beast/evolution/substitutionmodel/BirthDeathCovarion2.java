@@ -12,7 +12,7 @@ import beast.evolution.datatype.DataType;
 import beast.evolution.datatype.TwoStateCovarionPlus;
 
 @Description("Covarion model for Binary data with 3 rates")
-@Citation("R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571")
+@Citation(value="R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571", DOI="https://doi.org/10.1101/207571")
 public class BirthDeathCovarion2 extends ComplexSubstitutionModel implements Loggable {
     public Input<RealParameter> switchRateInput = new Input<RealParameter>("switchRate", "the rate of flipping between slow and fast modes", Validate.REQUIRED);
     public Input<RealParameter> vfrequenciesInput = new Input<RealParameter>("vfrequencies", "the frequencies of the visible states", Validate.REQUIRED);
