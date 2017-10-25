@@ -14,11 +14,8 @@ import java.util.Map;
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
 import beast.core.Description;
 import beast.core.Input;
-import beast.core.Runnable;
 import beast.core.util.Log;
 import beast.core.Input.Validate;
 import beast.evolution.tree.Node;
@@ -28,9 +25,7 @@ import beast.util.Randomizer;
 @Description("Relabels leafs of tree set, and splits leafs into random binary sub-tree with branch lengths exponentially distributed."
 		+ "Output as newick trees (not nexus). "
 		+ "Metadata is not preserved.")
-public class LeafSplitter extends Runnable {
-	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
-	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
+public class LeafSplitter extends Nexus2Newick {
 	final public Input<File> labelMapInput = new Input<>("labelMap","space delimited text file with list of source and target labels. "
 			+ "For taxa that need splitting, specify a comma separated list of new taxon labels.", Validate.REQUIRED);
 	final public Input<Double> meanLengthInput = new Input<>("meanLength","branch lengths are drawn from an exponential with average meanLength", 0.1);
@@ -67,26 +62,6 @@ public class LeafSplitter extends Runnable {
         Log.warning("Done");
 	}
 
-    public void toShortNewick(Node node, StringBuilder buf) {
-
-        if (node.isLeaf()) {
-            buf.append(node.getID());
-        } else {
-            buf.append("(");
-            boolean isFirst = true;
-            for (Node child : node.getChildren()) {
-                if (isFirst)
-                    isFirst = false;
-                else
-                    buf.append(",");
-                toShortNewick(child,buf);
-            }
-            buf.append(")");
-        }
-        
-        buf.append(":").append(node.getLength());
-    }
-	
 	private void relabel(Node node) {
 		if (node.isLeaf()) {
 			String id = node.getID();
@@ -127,10 +102,6 @@ public class LeafSplitter extends Runnable {
 				children.add(newNode);
 				double lo = Math.min(left.getHeight(), right.getHeight());
 				double hi = parent.getHeight();
-				if (lo > hi) {
-					int h = 3;
-					h++;
-				}
 				double h = lo + Randomizer.nextExponential(rate);
 				int tries = 1;
 				while (h > hi) {
