@@ -25,7 +25,7 @@ import beast.util.Randomizer;
 
 @Description("Grafts nodes into a tree above the MRCA of a set of nodes")
 public class TreeGrafter extends TreeCombiner {
-	final public Input<File> cgfFileInput = new Input<>("cfg", "tab separated configuration file containing three columns: "
+	final public Input<File> cfgFileInput = new Input<>("cfg", "tab separated configuration file containing three columns: "
 			+ "column 1: name of taxon\n"
 			+ "column 2: height (age) of taxon\n"
 			+ "column 3: a comma separated list of taxa determining MRCA to graft above in source tree (if no constraints have been specified).");
@@ -88,6 +88,7 @@ public class TreeGrafter extends TreeCombiner {
 				// create new leaf node
 				Node leaf = new Node();
 				leaf.setID(taxonName[i]);
+				Log.warning("Adding " + taxonName[i]);
 				leaf.setHeight(taxonHeight[i]);
 				newNode.addChild(leaf);
 				leaf.setParent(newNode);
@@ -102,7 +103,7 @@ public class TreeGrafter extends TreeCombiner {
 	private void processCfgFile(Set<String> taxa) throws IOException {
 		boolean hasConstraints = constraintsFileInput.get() != null && !constraintsFileInput.get().getName().equals("[[none]]");
 		
-		String cfg = BeautiDoc.load(cgfFileInput.get());
+		String cfg = BeautiDoc.load(cfgFileInput.get());
 		String [] strs = cfg.split("\n");
 		int n = 0;
 		for (String str : strs) {
@@ -137,9 +138,6 @@ public class TreeGrafter extends TreeCombiner {
 			Node root = parser.parse(constraints);
 			found = 0;
 			root = filterTaxa(root, taxa);
-			if (found != taxa.size()) {
-				Log.warning(found +"!="+ taxa.size());
-			}
 			Log.warning(toShortNewick(root));
 			for (i = 0; i < n; i++) {
 				findTaxa(taxonName[i], root, subTaxonSets[i]);

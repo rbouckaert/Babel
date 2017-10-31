@@ -46,7 +46,7 @@ public class Nexus2Newick extends Runnable {
         Log.err.println("Done");
  	}
 
-    public void toShortNewick(Node node, StringBuilder buf) {
+    static public void toShortNewick(Node node, StringBuilder buf) {
 
         if (node.isLeaf()) {
             buf.append(node.getID());

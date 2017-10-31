@@ -91,7 +91,7 @@ public class ISOTreeParser extends BEASTObject {
 				parent = parent.getParent();
 				if (i < s.length() - 1 && isLabelChar[s.charAt(i+1)]) {
 					int end = i + 1;
-					while (isLabelChar[s.charAt(end)]) {
+					while (end < s.length() && isLabelChar[s.charAt(end)]) {
 						end++;
 					}
 					String label = s.substring(i + 1, end);

@@ -50,8 +50,10 @@ public class LeafSplitter extends Nexus2Newick {
         // read trees one by one, relabel and write out relabeled tree in newick format
         MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
+    	Tree tree = trees.next();
+        trees.reset();
         while (trees.hasNext()) {
-        	Tree tree = trees.next();
+        	tree = trees.next();
             relabel(tree.getRoot());
             StringBuilder buf = new StringBuilder();
             toShortNewick(tree.getRoot(), buf);
@@ -65,7 +67,7 @@ public class LeafSplitter extends Nexus2Newick {
 	private void relabel(Node node) {
 		if (node.isLeaf()) {
 			String id = node.getID();
-			if (!labelMap.containsKey(id)) {
+ 			if (!labelMap.containsKey(id)) {
 				Log.warning("Could not find new label for " + id + ". Keeping label.");
 				return;
 			}
@@ -100,7 +102,7 @@ public class LeafSplitter extends Nexus2Newick {
 				newNode.addChild(right);
 				right.setParent(newNode);
 				children.add(newNode);
-				double lo = Math.min(left.getHeight(), right.getHeight());
+				double lo = Math.max(left.getHeight(), right.getHeight());
 				double hi = parent.getHeight();
 				double h = lo + Randomizer.nextExponential(rate);
 				int tries = 1;
@@ -117,8 +119,21 @@ public class LeafSplitter extends Nexus2Newick {
 		} else {
 			for (int i = node.getChildCount() - 1; i >= 0; i--) {
 				relabel(node.getChild(i));
+				if (hasNegBranchLength(node)) {
+					int h = 3;
+					h++;
+				}
 			}
 		}		
+	}
+
+	private boolean hasNegBranchLength(Node node) {
+		for (Node n : node.getAllChildNodes()) {
+			if (n.getLength() < 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void processLabelMap() throws IOException {
