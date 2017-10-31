@@ -15,5 +15,28 @@
               class="babel.tools.FamilyFilter"
               args=""
             />
-
+    <addonapp description="CladeSetComparator"
+              class="babel.tools.CladeSetComparator"
+              args=""
+            />
+    <addonapp description="Nexus2Newick"
+              class="babel.tools.Nexus2Newick"
+              args=""
+            />
+    <addonapp description="Newick2Nexus"
+              class="babel.tools.Newick2Nexus"
+              args=""
+            />
+    <addonapp description="AdjustTipHeight"
+              class="babel.tools.AdjustTipHeight"
+              args=""
+            />
+    <addonapp description="LeafSplitter"
+              class="babel.tools.LeafSplitter"
+              args=""
+            />
+    <addonapp description="TreeGrafter"
+              class="babel.tools.dplace.TreeGrafter"
+              args=""
+            />
 </addon>
