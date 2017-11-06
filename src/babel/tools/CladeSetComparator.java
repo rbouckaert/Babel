@@ -31,7 +31,7 @@ public class CladeSetComparator extends Runnable {
 
 	double n;
 	
-	final String header = "<svg version=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"graph\" aria-labelledby=\"title\" role=\"img\">\n" + 
+	final String header = "<svg version=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"graph\" aria-labelledby=\"title\" role=\"img\" height=\"1200\">\n" + 
 			"<g class=\"grid x-grid\" id=\"xGrid\">\n" + 
 			"  <line x1=\"90\" x2=\"90\" y1=\"10\" y2=\"1010\"></line>\n" + 
 			"</g>\n" + 
