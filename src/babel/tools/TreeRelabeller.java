@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import beast.app.treeannotator.TreeAnnotator;
+import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
+import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
@@ -17,6 +20,8 @@ import beast.core.Input;
 import beast.core.Runnable;
 import beast.core.Input.Validate;
 import beast.core.util.Log;
+import beast.evolution.tree.Node;
+import beast.evolution.tree.Tree;
 
 @Description("relabels taxe in a tree file. Usfeful for instance when labels are iso codes and language names are required for visualisation")
 public class TreeRelabeller extends Runnable {
@@ -49,6 +54,36 @@ public class TreeRelabeller extends Runnable {
         if (outputInput.get() != null) {
         	out = new PrintStream(outputInput.get());
         }
+
+        
+        FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treesInput.get().getAbsolutePath(), 0);
+        trees.reset();
+        Tree tree = trees.next();
+        relabel(tree.getRoot(), labelMap);
+        tree.init(out);
+        out.println();
+
+//        trees.reset();
+//        int i = 0;
+//        while (trees.hasNext()) {
+//        	tree = trees.next();
+//        	tree.log(i, out);
+//        	i++;
+//        }
+//        out.println();
+        
+        
+		fin = new BufferedReader(new FileReader(treesInput.get()));
+        // read to first non-empty line within trees block
+        String str = fin.readLine().trim();
+        while (str != null && !str.toLowerCase().contains("translate")) {
+            str = fin.readLine().trim();
+        }
+        while (!str.trim().equals(";")) {
+            str = readLine(fin);
+        }
+
+        /*
         out.println("#NEXUS");
         out.println("Begin trees;\n"+
         			"        Translate");
@@ -111,11 +146,19 @@ public class TreeRelabeller extends Runnable {
         if (ignored.length() > 0) {
         	Log.warning.println("Could not find mapping for following labels: " + ignored.toString());
         }
-        
+        */
         // process set of trees
 		while ((str = readLine(fin)) != null) {
 			out.println(str);
 		}
+//        trees.reset();
+//        int i = 0;
+//        while (trees.hasNext()) {
+//        	tree = trees.next();
+//        	tree.log(i, out);
+//        	i++;
+//        }
+//        out.println();
 		fin.close();
 		if (out != System.out) {
 			out.close();
@@ -124,7 +167,18 @@ public class TreeRelabeller extends Runnable {
 
 	}
 
-    String readLine(BufferedReader fin) throws IOException {
+    private void relabel(Node node, Map<String, String> labelMap) {
+		if (labelMap.containsKey(node.getID())) {
+			node.setID(labelMap.get(node.getID()));
+		}
+		if (!node.isLeaf()) {
+			for (Node child : node.getChildren()) {
+				relabel(child, labelMap);
+			}
+		}		
+	}
+
+	String readLine(BufferedReader fin) throws IOException {
         if (!fin.ready()) {
             return null;
         }
