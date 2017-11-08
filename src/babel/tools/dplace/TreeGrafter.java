@@ -94,6 +94,7 @@ public class TreeGrafter extends TreeCombiner {
 				leaf.setParent(newNode);
 			}
 			out.print(tree.getRoot().toNewick());
+			out.println(";");
 		}
 		 
 		Log.err("Done!");
