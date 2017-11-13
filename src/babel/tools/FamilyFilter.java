@@ -15,11 +15,8 @@ import beast.app.draw.BEASTObjectPanel;
 import beast.app.util.Application;
 import beast.app.util.ConsoleApp;
 //import beast.app.util.ConsoleApp;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
 import beast.core.Description;
 import beast.core.Input;
-import beast.core.Runnable;
 import beast.core.util.Log;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.Node;
@@ -28,12 +25,9 @@ import beast.util.NexusParser;
 import beast.core.Input.Validate;
 
 @Description("filters all leafs from specified taxon sets out of a tree file based on clade membership")
-public class FamilyFilter extends Runnable {
-	public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
+public class FamilyFilter extends TaxonFilter {
 	public Input<File> familyInput = new Input<>("families","NEXUS file containing taxon sets", Validate.REQUIRED);
-	public Input<File> subsetInput = new Input<>("subset","text file with list of clades (defined in families) to include", Validate.REQUIRED);
-	public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
-	public Input<Boolean> verboseInput = new Input<>("verbose","print out extra information while processing", true);
+//	public Input<File> subsetInput = new Input<>("subset","text file with list of clades (defined in families) to include", Validate.REQUIRED);
 
 	
 	@Override
@@ -140,64 +134,6 @@ public class FamilyFilter extends Runnable {
         }
         Log.warning.println("Done.");
 	}
-
-    public String toNewick(Node node) {
-    	if (node.getChildCount() == 1) {
-    		return toNewick(node.getChild(0));
-    	}
-        final StringBuilder buf = new StringBuilder();
-        if (node.getLeft() != null) {
-            buf.append("(");
-            buf.append(toNewick(node.getLeft()));
-            if (node.getRight() != null) {
-                buf.append(',');
-                buf.append(toNewick(node.getRight()));
-            }
-            buf.append(")");
-            if (node.getID() != null) {
-                buf.append(node.getID());
-            }
-        } else {
-            if (node.getID() == null) {
-                buf.append(node.getNr());
-            } else {
-                buf.append(node.getID());
-            }
-        }
-        buf.append(":").append(node.getLength());
-        return buf.toString();
-    }
-
-
-	
-	private Node filter(Node node, Set<String> taxaToInclude) {
-		if (node.isLeaf()) {
-			if (taxaToInclude.contains(node.getID())) {
-				return node;
-			} else {
-				return null;
-			}
-		} else {
-			Node left_ = node.getLeft(); 
-			Node right_ = node.getRight(); 
-			left_ = filter(left_, taxaToInclude);
-			right_ = filter(right_, taxaToInclude);
-			if (left_ == null && right_ == null) {
-				return null;
-			}
-			if (left_ == null) {
-				return right_;
-			}
-			if (right_ == null) {
-				return left_;
-			}
-			node.removeAllChildren(false);
-			node.addChild(left_);
-			node.addChild(right_);
-			return node;
-		}
-	}
-
 
 	static ConsoleApp consoleapp;
 	public static void main(String[] args) throws Exception {
