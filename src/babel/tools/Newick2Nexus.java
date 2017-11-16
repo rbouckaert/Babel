@@ -44,7 +44,10 @@ public class Newick2Nexus extends Runnable {
 	            	parser.init(out);
 	            }
 	            out.println();
-	            parser.log(k, out);
+	            out.print("tree STATE_" + k + " = ");
+	            final String newick = parser.getRoot().toSortedNewick(new int[1], true);
+	            out.print(newick);
+	            out.print(";");
 	            k++;
             }
         }

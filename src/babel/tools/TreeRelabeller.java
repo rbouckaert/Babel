@@ -63,16 +63,21 @@ public class TreeRelabeller extends Runnable {
         tree.init(out);
         out.println();
 
-//        trees.reset();
-//        int i = 0;
-//        while (trees.hasNext()) {
-//        	tree = trees.next();
-//        	tree.log(i, out);
-//        	i++;
-//        }
-//        out.println();
+        trees.reset();
+        int i = 0;
+        while (trees.hasNext()) {
+        	tree = trees.next();
+            out.println();
+            out.print("tree STATE_" + i + " = ");
+            final String newick = tree.getRoot().toSortedNewick(new int[1], true);
+            out.print(newick);
+            out.print(";");
+        	i++;
+        }
+        out.println();
+        out.println("end;");
         
-        
+if (false) {        
 		fin = new BufferedReader(new FileReader(treesInput.get()));
         // read to first non-empty line within trees block
         String str = fin.readLine().trim();
@@ -159,6 +164,7 @@ public class TreeRelabeller extends Runnable {
 //        	i++;
 //        }
 //        out.println();
+	}
 		fin.close();
 		if (out != System.out) {
 			out.close();
