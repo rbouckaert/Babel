@@ -53,6 +53,7 @@ public class TreeRelabeller extends Runnable {
         PrintStream out = System.out;
         if (outputInput.get() != null) {
         	out = new PrintStream(outputInput.get());
+			Log.warning("Writing to file " + outputInput.get().getPath());
         }
 
         

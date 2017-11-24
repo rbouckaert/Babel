@@ -30,6 +30,7 @@ public class Nexus2Newick extends Runnable {
 		// open file for writing
         PrintStream out = System.out;
         if (outputInput.get() != null) {
+			Log.warning("Writing to file " + outputInput.get().getPath());
         	out = new PrintStream(outputInput.get());
         }
 

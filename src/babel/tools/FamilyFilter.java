@@ -119,6 +119,7 @@ public class FamilyFilter extends TaxonFilter {
         // filter trees, and print out newick trees
         PrintStream out = System.out;
         if (outputInput.get() != null) {
+			Log.warning("Writing to file " + outputInput.get().getPath());
         	out = new PrintStream(outputInput.get());
         }
         
