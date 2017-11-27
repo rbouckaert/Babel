@@ -73,7 +73,7 @@ name="alignment">
                     <substModel id="CTMC.s:a8" spec="BirthDeathModel">
                         <frequencies frequencies="@freqParameter.s:a8" id="estimatedFreqs.s:a8" spec="Frequencies"/>
                         <!--birthrate id='cognateBirthRate.s:a8' spec='parameter.RealParameter' value='1'/-->
-                        <deathprob id='cognateDeathRate.s:a8' spec='parameter.RealParameter' value='1'/>
+                        <deathprob id='cognateDeathRate.s:a8' spec='parameter.RealParameter' upper="1.0" value='0.5'/>
                     </substModel>
                 </siteModel>
                 <branchRateModel clock.rate="@ucldMean.c:ringe" id="RelaxedClock.c:ringe" rateCategories="@rateCategories.c:ringe" spec="beast.evolution.branchratemodel.UCRelaxedClockModel" tree="@Tree.t:ringe">
