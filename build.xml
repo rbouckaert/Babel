@@ -31,7 +31,7 @@
 		<fileset dir="${libBeast2}" includes="junit-4.8.2.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
 		<fileset dir="${libBabel}" includes="itextpdf-5.5.9.jar"/>
-		<fileset dir="${libBeast2}" includes="antlr-runtime-4.5.jar"/>
+		<fileset dir="${libBeast2}" includes="antlr-runtime-4.7.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/> 
 		<fileset dir="${libBeast2}" includes="jam.jar"/>
         <pathelement path="${beast2classpath}"/>
