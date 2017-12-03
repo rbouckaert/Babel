@@ -69,6 +69,10 @@ public class AdjustTipHeight extends Runnable {
 
 	private void adjustHeights(Node node) {
 		if (node.isLeaf()) {
+			if (heightMap.get(node.getID()) == null) {
+				Log.warning("ERROR: Cannot find height for " + node.getID() + " in height-map");
+				return;
+			}
 			double h = heightMap.get(node.getID());
 			if (convertYearToMilleniumInput.get()) {
 				h = (2000.0 - h) / 1000.0;
