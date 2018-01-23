@@ -247,6 +247,11 @@
             <prior id="PDFreqParameterPrior" name="distribution" x="@PDFreqParameter">
                 <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="1.0"/>
             </prior>
+            <!-- ensure fourth value of frequencies remains zero -->
+			<prior id="PDFreqParameterPrior2" name="distribution">       
+			     <x spec="beast.util.Script" expression=“frequencies[3]" x='@frequencies’/>
+			     <Uniform name="distr" upper="0.0" lower="-1.0"/>
+			</prior>
 
 
             <prior id='YuleBirthRatePrior.t:tree' x='@birthRate.t:tree'><distr spec="beast.math.distributions.Uniform" lower='0' upper='Infinity'/></prior>
@@ -274,6 +279,7 @@
             <connect srcID='MutationRatePrior.s:$(n)'         targetID='prior' inputName='distribution' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
             <connect srcID='PDCognateDeathRatePrior'          targetID='prior' inputName='distribution' if='inlikelihood(PDCognateDeathRate) and PDCognateDeathRate/estimate=true'/>
             <connect srcID='PDFreqParameterPrior'             targetID='prior' inputName='distribution' if="inlikelihood(PDFreqParameter) and PDFreqParameter/estimate=true"/>
+            <connect srcID='PDFreqParameterPrior2'            targetID='prior' inputName='distribution' if="inlikelihood(PDFreqParameter) and PDFreqParameter/estimate=true"/>
             <connect srcID='GammaShapePrior.s:$(n)'           targetID='prior' inputName='distribution' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
             <connect srcID='PropInvariantPrior.s:$(n)'        targetID='prior' inputName='distribution' if='inlikelihood(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
             <connect srcID='YuleBirthRatePrior.t:tree'        targetID='prior' inputName='distribution' if='inposterior(YuleModel.t:tree) and inposterior(Tree.t:tree) and birthRate.t:tree/estimate=true'/>
@@ -385,7 +391,7 @@
             <distribution spec="CompoundDistribution" id="prior">
 				<mergepoint id='aux-priors'/>
             </distribution>
-            <distribution spec="CompoundDistribution" id="likelihood">
+            <distribution spec="CompoundDistribution" id="likelihood" useThreads="true">
 				<mergepoint id='aux-likelihoods'/>
             </distribution>
         </distribution>
