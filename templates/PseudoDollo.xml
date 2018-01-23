@@ -178,7 +178,7 @@
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
 					<substModel id="pseudodollo" spec="beast.evolution.substitutionmodel.BirthDeathModel">
 							<frequencies id="PDfrequencies" spec="Frequencies">
-						        <frequencies spec="parameter.RealParameter" dimension="4" id="PDFreqParameter" lower="0.0" upper="1.0">0.95 0.03 0.02</frequencies>
+						        <frequencies spec="parameter.RealParameter" dimension="4" id="PDFreqParameter" lower="0.0" upper="1.0">0.95 0.03 0.02 0.00</frequencies>
 						    </frequencies>
 							<deathprob id='PDCognateDeathRate' spec='parameter.RealParameter' value='0.05' upper="1.0"/>
 					</substModel>
@@ -245,7 +245,7 @@
                 <distr spec="beast.math.distributions.Exponential" mean="1.0"/>
             </prior>
             <prior id="PDFreqParameterPrior" name="distribution" x="@PDFreqParameter">
-                <distr spec="beast.math.distributions.Dirichlet" alpha="5 2 1"/>
+                <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="1.0"/>
             </prior>
 
 
