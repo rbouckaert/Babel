@@ -179,7 +179,7 @@ public class ISOTreeParser extends BEASTObject {
 				break;
 			case ';':
 				if (!s.substring(i+1).matches("^\\s*$")) {
-					throw new IllegalArgumentException("Unexpected ';' at position " + i);
+					throw new IllegalArgumentException("Unexpected '" + s.substring(i+1) + "' at position " + i);
 				}
 				i++;
 				break;

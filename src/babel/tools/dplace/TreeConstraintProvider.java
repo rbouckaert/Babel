@@ -317,8 +317,10 @@ public class TreeConstraintProvider extends Runnable {
 		if (new File(path).exists()) {
 			String [] strs = BeautiDoc.load(path).split("\n");
 			for (String str : strs) {
-				Node node = parser.parse(str);	
-				addConstraints(node, root);
+				if (!str.startsWith("#")) {
+					Node node = parser.parse(str);	
+					addConstraints(node, root);
+				}
 			}
 		}
 		
