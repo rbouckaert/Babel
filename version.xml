@@ -39,4 +39,8 @@
               class="babel.tools.dplace.TreeGrafter"
               args=""
             />
+    <addonapp description="TreeRelabeller"
+              class="babel.tools.TreeRelabeller"
+              args=""
+            />
 </addon>

@@ -337,13 +337,22 @@ public class ISOTreeParser extends BEASTObject {
 		return null;
 	}
 
+	// This generates a binary tree based on the tree in the argument,
+	// To generate a (non-binary) tree that takes constraints in account
+	// use TreeConstraintProvider: this reads constraints from the glottolog
+	// tree as well as the file 
+	// TreeConstraintProvider.CLADE_CONSTRAINTS_FILE_NAME = "/clade-constraints.trees"
+	//
+	// To generate DPLACE: first run TreeConstraintProvider without CLADE_CONSTRAINTS_FILE_NAME
+	// to get the glottolog constraints. Then run TreeConstraintProvider with
+	// CLADE_CONSTRAINTS_FILE_NAME to get a (badly timed) starting tree.	
 	public static void main(String[] args) throws Exception {
 		ISOTreeParser parser = new ISOTreeParser();
 		//Node n = parser.parse("((xmr),((knw)ctm))");
 		Node n = parser.parse(args[0]);
 		parser.toRandomBinary(n);
 		//parser.setConstrainedHeights(n, "/tmp/x.xml", "Tree.t:DPLACE");
-		parser.addjustHeights(n, 8000);
+		parser.addjustHeights(n, 200);
 		System.out.println(n.toNewick());
 
 	}

@@ -28,6 +28,10 @@ import beast.evolution.tree.Node;
 import beast.util.TreeParser;
 
 @Description("Pre-process glottolog files exported from http://glottolog.org/meta/downloads")
+// To generate DPLACE stuff: first run TreeConstraintProvider without CLADE_CONSTRAINTS_FILE_NAME
+// to get the glottolog constraints. Then run TreeConstraintProvider with
+// CLADE_CONSTRAINTS_FILE_NAME to get a non-binary newick tree that conforms to all constraints.
+// Then run ISOTreeParser to get a (badly timed) starting tree.
 public class TreeConstraintProvider extends Runnable {
 	final static String TREE_FILE_NAME = "/tree-glottolog-newick.txt";
 	final static String CLADE_CONSTRAINTS_FILE_NAME = "/clade-constraints.trees";
