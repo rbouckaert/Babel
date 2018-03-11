@@ -1,4 +1,4 @@
-<addon name='Babel' version='0.1.5'>
+<addon name='Babel' version='0.1.7'>
 	<depends on='beast2' atleast='2.4.3'/>
 	<depends on='BEASTLabs' atleast='1.6.0'/>
 	<addonapp description="CognateStats"
