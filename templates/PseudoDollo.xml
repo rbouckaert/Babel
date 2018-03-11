@@ -249,7 +249,7 @@
             </prior>
             <!-- ensure fourth value of frequencies remains zero -->
 			<prior id="PDFreqParameterPrior2" name="distribution">       
-			     <x spec="beast.util.Script" expression=“frequencies[3]" x='@frequencies’/>
+			     <x spec="beast.util.Script" expression="frequencies[3]" x='@PDFreqParameter'/>
 			     <Uniform name="distr" upper="0.0" lower="-1.0"/>
 			</prior>
 
