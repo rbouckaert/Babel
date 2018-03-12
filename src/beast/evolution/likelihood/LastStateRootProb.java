@@ -59,7 +59,7 @@ public class LastStateRootProb extends BEASTObject implements Function, Loggable
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		out.append(getArrayValue()+"\t");
 		
 	}

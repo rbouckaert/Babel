@@ -314,7 +314,7 @@ public class BirthDeathCovarion2 extends ComplexSubstitutionModel implements Log
 	}
 
 	@Override
-	public void log(int nSample, PrintStream out) {
+	public void log(long nSample, PrintStream out) {
 		double [] freqs = getFrequencies();
 		double sum = 0;
 		for (int i = 0; i < freqs.length; i++) {

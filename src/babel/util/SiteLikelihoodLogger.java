@@ -77,7 +77,7 @@ public class SiteLikelihoodLogger extends BEASTObject implements Loggable {
 	}
 
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 
 		// refresh all internal data structures
 		likelihood.calculateLogP();
