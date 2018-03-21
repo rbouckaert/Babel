@@ -19,7 +19,7 @@
 	<property name="beast2classpath" location="${beast2path}/build" />
     <property name="BEASTLabsclasspath" location="../BEASTLabs/build" />
 	<property name="Add_on_dir" value="${release_dir}/add-on" />
-	<property name="version" value="0.1.7" />
+	<property name="version" value="0.2.0" />
 
     <import file="${beast2path}/build.xml" />
 
