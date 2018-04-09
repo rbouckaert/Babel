@@ -43,4 +43,8 @@
               class="babel.tools.TreeRelabeller"
               args=""
             />
+    <packageapp description="TreeTransitionMarker"
+              class="babel.tools.TreeTransitionMarker"
+              args=""
+            />
 </package>
