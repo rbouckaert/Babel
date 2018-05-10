@@ -1,14 +1,14 @@
 package babel.tools;
 
-import java.io.PrintStream;
 
-import com.sun.org.glassfish.gmbal.Description;
+import java.io.PrintStream;
 
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
+import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
 import beast.core.Input.Validate;
@@ -25,8 +25,10 @@ public class TreeTransitionMarker extends Runnable {
 	final public Input<String> tagInput = new Input<>("tag","metadata tag to be marked", Validate.REQUIRED);
 	final public Input<String> fromInput = new Input<>("from","metadata tag value at top of branch to be marked", Validate.REQUIRED);
 	final public Input<String> toInput = new Input<>("to","metadata tag value at bottom of branch to be marked", Validate.REQUIRED);
+	final public Input<Boolean> markAllInput = new Input<>("markAll","whether to mark all possible transitions", true);
 
 	String tag, from, to;
+	boolean markAll;
 	
 	@Override
 	public void initAndValidate() {
@@ -39,6 +41,7 @@ public class TreeTransitionMarker extends Runnable {
 		tag = tagInput.get();
 		from = fromInput.get();
 		to = toInput.get();
+		markAll = markAllInput.get();
 		
         PrintStream out = System.out;
         if (outputInput.get() != null) {
@@ -80,6 +83,9 @@ public class TreeTransitionMarker extends Runnable {
 					child.metaDataString += ",mark=1";
 				} else {
 					child.metaDataString += ",mark=0";
+				}
+				if (markAll) {
+					child.metaDataString += ",mark_" + current + "_to_" + child.getMetaData(tag) + "=1";
 				}
 				mark(child);
 			}
