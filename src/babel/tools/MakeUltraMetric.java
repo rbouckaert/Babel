@@ -18,7 +18,7 @@ import beast.evolution.tree.Tree;
 @Description("Converts a rooted tree (set) to an ultrametric tree (set), "
 		+ "i.e. make all leafs have same distance to root by extending leaf "
 		+ "branches so the height of all leaf nodes is zero.")
-public class MakeUltrMetric extends Runnable {
+public class MakeUltraMetric extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
 
@@ -72,7 +72,7 @@ public class MakeUltrMetric extends Runnable {
 
 
 	public static void main(String[] args) throws Exception{
-		new Application(new MakeUltrMetric(), "Make Ultrametric", args);
+		new Application(new MakeUltraMetric(), "Make Ultrametric", args);
 
 	}
 
