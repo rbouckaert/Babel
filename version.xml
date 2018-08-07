@@ -55,4 +55,8 @@
               class="babel.tools.TreeEpochScaler"
               args=""
             />
+    <packageapp description="LineagesThroughTimeCounter"
+              class="babel.tools.LineagesThroughTimeCounter"
+              args=""
+            />
 </package>
