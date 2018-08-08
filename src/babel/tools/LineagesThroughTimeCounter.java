@@ -1,6 +1,7 @@
 package babel.tools;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,7 @@ public class LineagesThroughTimeCounter extends Runnable {
 	final public Input<Double> maxYInput = new Input<>("maxY", "maximum value for y-axis. Automaticlly deduced if < 0", -1.0);
 
 	int N = resolutionInput.get(); // number of steps in history
+	double maxX = 0;
 
 	@Override
 	public void initAndValidate() {
@@ -50,115 +52,134 @@ public class LineagesThroughTimeCounter extends Runnable {
 			Log.warning("Writing to file " + outputInput.get().getPath());
 		}
 
+		double [][][] dataX = new double[treesInput.get().size()][][];
+		int n = 0;
 		for (File treeFile : treesInput.get()) {
-
-			FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treeFile.getAbsolutePath(),
-					burnInPercentageInput.get());
-			trees.reset();
-
-			List<Integer>[] distrs = new List[N + 1];
-			for (int i = 0; i < distrs.length; i++) {
-				distrs[i] = new ArrayList<>();
-			}
-
-			trees.reset();
-			double h = 0;
-			while (trees.hasNext()) {
-				Tree tree = trees.next();
-				h = Math.max(tree.getRoot().getHeight(), h);
-			}
-			Log.warning("Maximum height = " + h);
-
-			trees.reset();
-
-			while (trees.hasNext()) {
-				int[] linCount = new int[N + 1];
-				Tree tree = trees.next();
-				for (Node node : tree.getNodesAsArray()) {
-					if (!node.isRoot()) {
-						int start = (int) (node.getHeight() * N / h + 0.5);
-						int end = (int) (node.getParent().getHeight() * N / h + 0.5);
-						for (int i = start; i <= end; i++) {
-							linCount[i]++;
-						}
-					}
-				}
-				for (int i = 0; i < N; i++) {
-					distrs[i].add(linCount[i]);
-				}
-			}
-
-			double[][] data = new double[N][4];
-			for (int i = 0; i < N; i++) {
-				data[i][0] = i * h / N;
-				List<Integer> counts = distrs[i];
-				data[i][1] = mean(counts);
-				double[] bounds = bounds(counts);
-				data[i][2] = bounds[0];
-				data[i][3] = bounds[1];
-			}
-
-			smooth(data, 1);
-			smooth(data, 2);
-			smooth(data, 3);
-
-			if (maxXInput.get() > 0) {
-				h = maxXInput.get();
-			}
-			if (reverseSVGAxisInput.get()) {
-				for (int i = 0; i < N; i++) {
-					data[i][0] = h - data[i][0];
-				}
-			}
-
+			Log.warning(treeFile.getPath());
+			dataX[n] = processFile(treeFile);
+			
 			out.println("age\tmean\t95%HPD_low\t95%HPD_high");
 			for (int i = 0; i < N; i++) {
-				out.println(data[0] + "\t" + data[1] + "\t" + data[2] + "\t" + data[3]);
+				out.println(dataX[n][i][0] + "\t" + dataX[n][i][1] + "\t" + dataX[n][i][2] + "\t" + dataX[n][i][3]);
 			}
+			
+			n++;
+		}
 
-			if (svgOutputInput.get() != null) {
-				double fx = 400 / h;
+
+		if (svgOutputInput.get() != null) {
+			PrintStream svg = new PrintStream(svgOutputInput.get());
+			Log.warning("Writing to file " + svgOutputInput.get().getPath());
+			svg.println("<svg xmlns=\"http://www.w3.org/2000/svg\">");
+			svg.println("<style type=\"text/css\">");
+			svg.println(".mean {stroke-width:1;stroke:#0000ff;fill:none;}");
+			svg.println(".intervals {stroke-width:1;opacity:0.2;}");
+			svg.println("</style>");
+
+			svg.println("<rect width='400' height='400' style='fill:none;stroke-width:0.5;stroke:#000;'/>");
+			for (int k = 0; k < n; k++) {
+				double fx = 400 / maxX;
 				double maxY = 0;
 				if (maxYInput.get() > 0) {
 					maxY = maxYInput.get();
 				} else {
-					for (double[] d : data) {
+					for (double[] d : dataX[k]) {
 						maxY = Math.max(maxY, d[3]);
 					}
 				}
 				double y = 400;
 				double fy = y / maxY;
 
-				PrintStream svg = new PrintStream(svgOutputInput.get());
-				Log.warning("Writing to file " + svgOutputInput.get().getPath());
-				svg.println("<svg xmlns=\"http://www.w3.org/2000/svg\">");
-				svg.println("<style type=\"text/css\">");
-				svg.println(".mean {stroke-width:1;stroke:#0000ff;fill:none;}");
-				svg.println(".intervals {stroke-width:1;opacity:0.2;}");
-				svg.println("</style>");
-
-				svg.println("<rect width='400' height='400' style='fill:none;stroke-width:0.5;stroke:#000;'/>");
-				// mean polyline
-				svg.print("<polyline class=\"mean\" points=\"");
-				for (int i = 0; i < N; i++) {
-					svg.print(data[i][0] * fx + "," + (y - data[i][1] * fy) + " ");
-				}
-				svg.println("\"/>");
 				// 95% hpd polygon
 				svg.print("<polygon class=\"intervals\" points=\"");
 				for (int i = 0; i < N; i++) {
-					svg.print(data[i][0] * fx + "," + (y - data[i][2] * fy) + " ");
+					svg.print(dataX[k][i][0] * fx + "," + (y - dataX[k][i][2] * fy) + " ");
 				}
 				for (int i = N - 1; i >= 0; i--) {
-					svg.print(data[i][0] * fx + "," + (y - data[i][3] * fy) + " ");
+					svg.print(dataX[k][i][0] * fx + "," + (y - dataX[k][i][3] * fy) + " ");
 				}
 				svg.println("\"/>");
-				svg.println("</svg>");
-				svg.close();
+
+				// mean polyline
+				svg.print("<polyline class=\"mean\" points=\"");
+				for (int i = 0; i < N; i++) {
+					svg.print(dataX[k][i][0] * fx + "," + (y - dataX[k][i][1] * fy) + " ");
+				}
+				svg.println("\"/>");
 			}
+			svg.println("</svg>");
+			svg.close();
 		}
 		Log.warning("Done");
+	}
 
+	private double[][] processFile(File treeFile) throws IOException {
+		FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treeFile.getAbsolutePath(),
+				burnInPercentageInput.get());
+		trees.reset();
+
+		List<Double>[] distrs = new List[N + 1];
+		for (int i = 0; i < distrs.length; i++) {
+			distrs[i] = new ArrayList<>();
+		}
+
+		trees.reset();
+		maxX = 0;
+		while (trees.hasNext()) {
+			Tree tree = trees.next();
+			maxX = Math.max(tree.getRoot().getHeight(), maxX);
+		}
+		Log.warning("Maximum height = " + maxX);
+
+		trees.reset();
+
+		while (trees.hasNext()) {
+			double [] linCount = new double[N + 1];
+			double stepSize = maxX / N;
+			Tree tree = trees.next();
+			for (Node node : tree.getNodesAsArray()) {
+				if (!node.isRoot()) {
+					int start = (int) (node.getHeight() * N / maxX + 0.5);
+					int end = (int) (node.getParent().getHeight() * N / maxX + 0.5);
+					if (start == end) {
+						linCount[start] += node.getParent().getHeight() - node.getHeight();
+					} else {
+						linCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+						for (int i = start+1; i < end; i++) {
+							linCount[i]++;
+						}
+						linCount[end] += node.getParent().getHeight() - end * stepSize;
+					}
+				}
+			}
+			for (int i = 0; i < N; i++) {
+				distrs[i].add(linCount[i]);
+			}
+		}
+
+		double[][] data = new double[N][4];
+		for (int i = 0; i < N; i++) {
+			data[i][0] = i * maxX / N;
+			List<Double> counts = distrs[i];
+			data[i][1] = mean(counts);
+			double[] bounds = bounds(counts);
+			data[i][2] = bounds[0];
+			data[i][3] = bounds[1];
+		}
+
+		smooth(data, 1);
+		smooth(data, 2);
+		smooth(data, 3);
+
+		if (maxXInput.get() > 0) {
+			maxX = maxXInput.get();
+		}
+		if (reverseSVGAxisInput.get()) {
+			for (int i = 0; i < N; i++) {
+				data[i][0] = maxX - data[i][0];
+			}
+		}
+		return data;
 	}
 
 	private void smooth(double[][] data, int column) {
@@ -178,16 +199,16 @@ public class LineagesThroughTimeCounter extends Runnable {
 		}
 	}
 
-	private double[] bounds(List<Integer> counts) {
+	private double[] bounds(List<Double> counts) {
 		Collections.sort(counts);
 		int lower = counts.size() * 25 / 1000;
 		int upper = counts.size() * 975 / 1000;
 		return new double[] { counts.get(lower), counts.get(upper) };
 	}
 
-	private double mean(List<Integer> counts) {
+	private double mean(List<Double> counts) {
 		double sum = 0;
-		for (int i : counts) {
+		for (double i : counts) {
 			sum += i;
 		}
 		return sum / counts.size();
