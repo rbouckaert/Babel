@@ -1,12 +1,8 @@
 package babel.tools;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.PrintStream;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import beast.app.beauti.BeautiConfig;
 import beast.app.beauti.BeautiDoc;
@@ -32,7 +28,6 @@ import beast.core.Input.Validate;
 public class FamilyPruner extends Runnable {
 	public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	public Input<File> familyInput = new Input<>("families","NEXUS file containing taxon sets", Validate.REQUIRED);
-	//public Input<File> subsetInput = new Input<>("subset","text file with list of clades (defined in families) to include", Validate.REQUIRED);
 	public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
 	public Input<Boolean> verboseInput = new Input<>("verbose","print out extra information while processing", true);
 

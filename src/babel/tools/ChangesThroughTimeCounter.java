@@ -16,15 +16,16 @@ import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
-@Description("Produces average of number of chagnes of particular tag. "
+@Description("Produces average of number of changes of particular tag. "
 		+ "Intervals go back in time.")
 public class ChangesThroughTimeCounter extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees", "NEXUS file containing a tree set",
 			Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file. Print to stdout if not specified");
-	final public Input<String> tagInput = new Input<>("tag", "metadata tag to be marked", Validate.REQUIRED);
+	final public Input<String> tagInput = new Input<>("tag", "metadata tag for which changes will be counted", Validate.REQUIRED);
 	final public Input<Double> intervalInput = new Input<>("interval", "time interval for each bin", Validate.REQUIRED);
 	final public Input<Double> offsetInput = new Input<>("offset", "time offset for first bin", Validate.REQUIRED);
+	final public Input<Boolean> averageByLineageInput = new Input<>("averageByLineage", "divide count by number of lineages", false);
 	
 	String tag;
 
@@ -48,10 +49,12 @@ public class ChangesThroughTimeCounter extends Runnable {
 		
 		double max = 0;
 		double [] counts = new double[10000];
+		double [] linCount = new double[10000];
 		double [] intervals = new double[10000];
-		intervals[0] = -intervalInput.get() + offsetInput.get();
+		double stepSize = intervalInput.get();
+		intervals[0] = -stepSize + offsetInput.get();
 		for (int i = 1; i < intervals.length; i++) {
-			intervals[i] = intervals[i-1] + intervalInput.get();
+			intervals[i] = intervals[i-1] + stepSize;
 		}
 		
 
@@ -74,23 +77,47 @@ public class ChangesThroughTimeCounter extends Runnable {
 						max = node.getHeight();
 					}
 				} else {
+					int start = Arrays.binarySearch(intervals, node.getHeight());
+					if (start < 0) {
+						start = - start - 1;
+					}
+					if (start >= 10000) {
+						throw new IllegalArgumentException("tree is too large, use a larger interval");
+					}
 					Object o = node.getMetaData(tag);
 					Object o2 = node.getParent().getMetaData(tag);
 					if (!o.equals(o2)) {
-						int i = Arrays.binarySearch(intervals, node.getHeight());
-						if (i < 0) {
-							i = - i - 1;
-						}
-						if (i >= 10000) {
-							throw new IllegalArgumentException("tree is too large, use a larger interval");
-						}
-						counts[i]++;
+						counts[start]++;
 					}
+					int end = Arrays.binarySearch(intervals, node.getParent().getHeight());
+					if (end < 0) {
+						end = - end - 1;
+					}
+					if (end >= 10000) {
+						throw new IllegalArgumentException("tree is too large, use a larger interval");
+					}
+					
+					if (start == end) {
+						linCount[start] += node.getLength(); 						 
+					} else {
+						linCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+						for (int i = start+1; i < end; i++) {
+							linCount[i]++;
+						}
+						linCount[end] += node.getParent().getHeight() - end * stepSize;
+					}
+					
 				}
 			}
 		}
 		for (int i = 0; i < counts.length; i++) {
-			counts[i] /= treeCount;
+			if (averageByLineageInput.get()) {
+				// both counts[i] and linCount[i] are multiples of treeCount,
+				// so these divide out
+				counts[i] /= linCount[i]; 
+			} else {
+				counts[i] /= treeCount;
+			}
 		}
 
 

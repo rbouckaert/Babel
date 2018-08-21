@@ -76,9 +76,9 @@ public class LineagesThroughTimeCounter extends Runnable {
 			svg.println(".intervals {stroke-width:1;opacity:0.2;}");
 			svg.println("</style>");
 
-			svg.println("<rect width='400' height='400' style='fill:none;stroke-width:0.5;stroke:#000;'/>");
+			svg.println("<rect width='800' height='400' style='fill:none;stroke-width:0.5;stroke:#000;'/>");
 			for (int k = 0; k < n; k++) {
-				double fx = 400 / maxX;
+				double fx = 800 / maxX;
 				double maxY = 0;
 				if (maxYInput.get() > 0) {
 					maxY = maxYInput.get();
