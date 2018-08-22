@@ -1,7 +1,10 @@
 package babel.tools;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
@@ -51,6 +54,13 @@ public class ChangesThroughTimeCounter extends Runnable {
 		double [] counts = new double[10000];
 		double [] linCount = new double[10000];
 		double [] intervals = new double[10000];
+
+		List<Double>[] distrs = new List[10000 + 1];
+		for (int i = 0; i < distrs.length; i++) {
+			distrs[i] = new ArrayList<>();
+		}
+
+		
 		double stepSize = intervalInput.get();
 		intervals[0] = -stepSize + offsetInput.get();
 		for (int i = 1; i < intervals.length; i++) {
@@ -109,28 +119,52 @@ public class ChangesThroughTimeCounter extends Runnable {
 					
 				}
 			}
-		}
-		for (int i = 0; i < counts.length; i++) {
-			if (averageByLineageInput.get()) {
-				// both counts[i] and linCount[i] are multiples of treeCount,
-				// so these divide out
-				counts[i] /= linCount[i]; 
-			} else {
-				counts[i] /= treeCount;
+			for (int i = 0; i < counts.length; i++) {
+				if (averageByLineageInput.get()) {
+					distrs[i].add(counts[i]/linCount[i]);
+				} else {
+					distrs[i].add(counts[i]);
+				}
 			}
 		}
+		
+//		for (int i = 0; i < counts.length; i++) {
+//			if (averageByLineageInput.get()) {
+//				// both counts[i] and linCount[i] are multiples of treeCount,
+//				// so these divide out
+//				counts[i] /= linCount[i]; 
+//			} else {
+//				counts[i] /= treeCount;
+//			}
+//		}
 
 
 		int i = 0;
-		out.println("interval\taverage_numer_of_changes");
+		out.println("interval\taverage_numer_of_changes\t2.5%_quantile\t97.5%_quantile");
 		while (intervals[i] <= max) {
-			out.println(i+"\t" + counts[i]);
+			double[] bounds = bounds(distrs[i]);
+			out.println(i+"\t" + mean(distrs[i]) + "\t" + bounds[0] + "\t" + bounds[1]);
 			i++;
 		}
 		out.println();
 
 		Log.warning("Done");
 
+	}
+	
+	private double[] bounds(List<Double> counts) {
+		Collections.sort(counts);
+		int lower = counts.size() * 25 / 1000;
+		int upper = counts.size() * 975 / 1000;
+		return new double[] { counts.get(lower), counts.get(upper) };
+	}
+
+	private double mean(List<Double> counts) {
+		double sum = 0;
+		for (double i : counts) {
+			sum += i;
+		}
+		return sum / counts.size();
 	}
 	
 	public static void main(String[] args) throws Exception {
