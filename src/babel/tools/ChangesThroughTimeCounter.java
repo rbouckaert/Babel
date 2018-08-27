@@ -89,7 +89,7 @@ public class ChangesThroughTimeCounter extends Runnable {
 				} else {
 					int start = Arrays.binarySearch(intervals, node.getHeight());
 					if (start < 0) {
-						start = - start - 1;
+						start = - start - 2;
 					}
 					if (start >= 10000) {
 						throw new IllegalArgumentException("tree is too large, use a larger interval");
@@ -101,7 +101,7 @@ public class ChangesThroughTimeCounter extends Runnable {
 					}
 					int end = Arrays.binarySearch(intervals, node.getParent().getHeight());
 					if (end < 0) {
-						end = - end - 1;
+						end = - end - 2;
 					}
 					if (end >= 10000) {
 						throw new IllegalArgumentException("tree is too large, use a larger interval");
@@ -110,11 +110,24 @@ public class ChangesThroughTimeCounter extends Runnable {
 					if (start == end) {
 						linCount[start] += node.getLength(); 						 
 					} else {
-						linCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+						linCount[start] += (intervals[start+1] - node.getHeight())/stepSize;
+						if (linCount[start] < 0) {
+							int h = 3;
+							h++;
+						}
 						for (int i = start+1; i < end; i++) {
 							linCount[i]++;
 						}
-						linCount[end] += node.getParent().getHeight() - end * stepSize;
+						linCount[end] += (node.getParent().getHeight() - intervals[end]) /stepSize;
+						if (linCount[end] < 0) {
+							
+							int h = 3;
+							end = Arrays.binarySearch(intervals, node.getParent().getHeight());
+							end = Arrays.binarySearch(intervals, 0.5);
+							end = Arrays.binarySearch(intervals, 1.5);
+							h++;
+							
+						}
 					}
 					
 				}
