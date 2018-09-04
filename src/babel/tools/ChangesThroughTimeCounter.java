@@ -19,7 +19,8 @@ import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
-@Description("Produces average of number of changes of particular tag. "
+@Description("Produces average of number of changes of particular tag -- assumes tag changes "
+		+ "are uniformly distributed along a branch where parent and node have different tags. "
 		+ "Intervals go back in time.")
 public class ChangesThroughTimeCounter extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees", "NEXUS file containing a tree set",
@@ -96,9 +97,9 @@ public class ChangesThroughTimeCounter extends Runnable {
 					}
 					Object o = node.getMetaData(tag);
 					Object o2 = node.getParent().getMetaData(tag);
-					if (!o.equals(o2)) {
-						counts[start]++;
-					}
+//					if (!o.equals(o2)) {
+//						counts[start]++;
+//					}
 					int end = Arrays.binarySearch(intervals, node.getParent().getHeight());
 					if (end < 0) {
 						end = - end - 2;
@@ -108,25 +109,27 @@ public class ChangesThroughTimeCounter extends Runnable {
 					}
 					
 					if (start == end) {
-						linCount[start] += node.getLength(); 						 
+						linCount[start] += node.getLength(); 
+						if (!o.equals(o2)) {
+							counts[start] += 1.0/node.getLength();
+						}
 					} else {
-						linCount[start] += (intervals[start+1] - node.getHeight())/stepSize;
-						if (linCount[start] < 0) {
-							int h = 3;
-							h++;
+						double delta = (intervals[start+1] - node.getHeight())/stepSize;
+						linCount[start] += delta;
+						if (!o.equals(o2)) {
+							counts[start] += delta * stepSize/node.getLength();
 						}
 						for (int i = start+1; i < end; i++) {
 							linCount[i]++;
+							if (!o.equals(o2)) {
+								counts[i] += stepSize/node.getLength();
+							}
 						}
-						linCount[end] += (node.getParent().getHeight() - intervals[end]) /stepSize;
-						if (linCount[end] < 0) {
-							
-							int h = 3;
-							end = Arrays.binarySearch(intervals, node.getParent().getHeight());
-							end = Arrays.binarySearch(intervals, 0.5);
-							end = Arrays.binarySearch(intervals, 1.5);
-							h++;
-							
+						
+						delta = (node.getParent().getHeight() - intervals[end]) /stepSize;
+						linCount[end] += delta;
+						if (!o.equals(o2)) {
+							counts[end] += delta * stepSize/node.getLength();
 						}
 					}
 					
