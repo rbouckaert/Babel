@@ -1,5 +1,6 @@
 package beast.evolution.likelihood;
 
+import beast.core.Description;
 import beast.core.Input;
 import beast.core.parameter.IntegerParameter;
 import beast.evolution.alignment.Alignment;
@@ -7,6 +8,7 @@ import beast.evolution.datatype.TwoStateCovarion;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
+@Description("TreeLikelihood that assumes only a single site is reconstructed as 1 at the root")
 public class MultiSiteTreeLikelihood extends TreeLikelihood {
 	final public Input<IntegerParameter> rootStateInput = new Input<>("rootState", "if specified, the site that is considered to be 1");
 	
