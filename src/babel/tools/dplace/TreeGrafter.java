@@ -62,16 +62,22 @@ public class TreeGrafter extends TreeCombiner {
 
 		srcTreeSet.reset();
 		int n = taxonName.length;
+		int k = 0;
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
+			System.err.println("Processing tree " + (k++));
 			for (int i = 0; i < n; i++) {
 				Node src = getMRCA(tree, subTaxonSets[i]);
 				Node parent = src.getParent();
 				double len = src.getLength();
 				// create intermediary node on branch
 				double newHeight = src.getHeight() + Randomizer.nextDouble() * len;
-				while (newHeight <= taxonHeight[i]) {
-					newHeight = src.getHeight() + Randomizer.nextDouble() * len;
+				if (src.getHeight() + len > taxonHeight[i]) {
+					while (newHeight <= taxonHeight[i]) {
+						newHeight = src.getHeight() + Randomizer.nextDouble() * len;
+					}
+				} else {
+					newHeight = src.getHeight() + len;
 				}
 				
 				Node newNode = new Node();
