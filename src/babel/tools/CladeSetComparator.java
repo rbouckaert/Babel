@@ -33,27 +33,28 @@ public class CladeSetComparator extends Runnable {
 	
 	final String header = "<svg version=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"graph\" aria-labelledby=\"title\" role=\"img\" height=\"1200\">\n" + 
 			"<g class=\"grid x-grid\" id=\"xGrid\">\n" + 
-			"  <line x1=\"90\" x2=\"90\" y1=\"10\" y2=\"1010\"></line>\n" + 
+			"  <line x1=\"90\" x2=\"90\" y1=\"10\" y2=\"1010\" style=\"stroke:#000;stroke-width:2\"></line>\n" + 
 			"</g>\n" + 
 			"<g class=\"grid y-grid\" id=\"yGrid\">\n" + 
-			"  <line x1=\"90\" x2=\"1090\" y1=\"1010\" y2=\"1010\"></line>\n" + 
+			"  <line x1=\"90\" x2=\"1090\" y1=\"1010\" y2=\"1010\" style=\"stroke:#000;stroke-width:2\"></line>\n" + 
 			"</g>\n" + 
+			"<line x1=\"90\" x2=\"1090\" y1=\"1010\" y2=\"10\" style=\"stroke:#000;stroke-width:2\"></line>\n" + 
 			"  <g class=\"labels x-labels\">\n" + 
-			"  <text x=\"100\" y=\"1020\">0.0</text>\n" + 
-			"  <text x=\"300\" y=\"1020\">0.2</text>\n" + 
-			"  <text x=\"500\" y=\"1020\">0.4</text>\n" + 
-			"  <text x=\"700\" y=\"1020\">0.6</text>\n" + 
-			"  <text x=\"900\" y=\"1020\">0.8</text>\n" + 
-			"  <text x=\"1100\" y=\"1020\">1.0</text>\n" + 
-			"  <text x=\"500\" y=\"1030\" class=\"label-title\">file1</text>\n" + 
+			"  <text x=\"90\" y=\"1030\">0.0</text>\n" + 
+			"  <text x=\"290\" y=\"1030\">0.2</text>\n" + 
+			"  <text x=\"490\" y=\"1030\">0.4</text>\n" + 
+			"  <text x=\"690\" y=\"1030\">0.6</text>\n" + 
+			"  <text x=\"890\" y=\"1030\">0.8</text>\n" + 
+			"  <text x=\"1090\" y=\"1030\">1.0</text>\n" + 
+			"  <text x=\"520\" y=\"1040\" class=\"label-title\">file1</text>\n" + 
 			"</g>\n" + 
 			"<g class=\"labels y-labels\">\n" + 
-			"  <text x=\"80\" y=\"15\">1.0</text>\n" + 
-			"  <text x=\"80\" y=\"215\">0.8</text>\n" + 
-			"  <text x=\"80\" y=\"415\">0.6</text>\n" + 
-			"  <text x=\"80\" y=\"615\">0.4</text>\n" + 
-			"  <text x=\"80\" y=\"815\">0.2</text>\n" + 
-			"  <text x=\"80\" y=\"1015\">0.0</text>\n" + 
+			"  <text x=\"60\" y=\"15\">1.0</text>\n" + 
+			"  <text x=\"60\" y=\"215\">0.8</text>\n" + 
+			"  <text x=\"60\" y=\"415\">0.6</text>\n" + 
+			"  <text x=\"60\" y=\"615\">0.4</text>\n" + 
+			"  <text x=\"60\" y=\"815\">0.2</text>\n" + 
+			"  <text x=\"60\" y=\"1015\">0.0</text>\n" + 
 			"  <text x=\"40\" y=\"540\" class=\"label-title\" transform=\"rotate(90,40,540)\">file2</text>\n" + 
 			"</g>\n" + 
 			"<g class=\"data\" data-setname=\"Our first data set\">\n"; 
@@ -139,6 +140,7 @@ public class CladeSetComparator extends Runnable {
 	}
 
 	private CladeSet getCladeSet(String path) throws IOException {
+		Log.warning("Processing " + path);
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
