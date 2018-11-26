@@ -39,6 +39,8 @@ public class CladeSetComparator extends Runnable {
 			"  <line x1=\"90\" x2=\"1090\" y1=\"1010\" y2=\"1010\" style=\"stroke:#000;stroke-width:2\"></line>\n" + 
 			"</g>\n" + 
 			"<line x1=\"90\" x2=\"1090\" y1=\"1010\" y2=\"10\" style=\"stroke:#000;stroke-width:2\"></line>\n" + 
+			"<line x1=\"90\" x2=\"840\" y1=\"760\" y2=\"10\" style=\"stroke:#00f;stroke-width:1\"></line>\n" + 
+			"<line x1=\"340\" x2=\"1090\" y1=\"1010\" y2=\"260\" style=\"stroke:#00f;stroke-width:1\"></line>\n" + 
 			"  <g class=\"labels x-labels\">\n" + 
 			"  <text x=\"90\" y=\"1030\">0.0</text>\n" + 
 			"  <text x=\"290\" y=\"1030\">0.2</text>\n" + 
@@ -94,10 +96,12 @@ public class CladeSetComparator extends Runnable {
 		
 		// create map of clades to support values in set1
 		Map<String, Double> cladeMap = new LinkedHashMap<>();
+		Map<String, Double> cladeHeightMap = new LinkedHashMap<>();
 		for (int i = 0; i < cladeSet1.getCladeCount(); i++) {
 			String clade = cladeSet1.getClade(i);
 			int support = cladeSet1.getFrequency(i);
 			cladeMap.put(clade, support/ n1);
+			cladeHeightMap.put(clade, cladeSet1.getMeanNodeHeight(i));
 		}
 		
 		// process clades in set2
@@ -107,6 +111,10 @@ public class CladeSetComparator extends Runnable {
 			if (cladeMap.containsKey(clade)) {
 				// clade is also in set1
 				output(out, svg, clade,cladeMap.get(clade),support/n2);
+				double h1 = cladeHeightMap.get(clade);
+				double h2 = cladeSet2.getMeanNodeHeight(i);
+				System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
+				
 				cladeMap.remove(clade);
 			} else {
 				// clade is not in set1
@@ -132,6 +140,10 @@ public class CladeSetComparator extends Runnable {
 			Log.warning("Problem clade: " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
 		}
 		
+		if (Math.abs(support1 - support2) > 0.25) {
+				Log.warning("Clade of interest (>25% difference): " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+			}
+
 		if (svg != null) {
 			svg.println("  <circle style=\"opacity:0.25;fill:#a00000\" cx=\""+ (90 +1000* support1 + Randomizer.nextInt(10) - 5) + 
 					"\" cy=\""+ (10 + 1000 - 1000 * support2 + Randomizer.nextInt(10) - 5) +"\" "
