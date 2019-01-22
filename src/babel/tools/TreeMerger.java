@@ -45,6 +45,7 @@ public class TreeMerger extends TreeCombiner {
 		}
 
 		srcTreeSet.reset();
+		int k = 0;
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
 			for (int i = 0; i < subTreeCount; i++) {
@@ -54,6 +55,11 @@ public class TreeMerger extends TreeCombiner {
 					Tree subTree = subTreeSet[i].next();
 					
 					Node replacement = getMRCA(subTree, subTaxonSets[i]);
+					
+					if (parent.getHeight() < replacement.getHeight()) {
+						squeezeToFit(parent, replacement);
+					}
+					
 					boolean replaced = false;
 					for (int j = 0; j < parent.getChildCount(); j++) {
 						if (parent.getChild(j) == src) {
@@ -69,13 +75,35 @@ public class TreeMerger extends TreeCombiner {
 					throw new IllegalArgumentException("Tree sets are of different sizes: treeset " + i + " is smaler than source set");
 				}
 			}
-			out.print(tree.getRoot().toNewick());
+			out.println(tree.getRoot().toNewick());
+			k++;
+			if (k % 100 == 0) {
+				Log.err.print("|" + k + "|");
+			} else if (k % 25 == 0) {
+				Log.err.print(".");
+			}
 		}
 		 
 		Log.err("Done!");
 		out.close();
 	}
 	
+	final static double EPSILON = 1e-4; // = distance between nodes if negative branch length occurs
+	
+	private void squeezeToFit(Node parent, Node node) {
+		if (node.getHeight() > parent.getHeight()) {
+			Log.err("Adjusting height from " + node.getHeight() + " to " + (parent.getHeight() - EPSILON));
+			node.setHeight(parent.getHeight() - EPSILON);
+			if (node.getHeight() < 0) {
+				node.setHeight(0);
+				Log.err("Adjusting height to 0");
+			}
+			for (Node child : node.getChildren()) {
+				squeezeToFit(node, child);
+			}
+		}		
+	}
+
 	private void processCfgFile() throws IOException {
 		String cfg = BeautiDoc.load(cgfFileInput.get());
 		String [] strs = cfg.split("\n");
@@ -92,10 +120,12 @@ public class TreeMerger extends TreeCombiner {
 			if (!str.matches("^\\s*$")) {
 				String [] strs2 = str.split("\t");
 				subTreeSet[i] = new TreeAnnotator().new MemoryFriendlyTreeSet(strs2[0], 0);
+				subTreeSet[i].reset();
 				subTaxonSets[i] = new HashSet<>();
 				for (String taxon : strs2[1].split(",")) {
 					subTaxonSets[i].add(taxon);					
 				}
+				i++;
 			}
 		}
 	}
