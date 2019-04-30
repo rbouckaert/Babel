@@ -1,4 +1,4 @@
-<package name='Babel' version='0.2.0'>
+<package name='Babel' version='0.2.1'>
 	<depends on='beast2' atleast='2.5.0'/>
 	<depends on='BEASTLabs' atleast='1.8.0'/>
 	<packageapp description="CognateStats"
@@ -25,6 +25,10 @@
             />
     <packageapp description="Newick2Nexus"
               class="babel.tools.Newick2Nexus"
+              args=""
+            />
+    <packageapp description="Phy2Nexus"
+              class="babel.tools.Phy2Nexus"
               args=""
             />
     <packageapp description="AdjustTipHeight"
