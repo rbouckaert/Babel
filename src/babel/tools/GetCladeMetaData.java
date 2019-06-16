@@ -57,7 +57,7 @@ public class GetCladeMetaData extends TreeCombiner {
         Log.warning("Done");
 	}
 
-	private void processCfgFile() throws IOException {
+	protected void processCfgFile() throws IOException {
 		taxa = new HashSet<>();
 		BufferedReader fin = new BufferedReader(new FileReader(cfgFileInput.get()));
         String str = null;

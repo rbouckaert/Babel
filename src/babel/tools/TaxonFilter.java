@@ -106,7 +106,8 @@ public class TaxonFilter extends Runnable {
         if (outputInput.get() != null) {
         	out.close();
         }
-        Log.warning.println("Done.");	}
+        Log.warning.println("Done.");
+       }
 
 
 	   public String toNewick(Node node) {

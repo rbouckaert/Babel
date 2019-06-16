@@ -23,7 +23,7 @@ import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
-@Description("relabels taxe in a tree file. Usfeful for instance when labels are iso codes and language names are required for visualisation")
+@Description("Relabels taxa in a tree file. Usfeful for instance when labels are iso codes and language names are required for visualisation")
 public class TreeRelabeller extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
