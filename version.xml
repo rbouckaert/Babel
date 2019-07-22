@@ -27,6 +27,14 @@
               class="babel.tools.Newick2Nexus"
               args=""
             />
+    <packageapp description="XML2Nexus"
+              class="babel.tools.XML2Nexus"
+              args=""
+            />
+    <packageapp description="Fasta2Nexus"
+              class="babel.tools.Fasta2Nexus"
+              args=""
+            />
     <packageapp description="Phy2Nexus"
               class="babel.tools.Phy2Nexus"
               args=""
