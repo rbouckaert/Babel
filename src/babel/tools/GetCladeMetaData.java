@@ -11,12 +11,14 @@ import java.util.Set;
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
+import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
+@Description("Get meta data from clade into trace log file")
 public class GetCladeMetaData extends TreeCombiner {
 	final public Input<File> cfgFileInput = new Input<>("cfg", "configuration file containing name of taxa, one on each line", Validate.REQUIRED);
 	final public Input<Boolean> originateInput = new Input<>("originate", "use originate of clade instead of MRCA of clade", false);

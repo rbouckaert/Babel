@@ -21,8 +21,8 @@ import beast.evolution.alignment.Sequence;
 import beast.util.XMLParser;
 import beast.util.XMLParserException;
 
-@Description("Convert BEAST XML file into NEXUS alignemnt file")
-public class XML2Nexus extends Runnable {
+@Description("Convert BEAST XML file into fasta alignemnt file")
+public class XML2Fasta extends Runnable {
 	final public Input<XMLFile> xmlInput = new Input<>("xml", "BEAST XML file containing an alignment",
 			Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
@@ -44,21 +44,10 @@ public class XML2Nexus extends Runnable {
 		}
 
 		out.println("#NEXUS");
-		String dataType = alignment.getDataType().getTypeDescription();
-		int ntax = alignment.sequenceInput.get().size();
-		int nchar = alignment.sequenceInput.get().get(0).dataInput.get().length();
-		out.println("begin data;\n" + 
-				"dimensions ntax=" + ntax + " nchar=" + nchar + ";\n" + 
-				"format datatype=" + dataType + 
-				" interleave=yes gap=- missing=?;\n" + "matrix");
 
 		for (Sequence seq : alignment.sequenceInput.get()) {
 			String taxon = seq.taxonInput.get();
-			out.print(taxon);
-			if (taxon.length() < Fasta2Nexus.spaces.length()) {
-				out.print(Fasta2Nexus.spaces.substring(taxon.length()));
-			}
-			out.print(" ");
+			out.println(">" + taxon);
 			out.println(seq.dataInput.get());
 		}
 		out.println(";\nend;");
@@ -85,7 +74,7 @@ public class XML2Nexus extends Runnable {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new Application(new XML2Nexus(), "XML to Nexus converter", args);
+		new Application(new XML2Fasta(), "XML to fasta converter", args);
 
 	}
 

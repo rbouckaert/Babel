@@ -374,7 +374,7 @@ public class NexusParser {
 
                 final String character = getAttValue("nchar", str);
                 if (character == null) {
-                    throw new IOException("nchar attribute expected (e.g. 'dimensions char=123') expected, not " + str);
+                    throw new IOException("nchar attribute expected (e.g. 'dimensions nchar=123') expected, not " + str);
                 }
                 charCount = Integer.parseInt(character);
                 final String taxa = getAttValue("ntax", str);
