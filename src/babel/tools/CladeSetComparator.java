@@ -105,6 +105,7 @@ public class CladeSetComparator extends Runnable {
 		}
 		
 		// process clades in set2
+		double maxDiff = 0;
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);
 			int support = cladeSet2.getFrequency(i);
@@ -115,21 +116,25 @@ public class CladeSetComparator extends Runnable {
 				double h2 = cladeSet2.getMeanNodeHeight(i);
 				System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
+				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support/n2));
 				cladeMap.remove(clade);
 			} else {
 				// clade is not in set1
 				output(out, svg, clade, 0.0, support/n2);
+				maxDiff = Math.max(maxDiff, support/n2);
 			}
 		}		
 		
 		// process left-overs of clades in set1 that are not in set2 
 		for (String clade : cladeMap.keySet()) {
 			output(out, svg, clade, cladeMap.get(clade), 0.0);
+			maxDiff = Math.max(maxDiff, cladeMap.get(clade));
 		}
 
 		if (svg != null) {
 			svg.println(footer);
 		}
+		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info.println("Done");
 	}
 
