@@ -81,7 +81,8 @@ public class BirthDeathCovarion2 extends ComplexSubstitutionModel implements Log
 
     @Override
     public boolean canHandleDataType(DataType dataType) {
-        return dataType.getClass().equals(TwoStateCovarionPlus.class);
+    	return dataType.getStateCount() == 5;
+        // return dataType.getClass().equals(U.class);
     }
 
 

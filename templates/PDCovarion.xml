@@ -168,14 +168,13 @@
                     <data idref="data"/>
 			    </data>
 				<tree idref="Tree.t:tree"/>
-				<siteModel spec='SiteModel' id="SiteModel.s:$(n)" gammaCategoryCount="1">
+				<siteModel spec='beast.evolution.sitemodel.SiteModel' id="SiteModel.s:$(n)" gammaCategoryCount="1">
 		            <proportionInvariant spec='parameter.RealParameter' id='proportionInvariant.s:$(n)' value='0.0' lower='0' upper='1' estimate='false'/>
 		            <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='true'/>
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
-<substModel id="PDCovarion" spec="BirthDeathCovarion2"><!-- eigenSystem="beast.math.matrixalgebra.RobustEigenDecomposition"-->
+<substModel id="PDCovarion" spec="beast.evolution.substitutionmodel.BirthDeathCovarion2">
         <hfrequencies id="hfrequencies" spec="parameter.RealParameter" dimension="2" lower="0.0" upper="1.0" estimate="false">0.5 0.5</hfrequencies>
         <vfrequencies id="frequencies" spec="parameter.RealParameter" dimension="3" lower="0.0" upper="1.0">0.95 0.05 0.0</vfrequencies>
-        <alpha id="PDCAlpha" spec='parameter.RealParameter' value='0.0' lower="0.0" upper="1.0" estimate="false"/>
         <originLength id="PDCOriginLength" spec='parameter.RealParameter' value='0.1'/>
         <switchRate id='PDCSwitchRate' spec='parameter.RealParameter' upper="1.0" value='0.1 0.1' estimate="false"/>
         <deathprob id='PDCCognateDeathRate' spec='parameter.RealParameter' upper="1000" lower="1e-5" value='1.0 0.1'/>
@@ -234,7 +233,9 @@
             <operator id='YuleModelWilsonBalding.t:tree' spec='WilsonBalding' weight="3" tree="@Tree.t:tree"/>
 
 			<operator id='PDCOriginLengthScaler' spec='ScaleOperator' scaleFactor="0.75" weight="0.1" parameter="@PDCOriginLength"/>
+<!--
 			<operator id='PDCAlphaScaler' spec='ScaleOperator' scaleFactor="0.75" weight="0.1" parameter="@PDCAlpha"/>
+-->			
 			<operator id='PDCSwitchRateScaler' spec='ScaleOperator' scaleFactor="0.75" weight="0.1" parameter="@PDCSwitchRate"/>
 			<operator id='PDCCognateDeathRateScaler' spec='ScaleOperator' scaleFactor="0.75" weight="0.1" parameter="@PDCCognateDeathRate"/>
 			
@@ -250,9 +251,11 @@
                 <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="10000"/>
             </prior>
             
+<!--
             <prior id="PDCAlphaPrior" name="distribution" x="@PDCAlpha">
                 <distr spec="beast.math.distributions.Uniform" lower="0.0" upper="1"/>
             </prior>
+-->
          
             <prior id="PDCCognateDeathRatePrior" name="distribution" x="@PDCCognateDeathRate">
                 <distr spec="beast.math.distributions.Exponential" mean="1.0"/>
@@ -289,7 +292,9 @@
             <connect srcID='mutationRate.s:$(n)'              targetID='state' inputName='stateNode' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
             <connect srcID='PDCOriginLength'                  targetID='state' inputName='stateNode' if='inlikelihood(PDCOriginLength) and PDCOriginLength/estimate=true'/>
             <connect srcID='PDCSwitchRate'                    targetID='state' inputName='stateNode' if='inlikelihood(PDCSwitchRate) and PDCSwitchRate/estimate=true'/>
+<!--
             <connect srcID='PDCAlpha'                          targetID='state' inputName='stateNode' if='inlikelihood(PDCAlpha) and PDCAlpha/estimate=true'/>
+-->            
             <connect srcID='PDCCognateDeathRate'              targetID='state' inputName='stateNode' if='inlikelihood(PDCCognateDeathRate) and PDCCognateDeathRate/estimate=true'/>
 
             <connect srcID='frequencies.s:$(n)'               targetID='state' inputName='stateNode' if='inlikelihood(frequencies.s:$(n)) and frequencies.s:$(n)/estimate=true'/>
@@ -304,7 +309,9 @@
             <!--connect srcID='mutationRateScaler.s:$(n)'        targetID='mcmc' inputName='operator' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect-->
             <connect srcID='mutationRateScaler.s:$(n)'        targetID='mcmc' inputName='operator' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'>Scales mutation rate of partition s:$(n)</connect>
             <connect srcID='PDCOriginLengthScaler'            targetID='mcmc' inputName='operator' if='inlikelihood(PDCOriginLength) and PDCOriginLength/estimate=true'>Scales origin length rate of partition s:$(n)</connect>
+<!--
             <connect srcID='PDCAlphaScaler'                   targetID='mcmc' inputName='operator' if='inlikelihood(PDCAlpha) and PDCAlpha/estimate=true'>Scales alpha rate of partition s:$(n)</connect>
+-->            
             <connect srcID='PDCSwitchRateScaler'              targetID='mcmc' inputName='operator' if='inlikelihood(PDCSwitchRate) and PDCSwitchRate/estimate=true'>Scales switch rate of partition s:$(n)</connect>
             <connect srcID='PDCCognateDeathRateScaler'        targetID='mcmc' inputName='operator' if='inlikelihood(PDCCognateDeathRate) and PDCCognateDeathRate/estimate=true'>Scales birth and death rate of partition s:$(n)</connect>
             
@@ -335,7 +342,9 @@
             <connect srcID='TreeHeight.t:tree'                targetID='tracelog' inputName='log' if='inposterior(Tree.t:tree)'/>
             <connect srcID='proportionInvariant.s:$(n)'       targetID='tracelog' inputName='log' if='inposterior(proportionInvariant.s:$(n)) and proportionInvariant.s:$(n)/estimate=true'/>
             <connect srcID='mutationRate.s:$(n)'              targetID='tracelog' inputName='log' if='inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>
+<!--
             <connect srcID='PDCAlpha'                         targetID='tracelog' inputName='log' if='inlikelihood(PDCAlpha) and PDCAlpha/estimate=true'/>
+-->            
             <connect srcID='PDCOriginLength'                  targetID='tracelog' inputName='log' if='inlikelihood(PDCOriginLength) and PDCOriginLength/estimate=true'/>
             <connect srcID='PDCCognateDeathRate'              targetID='tracelog' inputName='log' if='inlikelihood(PDCCognateDeathRate) and PDCCognateDeathRate/estimate=true'/>
             <connect srcID='PDCSwitchRate'                    targetID='tracelog' inputName='log' if='inlikelihood(PDCSwitchRate) and PDCSwitchRate/estimate=true'/>
@@ -347,7 +356,9 @@
             <connect srcID='hiddenfrequencies.s:$(n)'         targetID='tracelog' inputName='log' if='inlikelihood(hiddenfrequencies.s:$(n)) and hiddenfrequencies.s:$(n)/estimate=true'/>
 
             <connect srcID='GammaShapePrior.s:$(n)'           targetID='prior' inputName='distribution' if='inlikelihood(gammaShape.s:$(n)) and gammaShape.s:$(n)/estimate=true'/>
+<!--
             <connect srcID='PDCAlphaPrior'                    targetID='prior' inputName='distribution' if='inlikelihood(PDCAlpha) and PDCAlpha/estimate=true'/>
+-->            
             <connect srcID='PDCSwitchRatePrior'               targetID='prior' inputName='distribution' if='inlikelihood(PDCSwitchRate) and PDCSwitchRate/estimate=true'/>
             <connect srcID='PDCOriginLengthPrior'             targetID='prior' inputName='distribution' if='inlikelihood(PDCOriginLength) and PDCOriginLength/estimate=true'/>
             <connect srcID='PDCCognateDeathRatePrior'         targetID='prior' inputName='distribution' if='inlikelihood(PDCCognateDeathRate) and PDCCognateDeathRate/estimate=true'/>
@@ -362,9 +373,10 @@
 		<mergepoint id='treePriorTemplates'/>
         <mergepoint id='parametricDistributions'/>
 
+
 <!-- Tree initialisation -->
 <!-- Random tree -->
-
+		
         <subtemplate id='RandomTree' class='beast.evolution.tree.SimpleRandomTree' mainid='RandomTree.t:tree'>
 <![CDATA[
             <tree spec='beast.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)'>
