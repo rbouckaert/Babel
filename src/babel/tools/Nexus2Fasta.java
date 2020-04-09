@@ -1,16 +1,11 @@
 package babel.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
 import beast.app.util.Application;
 import beast.app.util.OutFile;
-import beast.app.util.XMLFile;
-import beast.core.BEASTInterface;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
@@ -18,12 +13,11 @@ import beast.core.Input.Validate;
 import beast.core.util.Log;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.Sequence;
-import beast.util.XMLParser;
-import beast.util.XMLParserException;
+import beast.util.NexusParser;
 
-@Description("Convert BEAST XML file into fasta alignemnt file")
-public class XML2Fasta extends Runnable {
-	final public Input<XMLFile> xmlInput = new Input<>("xml", "BEAST XML file containing an alignment",
+@Description("Convert NEXUS alignment file into fasta alignemnt file")
+public class Nexus2Fasta extends Runnable {
+	final public Input<File> nexusInput = new Input<>("in", "NEXUS file containing an alignment",
 			Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
@@ -34,7 +28,7 @@ public class XML2Fasta extends Runnable {
 
 	@Override
 	public void run() throws Exception {
-		Alignment alignment = loadFile(xmlInput.get());
+		Alignment alignment = loadFile(nexusInput.get());
 
 		// open file for writing
 		PrintStream out = System.out;
@@ -51,27 +45,14 @@ public class XML2Fasta extends Runnable {
 		Log.err.println("Done");	
 	}
 
-	private Alignment loadFile(XMLFile xmlFile) throws SAXException, IOException, ParserConfigurationException, XMLParserException {
-		XMLParser parser = new XMLParser();
-		Runnable runnable = parser.parseFile(xmlFile);		
-		return findAlignment(runnable);
+	private Alignment loadFile(File file) throws IOException {
+		NexusParser parser = new NexusParser();
+		parser.parseFile(file);
+		return parser.m_alignment;
 	}
-
-	private Alignment findAlignment(BEASTInterface bi) {
-		if (bi instanceof Alignment) {
-			return (Alignment) bi;
-		}
-		for (BEASTInterface o : bi.listActiveBEASTObjects()) {
-			Alignment a = findAlignment(o);
-			if (a != null) {
-				return a;
-			}
-		}
-		return null;
-	}
-
+	
 	public static void main(String[] args) throws Exception {
-		new Application(new XML2Fasta(), "XML to fasta converter", args);
+		new Application(new Nexus2Fasta(), "NEXUS alignment to fasta converter", args);
 
 	}
 

@@ -36,6 +36,10 @@
               class="babel.tools.XML2Fasta"
               args=""
             />
+    <packageapp description="Convert NEXUS alignment file into fasta alignemnt file"
+              class="babel.tools.Nexus2Fasta"
+              args=""
+            />
     <packageapp description="Convert FASTA file into NEXUS alignemtn file"
               class="babel.tools.Fasta2Nexus"
               args=""
