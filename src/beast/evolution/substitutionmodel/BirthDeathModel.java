@@ -119,7 +119,7 @@ public class BirthDeathModel extends GeneralSubstitutionModel {
         return eigenDecomposition;
     }
     
-	protected double[][] getRateMatrix() {
+	public double[][] getRateMatrix() {
 		if (delParameter.get().getValue() > 1.0) {
 			throw new IllegalArgumentException("death rate should not exceed birthrate (1.0)");
 		}
