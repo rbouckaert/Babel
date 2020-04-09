@@ -1,9 +1,17 @@
 package babel.tools;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
@@ -26,6 +34,8 @@ public class CladeSetComparator extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<OutFile> svgOutputInput = new Input<>("svg", "svg output file. if not specified, no SVG output is produced.",
+			new OutFile("[[none]]"));
+	final public Input<OutFile> pngOutputInput = new Input<>("png", "png output file. if not specified, no PNG output is produced.",
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 
@@ -74,6 +84,9 @@ public class CladeSetComparator extends Runnable {
 	public void initAndValidate() {
 	}
 
+	
+	double maxHeight = 0.0;
+	
 	@Override
 	public void run() throws Exception {
 		PrintStream out = System.out;
@@ -86,6 +99,52 @@ public class CladeSetComparator extends Runnable {
 			Log.warning("Writing to file " + svgOutputInput.get().getPath());
 			svg = new PrintStream(svgOutputInput.get());
 			svg.println(header.replaceAll("file1", src1Input.get().getPath()).replaceAll("file2", src2Input.get().getPath()));
+		}
+
+		Graphics2D g = null;
+		BufferedImage bi = null;
+		if (pngOutputInput.get() != null && !pngOutputInput.get().getName().equals("[[none]]")) {
+			Log.warning("Writing to file " + pngOutputInput.get().getPath());
+			bi = new BufferedImage(1200, 1200, BufferedImage.TYPE_INT_ARGB);
+			g = (Graphics2D) bi.getGraphics();
+			g.setColor(Color.white);
+			g.fillRect(0, 0, 1200, 1200);
+			
+			g.setColor(Color.black);
+			g.drawRect(100, 100, 1000, 1000);
+			
+			// diagonals
+			int h = 1200;
+			g.drawLine(100, h-100, 1100, h-1100);
+			g.setColor(Color.blue);
+			g.drawLine(100, h-300,  900, h-1100);
+			g.drawLine(300, h-100, 1100, h- 900);
+			
+			g.drawString("0.0", 100, 1130);
+			g.drawString("0.2", 300, 1130);
+			g.drawString("0.4", 500, 1130);
+			g.drawString("0.6", 700, 1130);
+			g.drawString("0.8", 900, 1130);
+			g.drawString("1.0",1100, 1130);
+			
+			g.drawString("0.0", 60, h-100);
+			g.drawString("0.2", 60, h-300);
+			g.drawString("0.4", 60, h-500);
+			g.drawString("0.6", 60, h-700);
+			g.drawString("0.8", 60, h-900);
+			g.drawString("1.0", 60, h-1100);
+
+			g.setColor(Color.black);
+			g.drawString(src1Input.get().getPath(), 520, 1170);
+
+			AffineTransform orig = g.getTransform();
+			g.rotate(Math.PI/2);
+			g.translate(540,-40);
+			g.drawString(src2Input.get().getPath(), 0, 0);
+			g.setTransform(orig);
+
+			g.setColor(Color.red);
+			g.setComposite(AlphaComposite.SrcOver.derive(0.25f));
 		}
 
 		CladeSet cladeSet1 = getCladeSet(src1Input.get().getPath());
@@ -109,36 +168,40 @@ public class CladeSetComparator extends Runnable {
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);
 			int support = cladeSet2.getFrequency(i);
+			double h2 = cladeSet2.getMeanNodeHeight(i);
 			if (cladeMap.containsKey(clade)) {
 				// clade is also in set1
-				output(out, svg, clade,cladeMap.get(clade),support/n2);
 				double h1 = cladeHeightMap.get(clade);
-				double h2 = cladeSet2.getMeanNodeHeight(i);
-				System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
+				output(out, svg, clade,cladeMap.get(clade),support/n2, g, h1, h2);
+				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support/n2));
 				cladeMap.remove(clade);
 			} else {
 				// clade is not in set1
-				output(out, svg, clade, 0.0, support/n2);
+				output(out, svg, clade, 0.0, support/n2, g, 0, h2);
 				maxDiff = Math.max(maxDiff, support/n2);
 			}
 		}		
 		
 		// process left-overs of clades in set1 that are not in set2 
 		for (String clade : cladeMap.keySet()) {
-			output(out, svg, clade, cladeMap.get(clade), 0.0);
+			double h1 = cladeHeightMap.get(clade);
+			output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0);
 			maxDiff = Math.max(maxDiff, cladeMap.get(clade));
 		}
 
 		if (svg != null) {
 			svg.println(footer);
 		}
+		if (bi != null) {
+			ImageIO.write(bi, "png", pngOutputInput.get());
+		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info.println("Done");
 	}
 
-	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2) {
+	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2) {
 		out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
 		if ((support1 < 0.1 && support2 > 0.9) ||
 			(support2 < 0.1 && support1 > 0.9)) {
@@ -154,6 +217,24 @@ public class CladeSetComparator extends Runnable {
 					"\" cy=\""+ (10 + 1000 - 1000 * support2 + Randomizer.nextInt(10) - 5) +"\" "
 							+ "data-value=\"7.2\" r=\"" + (support1 + support2) * 10 + "\"></circle>");
 		}
+		
+		if (g != null) {
+			double x = (100 + 1000 * support1 + Randomizer.nextInt(10) - 5);
+			double y = (     1100 - 1000 * support2 + Randomizer.nextInt(10) - 5);
+			double r = 1+(support1 + support2) * 10; 
+			g.setColor(Color.red);
+			g.setComposite(AlphaComposite.SrcOver.derive(0.25f));
+			g.fillOval((int)(x-r/2), (int)(y-r/2), (int) r, (int) r);
+			
+			g.setColor(Color.blue);
+			float alpha = (float)(0.1 + ((support1 + support2)/2.0)*0.9);
+			g.setComposite(AlphaComposite.SrcOver.derive(alpha));
+			x = 100 + 1000.0 * h1 / maxHeight;
+			y = 1100 - 1000.0 * h2/ maxHeight;
+			r = 3 + Math.max(support1, support2) * 13;
+			g.fillOval((int)(x-r/2), (int)(y-r/2), (int) r, (int) r);
+			
+		}
 	}
 
 	private CladeSet getCladeSet(String path) throws IOException {
@@ -167,6 +248,8 @@ public class CladeSetComparator extends Runnable {
 			tree = srcTreeSet.next();
 			cladeSet1.add(tree);
 			n++;
+			
+			maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
 		}
 		return cladeSet1;
 	}
