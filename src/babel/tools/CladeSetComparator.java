@@ -2,14 +2,20 @@ package babel.tools;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
@@ -22,8 +28,10 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
 import beast.core.util.Log;
-import beast.evolution.tree.CladeSet;
+import beast.evolution.alignment.TaxonSet;
+import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
+import beast.util.FrequencySet;
 import beast.util.Randomizer;
 
 @Description("Match clades from two tree sets and print support for both sets so "
@@ -89,6 +97,16 @@ public class CladeSetComparator extends Runnable {
 	
 	@Override
 	public void run() throws Exception {
+//		if (src1Input.get().size() < 2) {
+//			throw new IllegalArgumentException("Must specify at least 2 tree files");
+//		}
+		
+//		if (src1Input.get().size() == 2) {
+			process(src1Input.get(), src2Input.get(), "");
+//		}
+	}
+	
+	void process(TreeFile tree1, TreeFile tree2, String suffix)  throws Exception {
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + outputInput.get().getPath());
@@ -98,7 +116,7 @@ public class CladeSetComparator extends Runnable {
 		if (svgOutputInput.get() != null && !svgOutputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + svgOutputInput.get().getPath());
 			svg = new PrintStream(svgOutputInput.get());
-			svg.println(header.replaceAll("file1", src1Input.get().getPath()).replaceAll("file2", src2Input.get().getPath()));
+			svg.println(header.replaceAll("file1", tree1.getPath()).replaceAll("file2", tree2.getPath()));
 		}
 
 		Graphics2D g = null;
@@ -135,36 +153,39 @@ public class CladeSetComparator extends Runnable {
 			g.drawString("1.0", 60, h-1100);
 
 			g.setColor(Color.black);
-			g.drawString(src1Input.get().getPath(), 520, 1170);
+			g.drawString(tree1.getPath(), 520, 1170);
 
 			AffineTransform orig = g.getTransform();
 			g.rotate(Math.PI/2);
 			g.translate(540,-40);
-			g.drawString(src2Input.get().getPath(), 0, 0);
+			g.drawString(tree2.getPath(), 0, 0);
 			g.setTransform(orig);
 
 			g.setColor(Color.red);
 			g.setComposite(AlphaComposite.SrcOver.derive(0.25f));
 		}
 
-		CladeSet cladeSet1 = getCladeSet(src1Input.get().getPath());
+		CladeSetWithHeights cladeSet1 = getCladeSet(tree1.getPath());
 		double n1 = n;
 
-		CladeSet cladeSet2 = getCladeSet(src2Input.get().getPath());		
+		CladeSetWithHeights cladeSet2 = getCladeSet(tree2.getPath());		
 		double n2 = n;
 		
 		// create map of clades to support values in set1
 		Map<String, Double> cladeMap = new LinkedHashMap<>();
+		Map<String, Integer> cladeToIndexMap = new LinkedHashMap<>();
 		Map<String, Double> cladeHeightMap = new LinkedHashMap<>();
 		for (int i = 0; i < cladeSet1.getCladeCount(); i++) {
 			String clade = cladeSet1.getClade(i);
 			int support = cladeSet1.getFrequency(i);
 			cladeMap.put(clade, support/ n1);
 			cladeHeightMap.put(clade, cladeSet1.getMeanNodeHeight(i));
+			cladeToIndexMap.put(clade, i);
 		}
 		
 		// process clades in set2
 		double maxDiff = 0;
+		double [] hist = new double[40];
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);
 			int support = cladeSet2.getFrequency(i);
@@ -172,22 +193,52 @@ public class CladeSetComparator extends Runnable {
 			if (cladeMap.containsKey(clade)) {
 				// clade is also in set1
 				double h1 = cladeHeightMap.get(clade);
-				output(out, svg, clade,cladeMap.get(clade),support/n2, g, h1, h2);
+				double [] heights1 = cladeSet1.nodeHeights.get(cladeSet1.get(cladeToIndexMap.get(clade)));
+				Arrays.sort(heights1);
+				double lo1 = heights1[(int)(heights1.length * 0.025)];
+				double hi1 = heights1[(int)(heights1.length * 0.975)];
+				
+				double [] heights2 = cladeSet2.nodeHeights.get(cladeSet2.get(i));
+				Arrays.sort(heights2);
+				double lo2 = heights2[(int)(heights2.length * 0.025)];
+				double hi2 = heights2[(int)(heights2.length * 0.975)];
+				
+				double support1 = cladeMap.get(clade);
+				double support2 = support/n2;
+				output(out, svg, clade,support1, support2, g, h1, h2, 
+						lo1, lo2, hi1, hi2);
 				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support/n2));
 				cladeMap.remove(clade);
+				
+				// record difference in 95%HPD (if support > 1% in both clade sets)
+				if (support1 > 0.01 && support2 > 0.01) {
+					if ((hi1-lo1) < (hi2-lo2)) {
+						double w = (hist.length/2) * (hi1-lo1)/(hi2-lo2);
+						if (w < 0) {
+							w = 0;
+						}
+						hist[(int)w] += support1 + support2;
+					} else {
+						double w = hist.length - 1 - (hist.length/2) * (hi2-lo2)/(hi1-lo1);
+						if (w >= hist.length) {
+							w = hist.length - 1;
+						}
+						hist[(int)w] += support1 + support2;
+					}
+				}
 			} else {
 				// clade is not in set1
-				output(out, svg, clade, 0.0, support/n2, g, 0, h2);
+				output(out, svg, clade, 0.0, support/n2, g, 0, h2, 0, h2, 0, h2);
 				maxDiff = Math.max(maxDiff, support/n2);
 			}
-		}		
+		}
 		
 		// process left-overs of clades in set1 that are not in set2 
 		for (String clade : cladeMap.keySet()) {
 			double h1 = cladeHeightMap.get(clade);
-			output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0);
+			output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0, h1, 0, h1, 0);
 			maxDiff = Math.max(maxDiff, cladeMap.get(clade));
 		}
 
@@ -195,13 +246,27 @@ public class CladeSetComparator extends Runnable {
 			svg.println(footer);
 		}
 		if (bi != null) {
+			// draw histogram of 95%HPD interval fractions
+			double max = 0;
+			for (double d : hist) {
+				max = Math.max(max, d);
+			}
+			int width = 10, height = 100;
+			g.setComposite(AlphaComposite.SrcOver.derive(1.0f));
+			g.drawRect(100, 0, width*hist.length, height);
+			for (int i = 0; i < hist.length; i++) {
+				g.drawRect(100 + i * width, height-(int)(hist[i] * height / max), width, (int)(hist[i] * height / max));
+			}
+			
+			
 			ImageIO.write(bi, "png", pngOutputInput.get());
 		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info.println("Done");
 	}
 
-	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2) {
+	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
+			double lo1, double lo2, double hi1, double hi2) {
 		out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
 		if ((support1 < 0.1 && support2 > 0.9) ||
 			(support2 < 0.1 && support1 > 0.9)) {
@@ -234,15 +299,30 @@ public class CladeSetComparator extends Runnable {
 			r = 3 + Math.max(support1, support2) * 13;
 			g.fillOval((int)(x-r/2), (int)(y-r/2), (int) r, (int) r);
 			
+			
+			if ((support1 + support2) > 0.1) {
+				g.setComposite(AlphaComposite.SrcOver.derive(alpha * alpha));
+				int x1 = (int)(100 + 1000.0 * lo1 / maxHeight);
+				int y1 = (int)(1100 - 1000.0 * h1/ maxHeight);
+				int x2 = (int)(100 + 1000.0 * hi1 / maxHeight);
+				int y2 = (int)(1100 - 1000.0 * h1/ maxHeight);
+				g.drawLine(x1, y1, x2, y2);
+				x1 = (int)(100 + 1000.0 * h2 / maxHeight);
+				y1 = (int)(1100 - 1000.0 * lo2/ maxHeight);
+				x2 = (int)(100 + 1000.0 * h2 / maxHeight);
+				y2 = (int)(1100 - 1000.0 * hi2/ maxHeight);
+				g.drawLine(x1, y1, x2, y2);
+			}
+			
 		}
 	}
 
-	private CladeSet getCladeSet(String path) throws IOException {
+	private CladeSetWithHeights getCladeSet(String path) throws IOException {
 		Log.warning("Processing " + path);
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
-		CladeSet cladeSet1 = new CladeSet(tree);
+		CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree);
 		n = 1;
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
@@ -254,9 +334,240 @@ public class CladeSetComparator extends Runnable {
 		return cladeSet1;
 	}
 
+	public class CladeSetWithHeights extends FrequencySet<BitSet> {
+	    //
+	    // Public stuff
+	    //
+
+	    public CladeSetWithHeights() {}
+
+	    /**
+	     * @param tree
+	     */
+	    public CladeSetWithHeights(Tree tree) {
+	        this(tree, tree.getTaxonset());
+	    }
+
+	    /**
+	     * @param taxonSet  a set of taxa used to label the tips
+	     */
+	    public CladeSetWithHeights(Tree tree, TaxonSet taxonSet) {
+	        this.taxonSet = taxonSet;
+	        add(tree);
+	    }
+
+	    /** get number of unique clades */
+	    public int getCladeCount()
+	    {
+	        return size();
+	    }
+
+	    /** get clade bit set */
+	    public String getClade(int index) {
+	        BitSet bits = get(index);
+
+	        StringBuffer buffer = new StringBuffer("{");
+	        boolean first = true;
+	        for (String taxonId : getTaxaSet(bits)) {
+	            if (!first) {
+	                buffer.append(", ");
+	            } else {
+	                first = false;
+	            }
+	            buffer.append(taxonId);
+	        }
+	        buffer.append("}");
+	        return buffer.toString();
+	    }
+
+	    private SortedSet<String> getTaxaSet(BitSet bits) {
+
+	        SortedSet<String> taxaSet = new TreeSet<>();
+
+	        for (int i = 0; i < bits.length(); i++) {
+	            if (bits.get(i)) {
+	                taxaSet.add(taxonSet.asStringList().get(i)); //TODO ?= taxonList.getTaxonId(i)
+	            }
+	        }
+	        return taxaSet;
+	    }
+
+	    /** get clade frequency */
+	    int getCladeFrequency(int index)
+	    {
+	        return getFrequency(index);
+	    }
+
+	    /** adds all the clades in the tree */
+	    public void add(Tree tree) {
+	        if (taxonSet == null) {
+	            taxonSet = tree.getTaxonset();
+	        }
+
+	        totalTrees += 1;
+
+	        // Recurse over the tree and add all the clades (or increment their
+	        // frequency if already present). The root clade is not added.
+	        addClades(tree.getRoot(), null);
+	    }
+
+	    private void addClades(Node node, BitSet bits) {
+
+	        if (node.isLeaf()) {
+	            if (taxonSet != null) {
+	                int index = taxonSet.getTaxonIndex(node.getID());
+	                bits.set(index);
+	            } else {
+	                bits.set(node.getNr());
+	            }
+	        } else {
+
+	            BitSet bits2 = new BitSet();
+	            for (Node child : node.getChildren()) {
+	                addClades(child, bits2);
+	            }
+
+	            add(bits2, 1);
+	            addNodeHeight(bits2, node.getHeight()); // TODO ?= tree.getNodeHeight(node)
+
+	            if (bits != null) {
+	                bits.or(bits2);
+	            }
+	        }
+	    }
+
+	    public double getMeanNodeHeight(int i) {
+	        BitSet bits = get(i);
+
+	        return getTotalNodeHeight(bits) / getFrequency(i);
+	    }
+
+	    private double getTotalNodeHeight(BitSet bits) {
+	        Double tnh = totalNodeHeight.get(bits);
+	        if (tnh == null) return 0.0;
+	        return tnh;
+	    }
+
+	    private void addNodeHeight(BitSet bits, double height) {
+	        totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + height));
+	        if (!nodeHeights.containsKey(bits)) {
+	        	nodeHeights.put(bits, new double[]{height});
+	        } else {
+	        	double [] heights = nodeHeights.get(bits);
+	        	double [] newHeights = new double[heights.length + 1];
+	        	System.arraycopy(heights, 0, newHeights, 0, heights.length);
+	        	newHeights[heights.length] = height;
+	        	nodeHeights.put(bits, newHeights);
+	        }
+	    }
+
+	    // Generifying found that this code was buggy. Luckily it is not used anymore.
+
+//	    /** adds all the clades in the CladeSet */
+//	    public void add(CladeSet cladeSet)
+//	    {
+//	        for (int i = 0, n = cladeSet.getCladeCount(); i < n; i++) {
+//	            add(cladeSet.getClade(i), cladeSet.getCladeFrequency(i));
+//	        }
+//	    }
+
+	    private BitSet annotate(Tree tree, Node node, String freqAttrName) {
+	        BitSet b = null;
+	        if (node.isLeaf()) {
+	            int index;
+	            if (taxonSet != null) {
+	                index = taxonSet.getTaxonIndex(node.getID());
+	            } else {
+	                index = node.getNr();
+	            }
+	            b = new BitSet(tree.getLeafNodeCount());
+	            b.set(index);
+
+	        } else {
+
+	            for (Node child : node.getChildren()) {
+	                BitSet b1 = annotate(tree, child, freqAttrName);
+	                if( child.isRoot() ) {
+	                    b = b1;
+	                } else {
+	                    b.or(b1);
+	                }
+	            }
+	            final int total = getFrequency(b);
+	            if( total >= 0 ) {
+	                node.setMetaData(freqAttrName, total / (double)totalTrees );
+	            }
+	        }
+	        return b;
+	    }
+
+	    /**
+	     * Annotate clades of tree with posterior probability
+	     * @param tree
+	     * @param freqAttrName name of attribute to set per node
+	     * @return sum(log(all clades probability))
+	     */
+	    public double annotate(Tree tree, String freqAttrName) {
+	        annotate(tree, tree.getRoot(), freqAttrName);
+
+	        double logClade = 0.0;
+	        for(Node internalNode : tree.getInternalNodes()) {
+	            final double f = (Double) internalNode.getMetaData(freqAttrName);
+	            logClade += Math.log(f);
+	        }
+	        return logClade;
+	    }
+
+	    public boolean hasClade(int index, Tree tree) {
+	        BitSet bits = get(index);
+
+	        Node[] mrca = new Node[1];
+	        findClade(bits, tree.getRoot(), mrca);
+
+	        return (mrca[0] != null);
+	    }
+
+	    private int findClade(BitSet bitSet, Node node, Node[] cladeMRCA) {
+
+	        if (node.isLeaf()) {
+
+	            if (taxonSet != null) {
+	                int index = taxonSet.getTaxonIndex(node.getID());
+	                if (bitSet.get(index)) return 1;
+	            } else {
+	                if (bitSet.get(node.getNr())) return 1;
+	            }
+	            return -1;
+	        } else {
+	            int count = 0;
+	            for (Node child : node.getChildren()) {
+	                int childCount = findClade(bitSet, child, cladeMRCA);
+
+	                if (childCount != -1 && count != -1) {
+	                    count += childCount;
+	                } else count = -1;
+	            }
+
+	            if (count == bitSet.cardinality()) cladeMRCA[0] = node;
+
+	            return count;
+	        }
+	    }
+
+	    //
+	    // Private stuff
+	    //
+	    private TaxonSet taxonSet = null;
+	    private final Map<BitSet, Double> totalNodeHeight = new HashMap<>();
+	    private final Map<BitSet, double[]> nodeHeights = new HashMap<>();
+	    private int totalTrees = 0;
+	}
+
+	
 	public static void main(String[] args) throws Exception {
 		new Application(new CladeSetComparator(), "Clade Set Comparator", args);
 
 	}
 
+	
 }
