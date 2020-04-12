@@ -2,9 +2,11 @@ package babel.tools;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ import beast.util.Randomizer;
 @Description("Match clades from two tree sets and print support for both sets so "
 		+ "they can be plotted in an X-Y plot")
 public class CladeSetComparator extends Runnable {
+	final public Input<List<TreeFile>> srcInput = new Input<>("tree","source tree (set) file", new ArrayList<>());
 	final public Input<TreeFile> src1Input = new Input<>("tree1","source tree (set) file");
 	final public Input<TreeFile> src2Input = new Input<>("tree2","source tree (set) file");
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
@@ -97,72 +100,77 @@ public class CladeSetComparator extends Runnable {
 	
 	@Override
 	public void run() throws Exception {
-//		if (src1Input.get().size() < 2) {
-//			throw new IllegalArgumentException("Must specify at least 2 tree files");
-//		}
-		
-//		if (src1Input.get().size() == 2) {
+		if (srcInput.get().size()  == 0) {
 			process(src1Input.get(), src2Input.get(), "");
-//		}
+			return;
+		}
+		
+		if (srcInput.get().size()  == 1) {
+			throw new IllegalArgumentException("Must specify at least 2 tree files with \'tree\' argument");
+		}
+
+		int n = srcInput.get().size(); 
+		for (int i = 0; i < n; i++) {
+			for (int j = i+1; j < n; j++) {
+				process(srcInput.get().get(i), srcInput.get().get(j), n > 2 ? i+"-"+j : "");				
+			}			
+		}
+		
+		if (pngOutputInput.get() != null && 
+			!pngOutputInput.get().getName().equals("[[none]]") &&
+			n > 2) {
+			String str = pngOutputInput.get().getPath();
+			if (str.contains(".")) {
+				int k = str.lastIndexOf('.');
+				str = str.substring(0, k);
+			}
+			str += ".html";
+			PrintStream out = new PrintStream(str);
+			out.println("<html>\n<body>");
+			out.println("<table>");
+			for (int i = 0; i < n; i++) {
+				out.print("<tr>");
+				for (int j = 0; j < i; j++) {
+					out.print("<td>&nbsp;</td>");
+				}
+				for (int j = i+1; j < n; j++) {
+					String png = pngOutputInput.get().getPath();
+					if (png.contains(".")) {
+						int k = png.lastIndexOf('.');
+						png = png.substring(0, k) + (i+"-"+j) + png.substring(k);
+					}
+					out.println("\t<td><img src='" + png + "'/></td>");
+				}			
+				out.println("</tr>");
+			}
+			
+			out.println("</table>");
+			out.println("</body>\n</html>");
+			out.close();			
+		}
 	}
 	
 	void process(TreeFile tree1, TreeFile tree2, String suffix)  throws Exception {
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
-			Log.warning("Writing to file " + outputInput.get().getPath());
-			out = new PrintStream(outputInput.get());
+			String str = normalise(outputInput.get().getPath(), suffix);			
+			Log.warning("Writing to file " + str);
+			out = new PrintStream(str);
 		}
 		PrintStream svg = null;
 		if (svgOutputInput.get() != null && !svgOutputInput.get().getName().equals("[[none]]")) {
-			Log.warning("Writing to file " + svgOutputInput.get().getPath());
-			svg = new PrintStream(svgOutputInput.get());
+			String str = normalise(svgOutputInput.get().getPath(), suffix);
+			Log.warning("Writing to file " + str);
+			svg = new PrintStream(str);
 			svg.println(header.replaceAll("file1", tree1.getPath()).replaceAll("file2", tree2.getPath()));
 		}
 
 		Graphics2D g = null;
 		BufferedImage bi = null;
 		if (pngOutputInput.get() != null && !pngOutputInput.get().getName().equals("[[none]]")) {
-			Log.warning("Writing to file " + pngOutputInput.get().getPath());
 			bi = new BufferedImage(1200, 1200, BufferedImage.TYPE_INT_ARGB);
 			g = (Graphics2D) bi.getGraphics();
-			g.setColor(Color.white);
-			g.fillRect(0, 0, 1200, 1200);
-			
-			g.setColor(Color.black);
-			g.drawRect(100, 100, 1000, 1000);
-			
-			// diagonals
-			int h = 1200;
-			g.drawLine(100, h-100, 1100, h-1100);
-			g.setColor(Color.blue);
-			g.drawLine(100, h-300,  900, h-1100);
-			g.drawLine(300, h-100, 1100, h- 900);
-			
-			g.drawString("0.0", 100, 1130);
-			g.drawString("0.2", 300, 1130);
-			g.drawString("0.4", 500, 1130);
-			g.drawString("0.6", 700, 1130);
-			g.drawString("0.8", 900, 1130);
-			g.drawString("1.0",1100, 1130);
-			
-			g.drawString("0.0", 60, h-100);
-			g.drawString("0.2", 60, h-300);
-			g.drawString("0.4", 60, h-500);
-			g.drawString("0.6", 60, h-700);
-			g.drawString("0.8", 60, h-900);
-			g.drawString("1.0", 60, h-1100);
-
-			g.setColor(Color.black);
-			g.drawString(tree1.getPath(), 520, 1170);
-
-			AffineTransform orig = g.getTransform();
-			g.rotate(Math.PI/2);
-			g.translate(540,-40);
-			g.drawString(tree2.getPath(), 0, 0);
-			g.setTransform(orig);
-
-			g.setColor(Color.red);
-			g.setComposite(AlphaComposite.SrcOver.derive(0.25f));
+			initPNG(g, tree1, tree2);
 		}
 
 		CladeSetWithHeights cladeSet1 = getCladeSet(tree1.getPath());
@@ -251,19 +259,70 @@ public class CladeSetComparator extends Runnable {
 			for (double d : hist) {
 				max = Math.max(max, d);
 			}
-			int width = 10, height = 100;
+			int width = 10, height = 90;
 			g.setComposite(AlphaComposite.SrcOver.derive(1.0f));
 			g.drawRect(100, 0, width*hist.length, height);
 			for (int i = 0; i < hist.length; i++) {
 				g.drawRect(100 + i * width, height-(int)(hist[i] * height / max), width, (int)(hist[i] * height / max));
 			}
 			
-			
-			ImageIO.write(bi, "png", pngOutputInput.get());
+			String str = normalise(pngOutputInput.get().getPath(), suffix);
+			Log.warning("Writing to file " + str);
+			ImageIO.write(bi, "png", new File(str));
 		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info.println("Done");
 	}
+
+	private String normalise(String str, String suffix) {
+		if (str.contains(".")) {
+			int k = str.lastIndexOf('.');
+			str = str.substring(0, k) + suffix + str.substring(k);
+		} else {
+			str += suffix;
+		}
+		return str;
+	}
+
+	private void initPNG(Graphics2D g, TreeFile tree1, TreeFile tree2) {
+		g.setColor(Color.white);
+		g.fillRect(0, 0, 1200, 1200);
+		
+		g.setColor(Color.black);
+		g.drawRect(100, 100, 1000, 1000);
+		
+		// diagonals
+		int h = 1200;
+		g.drawLine(100, h-100, 1100, h-1100);
+		g.setColor(Color.blue);
+		g.drawLine(100, h-300,  900, h-1100);
+		g.drawLine(300, h-100, 1100, h- 900);
+		
+		g.drawString("0.0", 100, 1130);
+		g.drawString("0.2", 300, 1130);
+		g.drawString("0.4", 500, 1130);
+		g.drawString("0.6", 700, 1130);
+		g.drawString("0.8", 900, 1130);
+		g.drawString("1.0",1100, 1130);
+		
+		g.drawString("0.0", 60, h-100);
+		g.drawString("0.2", 60, h-300);
+		g.drawString("0.4", 60, h-500);
+		g.drawString("0.6", 60, h-700);
+		g.drawString("0.8", 60, h-900);
+		g.drawString("1.0", 60, h-1100);
+
+		g.setColor(Color.black);
+		g.setFont(new Font("Arial",Font.PLAIN, 50));
+		g.drawString(tree1.getPath(), 120, 1170);
+
+		AffineTransform orig = g.getTransform();
+		g.rotate(-Math.PI/2);
+		g.drawString(tree2.getPath(), -880, 40);
+		g.setTransform(orig);
+
+		g.setColor(Color.red);
+		g.setComposite(AlphaComposite.SrcOver.derive(0.25f));	}
 
 	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
 			double lo1, double lo2, double hi1, double hi2) {
@@ -303,13 +362,13 @@ public class CladeSetComparator extends Runnable {
 			if ((support1 + support2) > 0.1) {
 				g.setComposite(AlphaComposite.SrcOver.derive(alpha * alpha));
 				int x1 = (int)(100 + 1000.0 * lo1 / maxHeight);
-				int y1 = (int)(1100 - 1000.0 * h1/ maxHeight);
+				int y1 = (int)(1100 - 1000.0 * h2/ maxHeight);
 				int x2 = (int)(100 + 1000.0 * hi1 / maxHeight);
-				int y2 = (int)(1100 - 1000.0 * h1/ maxHeight);
+				int y2 = (int)(1100 - 1000.0 * h2/ maxHeight);
 				g.drawLine(x1, y1, x2, y2);
-				x1 = (int)(100 + 1000.0 * h2 / maxHeight);
+				x1 = (int)(100 + 1000.0 * h1 / maxHeight);
 				y1 = (int)(1100 - 1000.0 * lo2/ maxHeight);
-				x2 = (int)(100 + 1000.0 * h2 / maxHeight);
+				x2 = (int)(100 + 1000.0 * h1 / maxHeight);
 				y2 = (int)(1100 - 1000.0 * hi2/ maxHeight);
 				g.drawLine(x1, y1, x2, y2);
 			}
