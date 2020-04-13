@@ -39,9 +39,9 @@ import beast.util.Randomizer;
 @Description("Match clades from two tree sets and print support for both sets so "
 		+ "they can be plotted in an X-Y plot")
 public class CladeSetComparator extends Runnable {
-	final public Input<List<TreeFile>> srcInput = new Input<>("tree","source tree (set) file", new ArrayList<>());
-	final public Input<TreeFile> src1Input = new Input<>("tree1","source tree (set) file");
-	final public Input<TreeFile> src2Input = new Input<>("tree2","source tree (set) file");
+	final public Input<List<TreeFile>> srcInput = new Input<>("tree","2 or more source tree (set or MCC tree) files", new ArrayList<>());
+	final public Input<TreeFile> src1Input = new Input<>("tree1","source tree (set or MCC tree) file");
+	final public Input<TreeFile> src2Input = new Input<>("tree2","source tree (set or MCC tree) file");
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<OutFile> svgOutputInput = new Input<>("svg", "svg output file. if not specified, no SVG output is produced.",
@@ -100,8 +100,13 @@ public class CladeSetComparator extends Runnable {
 	
 	@Override
 	public void run() throws Exception {
+		long start = System.currentTimeMillis();
 		if (srcInput.get().size()  == 0) {
-			process(src1Input.get(), src2Input.get(), "");
+			CladeSetWithHeights cladeSet1 = getCladeSet(src1Input.get().getPath());
+			double n1 = n;
+			CladeSetWithHeights cladeSet2 = getCladeSet(src2Input.get().getPath());
+			double n2 = n;
+			process(src1Input.get(), src2Input.get(), "", cladeSet1, n1, cladeSet2, n2);
 			return;
 		}
 		
@@ -109,10 +114,16 @@ public class CladeSetComparator extends Runnable {
 			throw new IllegalArgumentException("Must specify at least 2 tree files with \'tree\' argument");
 		}
 
-		int n = srcInput.get().size(); 
+		int n = srcInput.get().size();
+		CladeSetWithHeights [] cladeSets = new CladeSetWithHeights[n];
+		double [] count = new double[n];
+		for (int i = 0; i < n; i++) {
+			cladeSets[i] = getCladeSet(srcInput.get().get(i).getPath());
+			count[i] = this.n;
+		}		
 		for (int i = 0; i < n; i++) {
 			for (int j = i+1; j < n; j++) {
-				process(srcInput.get().get(i), srcInput.get().get(j), n > 2 ? i+"-"+j : "");				
+				process(srcInput.get().get(i), srcInput.get().get(j), n > 2 ? i+"-"+j : "", cladeSets[i], count[i], cladeSets[j], count[j]);				
 			}			
 		}
 		
@@ -148,9 +159,14 @@ public class CladeSetComparator extends Runnable {
 			out.println("</body>\n</html>");
 			out.close();			
 		}
+		long end = System.currentTimeMillis();
+		System.err.println("All done in " + (end - start)/1000 + " seconds");
 	}
 	
-	void process(TreeFile tree1, TreeFile tree2, String suffix)  throws Exception {
+	void process(TreeFile tree1, TreeFile tree2, String suffix, 
+			CladeSetWithHeights cladeSet1, double n1,
+			CladeSetWithHeights cladeSet2, double n2
+			)  throws Exception {
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			String str = normalise(outputInput.get().getPath(), suffix);			
@@ -173,11 +189,11 @@ public class CladeSetComparator extends Runnable {
 			initPNG(g, tree1, tree2);
 		}
 
-		CladeSetWithHeights cladeSet1 = getCladeSet(tree1.getPath());
-		double n1 = n;
+//		CladeSetWithHeights cladeSet1 = getCladeSet(tree1.getPath());
+//		double n1 = n;
 
-		CladeSetWithHeights cladeSet2 = getCladeSet(tree2.getPath());		
-		double n2 = n;
+//		CladeSetWithHeights cladeSet2 = getCladeSet(tree2.getPath());		
+//		double n2 = n;
 		
 		// create map of clades to support values in set1
 		Map<String, Double> cladeMap = new LinkedHashMap<>();
@@ -185,8 +201,13 @@ public class CladeSetComparator extends Runnable {
 		Map<String, Double> cladeHeightMap = new LinkedHashMap<>();
 		for (int i = 0; i < cladeSet1.getCladeCount(); i++) {
 			String clade = cladeSet1.getClade(i);
+			BitSet bitset = cladeSet1.get(i);
 			int support = cladeSet1.getFrequency(i);
-			cladeMap.put(clade, support/ n1);
+			if (cladeSet1 instanceof SummaryCladeSetWithHeights) {
+				cladeMap.put(clade, ((SummaryCladeSetWithHeights)cladeSet1).posteriors.get(bitset));
+			} else {
+				cladeMap.put(clade, support/ n1);
+			}
 			cladeHeightMap.put(clade, cladeSet1.getMeanNodeHeight(i));
 			cladeToIndexMap.put(clade, i);
 		}
@@ -195,8 +216,15 @@ public class CladeSetComparator extends Runnable {
 		double maxDiff = 0;
 		double [] hist = new double[40];
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
-			String clade = cladeSet2.getClade(i);
-			int support = cladeSet2.getFrequency(i);
+			String clade = cladeSet2.getClade(i);			
+			double support2; 
+			if (cladeSet2 instanceof SummaryCladeSetWithHeights) {
+				BitSet bitset = cladeSet2.get(i);
+				support2 = ((SummaryCladeSetWithHeights)cladeSet2).posteriors.get(bitset);
+			} else {
+				int support = cladeSet2.getFrequency(i);
+				support2 = support/n2;	
+			}
 			double h2 = cladeSet2.getMeanNodeHeight(i);
 			if (cladeMap.containsKey(clade)) {
 				// clade is also in set1
@@ -212,12 +240,11 @@ public class CladeSetComparator extends Runnable {
 				double hi2 = heights2[(int)(heights2.length * 0.975)];
 				
 				double support1 = cladeMap.get(clade);
-				double support2 = support/n2;
 				output(out, svg, clade,support1, support2, g, h1, h2, 
 						lo1, lo2, hi1, hi2);
 				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
-				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support/n2));
+				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
 				cladeMap.remove(clade);
 				
 				// record difference in 95%HPD (if support > 1% in both clade sets)
@@ -238,8 +265,8 @@ public class CladeSetComparator extends Runnable {
 				}
 			} else {
 				// clade is not in set1
-				output(out, svg, clade, 0.0, support/n2, g, 0, h2, 0, h2, 0, h2);
-				maxDiff = Math.max(maxDiff, support/n2);
+				output(out, svg, clade, 0.0, support2, g, 0, h2, 0, h2, 0, h2);
+				maxDiff = Math.max(maxDiff, support2);
 			}
 		}
 		
@@ -322,7 +349,8 @@ public class CladeSetComparator extends Runnable {
 		g.setTransform(orig);
 
 		g.setColor(Color.red);
-		g.setComposite(AlphaComposite.SrcOver.derive(0.25f));	}
+		g.setComposite(AlphaComposite.SrcOver.derive(0.25f));	
+	}
 
 	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
 			double lo1, double lo2, double hi1, double hi2) {
@@ -383,6 +411,8 @@ public class CladeSetComparator extends Runnable {
 		Tree tree = srcTreeSet.next();
 		CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree);
 		n = 1;
+		maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
 			cladeSet1.add(tree);
@@ -390,9 +420,70 @@ public class CladeSetComparator extends Runnable {
 			
 			maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
 		}
+		
+		if (n==1) {
+			// might be a summary tree
+			cladeSet1 = new SummaryCladeSetWithHeights(tree);
+		}
 		return cladeSet1;
 	}
 
+	public class SummaryCladeSetWithHeights extends CladeSetWithHeights {
+
+		public SummaryCladeSetWithHeights(Tree tree) {
+	        this(tree, tree.getTaxonset());
+		}
+		
+	    public SummaryCladeSetWithHeights(Tree tree, TaxonSet taxonSet) {
+	        this.taxonSet = taxonSet;
+	        add(tree);
+	    }
+	    
+	    void addClades(Node node, BitSet bits) {
+
+	        if (node.isLeaf()) {
+	            if (taxonSet != null) {
+	                int index = taxonSet.getTaxonIndex(node.getID());
+	                bits.set(index);
+	            } else {
+	                bits.set(node.getNr());
+	            }
+	        } else {
+
+	            BitSet bits2 = new BitSet();
+	            for (Node child : node.getChildren()) {
+	                addClades(child, bits2);
+	            }
+
+	            add(bits2, 1);
+	            Double [] heightHPD = (Double []) node.getMetaData("height_95%_HPD");
+	            double lo = node.getHeight(), hi = node.getHeight();
+	            if (heightHPD != null) {
+		            lo = heightHPD[0];
+		            hi = heightHPD[1];
+	            }
+	            addNodeHeight(bits2, node.getHeight(), lo, hi); // TODO ?= tree.getNodeHeight(node)
+	            double posterior = 1;
+	            Double posterior_ = (Double) node.getMetaData("posterior");
+	            if (posterior_ != null) {
+	            	posterior = posterior_;
+	            }
+	            posteriors.put(bits2, posterior);
+
+	            if (bits != null) {
+	                bits.or(bits2);
+	            }
+	        }
+	    }
+	    
+	    void addNodeHeight(BitSet bits, double height, double lo, double hi) {
+	        totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + height));
+	        nodeHeights.put(bits, new double[]{lo, height, hi});
+	    }
+
+	    Map<BitSet, Double> posteriors = new HashMap<>();
+	}
+	
 	public class CladeSetWithHeights extends FrequencySet<BitSet> {
 	    //
 	    // Public stuff
@@ -470,7 +561,7 @@ public class CladeSetComparator extends Runnable {
 	        addClades(tree.getRoot(), null);
 	    }
 
-	    private void addClades(Node node, BitSet bits) {
+	    void addClades(Node node, BitSet bits) {
 
 	        if (node.isLeaf()) {
 	            if (taxonSet != null) {
@@ -501,7 +592,7 @@ public class CladeSetComparator extends Runnable {
 	        return getTotalNodeHeight(bits) / getFrequency(i);
 	    }
 
-	    private double getTotalNodeHeight(BitSet bits) {
+	    double getTotalNodeHeight(BitSet bits) {
 	        Double tnh = totalNodeHeight.get(bits);
 	        if (tnh == null) return 0.0;
 	        return tnh;
@@ -616,10 +707,10 @@ public class CladeSetComparator extends Runnable {
 	    //
 	    // Private stuff
 	    //
-	    private TaxonSet taxonSet = null;
-	    private final Map<BitSet, Double> totalNodeHeight = new HashMap<>();
-	    private final Map<BitSet, double[]> nodeHeights = new HashMap<>();
-	    private int totalTrees = 0;
+	    TaxonSet taxonSet = null;
+	    Map<BitSet, Double> totalNodeHeight = new HashMap<>();
+	    Map<BitSet, double[]> nodeHeights = new HashMap<>();
+	    int totalTrees = 0;
 	}
 
 	
