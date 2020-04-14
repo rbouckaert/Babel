@@ -18,7 +18,7 @@ import beast.evolution.tree.Tree;
 
 @Description("Counts transitions of tags along branches of a tree")
 public class StateTransitionCounter extends Runnable {	
-	final public Input<TreeFile> src1Input = new Input<>("tree","source tree (set) file");
+	final public Input<TreeFile> src1Input = new Input<>("in","source tree (set) file");
     final public Input<String> tagInput = new Input<String>("tag","label used to report trait", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
@@ -60,12 +60,20 @@ public class StateTransitionCounter extends Runnable {
 			Map<String, Integer> transitionCounts = new HashMap<>();
 			collectTags(tree.getRoot(), transitionCounts, tag);
 			
-			for (String id : transitionCounts.keySet()) {
-				if (!transitionDistributions.containsKey(id)) {
-					Log.warning("Unrecognised tag: " + id);
-					transitionDistributions.put(id, new ArrayList<>());
+			for (int i = 0; i < tags.length; i++) {
+				for (int j = 0; j < tags.length; j++) {
+					String id = tags[i] + "=>" + tags[j];
+
+					if (!transitionDistributions.containsKey(id)) {
+						Log.warning("Unrecognised tag: " + id);
+						transitionDistributions.put(id, new ArrayList<>());
+					}
+					if (transitionCounts.containsKey(id)) {
+						transitionDistributions.get(id).add(transitionCounts.get(id));
+					} else {
+						transitionDistributions.get(id).add(0);
+					}
 				}
-				transitionDistributions.get(id).add(transitionCounts.get(id));
 			}
 			n++;
 		}
@@ -112,7 +120,7 @@ public class StateTransitionCounter extends Runnable {
 
 	private void collectTags(Node root, Set<String> tags, String tag) {
 		for (Node leaf : root.getAllLeafNodes()) {
-			tags.add((String) leaf.getParent().getMetaData(tag));
+			tags.add((String) leaf.getMetaData(tag));
 		}
 		
 	}
