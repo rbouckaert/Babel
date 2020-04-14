@@ -80,8 +80,12 @@
               class="babel.tools.LineagesThroughTimeCounter"
               args=""
             />
-    <packageapp description="Prints description of a BEAST clas"
+    <packageapp description="Prints description of a BEAST class"
               class="babel.tools.GetDescription"
+              args=""
+            />
+    <packageapp description="Counts transitions of tags along branches of a tree"
+              class="babel.tools.StateTransitionCounter"
               args=""
             />
 </package>
