@@ -50,12 +50,13 @@ public class Nexus2Json extends Runnable {
 			+ "true then other details are also required", false);
 	
 	final public Input<String> build_url = new Input<>("build_url", "build URL for NextStrain metadata");
+	final public Input<String> description = new Input<>("description", "description for NextStrain metadata (markdown)");
 	final public Input<String> title = new Input<>("title", "title of projecr for NextStrain metadata");
 	final public Input<String> maintainerName = new Input<>("maintainerName", "your name");
 	final public Input<String> maintainerWebsite = new Input<>("maintainerWebsite", "your website/email");
 	final public Input<String> geo_resolution = new Input<>("geo_resolution", "the name of the categorical variable that refers to grography");
 	final public Input<String> color_by = new Input<>("color_by", "the name of the categorical variable to colour by");
-	final public Input<String> distance_measure_input = new Input<>("distance_measure", "the name of the node height variable (date_num or div)");
+	final public Input<String> distance_measure_input = new Input<>("distance_measure", "the name of the node height variable (num_date or div)");
 	
 	final public Input<OutFile> printLocationsToInput = new Input<>("printLocationsTo", "where to print all predicted locations (latitude / longitude) to. Please "
 			+ "manually inspect/adjust this file after it is done and add it to the input xml to save time on future runs.", Input.Validate.OPTIONAL);;
@@ -228,6 +229,10 @@ public class Nexus2Json extends Runnable {
 		// String building
 		buf.println(indent + "{");
 		String indent2 = indent + INDENT;
+		
+		
+		// description
+		if (description.get() != null) buf.println(indent2 + "\"description\":\"" + description.get() + "\",");
 		
 		// build_url
 		if (build_url.get() != null) buf.println(indent2 + "\"build_url\":\"" + build_url.get() + "\",");
@@ -424,22 +429,7 @@ public class Nexus2Json extends Runnable {
     }
     
     
-    /**
-     * Figure out whether this string is a number (int or double)
-     * @param value
-     * @return
-     */
-    private boolean tryParseNum(String value) {  
-        try {  
-            Integer.parseInt(value);  
-            Double.parseDouble(value);
-            return true;  
-         } catch (NumberFormatException e) {  
-            return false;  
-         }  
-    }
-    
-    
+
     
     /***
      * Annotate all nodes in the tree using their sequence names (ie. accessions) and the list of 'annotations'
