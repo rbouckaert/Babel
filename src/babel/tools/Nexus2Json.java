@@ -66,6 +66,9 @@ public class Nexus2Json extends Runnable {
 	final public Input<List<NodeLocation>> nodeLocationsInput = new Input<>("location", "list of locations (for nextstrain). "
 			+ "If locations are not provided then beast2 will attempt to find them using the geocodes website.", new ArrayList<NodeLocation>());
 	
+	final public Input<List<GenomeAnnotation>> genomeAnnotationsInput = new Input<>("genomeAnnotation", "list of genome annotations (for nextstrain).", new ArrayList<GenomeAnnotation>());
+	
+	
 	
 	
 	protected distanceMeasure distance_measure;
@@ -288,19 +291,16 @@ public class Nexus2Json extends Runnable {
 		
 		// genome_annotations
 		buf.println(indent2 + "\"genome_annotations\":{");
-		buf.println(indent2 + "\"nuc\":{}");
-		buf.println(indent2 + "},");
+		first = true;
+		for (GenomeAnnotation g : genomeAnnotationsInput.get()) {
+			buf.print((first ? "" : ",\n") + indent2 + INDENT + g.getJSON());
+			first = false;
+		}
+		//buf.println(indent2 + "\"nuc\":{}");
+		buf.println("\n" + indent2 + "},");
 		
 		
-		/*
-		 "nuc": {
-	        "start": 1, 
-	        "seqid": "config/reference.gb", 
-	        "end": 29903, 
-	        "strand": "+", 
-	        "type": "source"
-	      }, 
-		*/
+
 		
 		// geo_resolutions
 		buf.println(indent2 + "\"geo_resolutions\":[");
@@ -309,11 +309,7 @@ public class Nexus2Json extends Runnable {
 			AnnotationTuple annotation = annotationsInput.get().get(i);
 			if (!annotation.isLocation()) continue;
 			
-			// Get latitude and longitude of demes
-			//List<Object> all_deme_values = getValuesOfAnnotation(tree, annotation.getName());
-			//HashMap<String, double[]> geoMap = getGeoCoordinates(all_deme_values);
-			
-			
+
     		buf.println(indent2 + INDENT + (first ? "" : ",") 
     						+ "{" 
 	    					+ "\"key\":\"" + annotation.getName() + "\"," 
