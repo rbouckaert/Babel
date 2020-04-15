@@ -17,6 +17,10 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import babel.nshelpers.AnnotationTuple;
+import babel.nshelpers.AuthorMaintainer;
+import babel.nshelpers.GenomeAnnotation;
+import babel.nshelpers.NodeLocation;
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
 import beast.app.util.Application;
@@ -52,8 +56,6 @@ public class Nexus2Json extends Runnable {
 	final public Input<String> build_url = new Input<>("build_url", "build URL for NextStrain metadata");
 	final public Input<String> description = new Input<>("description", "description for NextStrain metadata (markdown)");
 	final public Input<String> title = new Input<>("title", "title of projecr for NextStrain metadata");
-	final public Input<String> maintainerName = new Input<>("maintainerName", "your name");
-	final public Input<String> maintainerWebsite = new Input<>("maintainerWebsite", "your website/email");
 	final public Input<String> geo_resolution = new Input<>("geo_resolution", "the name of the categorical variable that refers to grography");
 	final public Input<String> color_by = new Input<>("color_by", "the name of the categorical variable to colour by");
 	final public Input<String> distance_measure_input = new Input<>("distance_measure", "the name of the node height variable (num_date or div)");
@@ -68,7 +70,7 @@ public class Nexus2Json extends Runnable {
 	
 	final public Input<List<GenomeAnnotation>> genomeAnnotationsInput = new Input<>("genomeAnnotation", "list of genome annotations (for nextstrain).", new ArrayList<GenomeAnnotation>());
 	
-	
+	final public Input<List<AuthorMaintainer>> maintainersInput = new Input<>("maintainer", "list of authors/maintainers (for nextstrain).", new ArrayList<AuthorMaintainer>());
 	
 	
 	protected distanceMeasure distance_measure;
@@ -248,13 +250,16 @@ public class Nexus2Json extends Runnable {
 		Date date = new Date();
 		buf.println(indent2 + "\"updated\":\"" + dateFormat.format(date) + "\",");
 		
+		
 		// maintainers
 		buf.println(indent2 + "\"maintainers\":[");
-		if (maintainerName.get() != null && maintainerWebsite.get() != null) {
-			buf.println(indent2 + INDENT + "{\"name\":\"" + maintainerName.get() + 
-							"\",\"url\":\"" + maintainerWebsite.get() + "\"}");
+		first = true;
+		for (AuthorMaintainer person : maintainersInput.get()) {
+			buf.print((first ? "" : ",\n") + indent2 + INDENT + person.getJSON());
+			first = false;
 		}
-		buf.println(indent2 + "],");
+		buf.println("\n" + indent2 + "],");
+		
 		
 		// colorings
 		buf.println(indent2 + "\"colorings\":[");

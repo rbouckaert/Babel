@@ -1,4 +1,4 @@
-package babel.tools;
+package babel.nshelpers;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -246,7 +246,7 @@ public class NodeLocation extends BEASTObject {
 	public String getXML() {
 		if (!this.hasCoords) search();
 		String xml = "";
-		xml += "spec=\"babel.tools.NodeLocation\" "; 
+		xml += "spec=\"babel.nshelpers.NodeLocation\" "; 
 		xml += "place=\"" + String.join("|", this.placeBits) + "\" ";
 		xml += "pattern=\"" + String.join("|", this.patternBits) + "\" ";
 		xml += "latitude=\"" + (this.hasCoords ? this.latitude : "?") + "\" ";

@@ -1,0 +1,91 @@
+<package name='Babel' version='0.3.0'>
+	<depends on='beast2' atleast='2.6.0'/>
+	<depends on='BEASTLabs' atleast='1.9.0'/>
+	<packageapp description="CognateStats"
+              class="babel.CognateStats"
+              args=""
+              icon="babel/icons/CognateStats.png"
+            />
+    <packageapp description="SpanningTree"
+              class="babel.spanningtrees.SpanningTree"
+              args=""
+              icon="babel/icons/SpanningTree.png"
+            />
+    <packageapp
+    		  description="filters all leafs from specified taxon sets out of a tree file based on clade membership"
+              class="babel.tools.FamilyFilter"
+              args=""
+            />
+    <packageapp description="Match clades from two tree sets and print support for both sets"
+              class="babel.tools.CladeSetComparator"
+              args=""
+            />
+    <packageapp description="Convert NEXUS tree file"
+              class="babel.tools.Nexus2Newick"
+              args=""
+            />
+    <packageapp description="Convert newick tree file"
+              class="babel.tools.Newick2Nexus"
+              args=""
+            />
+    <packageapp description="Convert BEAST XML file into NEXUS alignemnt file"
+              class="babel.tools.XML2Nexus"
+              args=""
+            />
+    <packageapp description="Convert BEAST XML file into fasta alignemnt file"
+              class="babel.tools.XML2Fasta"
+              args=""
+            />
+    <packageapp description="Convert NEXUS alignment file into fasta alignemnt file"
+              class="babel.tools.Nexus2Fasta"
+              args=""
+            />
+    <packageapp description="Convert FASTA file into NEXUS alignemtn file"
+              class="babel.tools.Fasta2Nexus"
+              args=""
+            />
+    <packageapp description="Convert phyml phy format to nexus alignment file"
+              class="babel.tools.Phy2Nexus"
+              args=""
+            />
+    <packageapp description="Set tip heights of existing tree to match the heights from a list"
+              class="babel.tools.AdjustTipHeight"
+              args=""
+            />
+    <packageapp description="Relabels leafs of tree set, and splits leafs into random binary sub-tree with branch lengths exponentially distributed"
+              class="babel.tools.LeafSplitter"
+              args=""
+            />
+    <packageapp description="TreeGrafter"
+              class="babel.tools.dplace.TreeGrafter"
+              args=""
+            />
+    <packageapp description="Relabels taxa in a tree file. Usfeful for instance when labels are iso codes and language names are required for visualisation"
+              class="babel.tools.TreeRelabeller"
+              args=""
+            />
+    <packageapp description="Mark specific transitions of a meta-data attribute on a tree to make it easy to visualise these transitions"
+              class="babel.tools.TreeTransitionMarker"
+              args=""
+            />
+    <packageapp description="Converts a rooted tree (set) to an ultrametric tree (set)"
+              class="babel.tools.MakeUltraMetric"
+              args=""
+            />
+    <packageapp description="Scales trees so epochs have the same length"
+              class="babel.tools.TreeEpochScaler"
+              args=""
+            />
+    <packageapp description="Produce table for lineages through time plot with 95%HPD bounds"
+              class="babel.tools.LineagesThroughTimeCounter"
+              args=""
+            />
+    <packageapp description="Prints description of a BEAST class"
+              class="babel.tools.GetDescription"
+              args=""
+            />
+    <packageapp description="Counts transitions of tags along branches of a tree"
+              class="babel.tools.StateTransitionCounter"
+              args=""
+            />
+</package>
