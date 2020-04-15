@@ -77,16 +77,21 @@ public class Json2Nexus extends Runnable {
 	}
 	
 	
-	
+	/***
+	 * Builds a beast2 tree from a nextstrain JSON tree
+	 * Appropriately labels nodes 0 through to (n-1)
+	 * Converts forward to reverse node heights
+	 * @param jsonTree
+	 * @return
+	 * @throws JSONException
+	 */
 	public static Tree parseTree(JSONObject jsonTree) throws JSONException {
 		
 		// Create root
 		nodeNum = 0;
-		//double rootHeight = getHeight(jsonTree);
 		Node root = parseNode(jsonTree);
 		
 
-		
 		
 		// Put root inside tree1
 		Tree tree = new Tree(root);
@@ -131,7 +136,12 @@ public class Json2Nexus extends Runnable {
 
 	
 
-	
+	/***
+	 * Parses this json node into a beast2 subtree. Node numbering is not yet finalised.
+	 * @param jsonNode
+	 * @return the node
+	 * @throws JSONException
+	 */
 	private static Node parseNode(JSONObject jsonNode) throws JSONException {
 		
 		// Create node
