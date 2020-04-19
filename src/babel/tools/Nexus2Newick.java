@@ -64,6 +64,7 @@ public class Nexus2Newick extends Runnable {
             buf.append(")");
         }
         
+        buf.append(node.getNewickMetaData());
         buf.append(":").append(node.getLength());
     }
     

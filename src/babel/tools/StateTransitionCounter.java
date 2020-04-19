@@ -23,6 +23,7 @@ public class StateTransitionCounter extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
+	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 1000);
 
 
 	@Override
@@ -45,18 +46,25 @@ public class StateTransitionCounter extends Runnable {
 		Set<String> tagSet = new HashSet<>();
 		collectTags(srcTreeSet.next().getRoot(), tagSet, tag);
 		String [] tags = tagSet.toArray(new String[] {});
+		Arrays.sort(tags);
+		int m = tags.length;
 		Map<String, List<Integer>> transitionDistributions = new HashMap<>();
-		for (int i = 0; i < tags.length; i++) {
-			for (int j = 0; j < tags.length; j++) {
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < m; j++) {
 				String id = tags[i] + "=>" + tags[j];
 				transitionDistributions.put(id, new ArrayList<>());
 			}
 		}
-		srcTreeSet.reset();
+		String [] keys = transitionDistributions.keySet().toArray(new String []{});
+		Arrays.sort(keys);
 		
+		// collect data from trees
+		srcTreeSet.reset();
 		int n = 0;
+		double maxX = 0;
 		while (srcTreeSet.hasNext()) {
 			Tree tree = srcTreeSet.next();
+			maxX = Math.max(maxX, tree.getRoot().getHeight());
 			Map<String, Integer> transitionCounts = new HashMap<>();
 			collectTags(tree.getRoot(), transitionCounts, tag);
 			
@@ -78,9 +86,39 @@ public class StateTransitionCounter extends Runnable {
 			n++;
 		}
 		
-		String [] keys = transitionDistributions.keySet().toArray(new String []{});
-		Arrays.sort(keys);
-		out.println("Transition" + "\t" +"mean" + "\t" + "95%Low" + "\t" + "95%High" + "\t" + "histogram");
+		
+		int N = resolutionInput.get();
+		srcTreeSet.reset();
+
+		double [][] linCount = new double[m][N + 1];
+		while (srcTreeSet.hasNext()) {
+			double stepSize = maxX / N;
+			Tree tree = srcTreeSet.next();
+			for (Node node : tree.getNodesAsArray()) {
+				if (!node.isRoot()) {
+					String value = (String) node.getMetaData(tag);
+					int k = indexOf(tags, value);
+					double [] tagLinCount = linCount[k];
+					int start = (int) (node.getHeight() * N / maxX + 0.5);
+					int end = (int) (node.getParent().getHeight() * N / maxX + 0.5);
+					if (start == end) {
+						tagLinCount[start] += node.getParent().getHeight() - node.getHeight();
+					} else {
+						tagLinCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+						for (int i = start+1; i < end; i++) {
+							tagLinCount[i]++;
+						}
+						tagLinCount[end] += node.getParent().getHeight() - end * stepSize;
+					}
+				}
+			}
+		}
+		// create report
+		
+		// output main statistics
+		out.println("Transition" + "\t" +"mean" + "\t" + "95%Low" + "\t" + "95%High");
+		int [][] histograms = new int[keys.length][];
+		int k = 0;
 		for (String id : keys) {
 			List<Integer> counts = transitionDistributions.get(id);
 			Collections.sort(counts);
@@ -91,10 +129,46 @@ public class StateTransitionCounter extends Runnable {
 			double mean = sum / n;
 			double lo = counts.get((int) (0.025 * counts.size())); 
 			double hi = counts.get((int) (0.975 * counts.size())); 			
-			out.println(id + "\t" + mean + "\t" + lo + "\t" + hi + "\t" + histogram(counts));
+			out.println(id + "\t" + mean + "\t" + lo + "\t" + hi);
+			histograms[k] = histogram(counts);
+			k++;
 		}
 		
+		// output histogram
+		out.println("\nHistogram");
+		int max = 0;
+		for (int i = 0; i < keys.length; i++) {
+			max = Math.max(max, histograms[i].length);
+		}
+		out.print("Transition\t");
+		for (int i = 0; i <= max; i++) {
+			out.print(i + "\t");
+		}
+		out.println();
+		for (int i = 0; i < keys.length; i++) {
+			out.print(keys[i] + "\t");
+			for (int j : histograms[i]) {
+				out.print(j + "\t");
+			}
+			out.println();
+		}
 		
+		// output ltt
+		out.println("\nLineages through time");
+		out.print("Transition\t");
+		for (int i = 0; i <= N; i++) {
+			out.print((maxX * i) / N + "\t");
+		}
+		out.println();
+		for (int i = 0; i < m; i++) {
+			out.print(tags[i] + "\t");
+			for (int j = N-1; j >= 0; j--) {
+				out.print(linCount[i][j] + "\t");
+			}
+			out.println();
+		}
+		
+
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			out.close();
 		}
@@ -102,7 +176,16 @@ public class StateTransitionCounter extends Runnable {
 	}
 
 	
-	private String histogram(List<Integer> counts) {
+	private int indexOf(String[] keys, String value) {
+		for (int i = 0; i < keys.length; i++) {
+			if (keys[i].equals(value)) {
+				return i;
+			}
+		}
+		throw new IllegalArgumentException("value " + value + " should be in keys " + Arrays.toString(keys));
+	}
+
+	private int [] histogram(List<Integer> counts) {
 		int max = 0;
 		for (int i : counts) {
 			max = Math.max(max, i);
@@ -111,11 +194,12 @@ public class StateTransitionCounter extends Runnable {
 		for (int i : counts) {
 			n[i]++;
 		}
-		StringBuilder b = new StringBuilder();
-		for (int i = 0; i <= max; i++) {
-			b.append(n[i]).append('\t');
-		}
-		return b.toString();
+		return n;
+//		StringBuilder b = new StringBuilder();
+//		for (int i = 0; i <= max; i++) {
+//			b.append(n[i]).append('\t');
+//		}
+//		return b.toString();
 	}
 
 	private void collectTags(Node root, Set<String> tags, String tag) {
