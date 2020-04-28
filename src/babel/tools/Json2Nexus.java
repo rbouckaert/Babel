@@ -157,7 +157,7 @@ public class Json2Nexus extends Runnable {
 		}
 		
 		node.setNr(nodeNum);
-		//System.out.println(node.getNr());
+		System.out.println(node.getNr());
 		nodeNum ++;
 		
 		// Name

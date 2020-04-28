@@ -1,5 +1,7 @@
 package babel.tools;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -50,6 +52,10 @@ public class Nexus2Json extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	
+	final public Input<File> demes_col = new Input<>("demes_col", "tsv file containing deme colours in the format <color_by>\tdemename\tcol where <color_by> is"
+			+ "the annotation specified by color_by");
+	
+	
 	final public Input<Boolean> nsMetaInput = new Input<>("ns", "true if nextstrain meta data should be printed also. If this is"
 			+ "true then other details are also required", false);
 	
@@ -75,6 +81,7 @@ public class Nexus2Json extends Runnable {
 	
 	protected distanceMeasure distance_measure;
 	final String INDENT = "  ";
+	HashMap<String, String> demeColouring;
 	
 	boolean ns;
 	
@@ -101,6 +108,45 @@ public class Nexus2Json extends Runnable {
 			if (distance_measure_input.get() == null || distance_measure_input.get().isEmpty()) {
 				throw new IllegalArgumentException("Please specify distance_measure (or set ns to false).");
 	        }
+			
+			
+			// Read in deme colouring map
+			if (demes_col.get() != null) {
+				try {
+					File file = demes_col.get();
+					demeColouring = new HashMap<String, String>();
+				
+					Scanner scanner = new Scanner(file);
+					
+					// First line
+					String line = scanner.nextLine();
+					
+					while (scanner.hasNext()) {
+						
+						line = scanner.nextLine().trim();
+						if (line.isEmpty()) continue;
+						
+						String[] split = line.split("\t");
+						if (split.length < 3) {
+							throw new IllegalArgumentException("Cannot parse " + file.getName() + ". Line '" + line + "' has less than 3 elements. Ensure format is" +
+									" 'area\tdemename\tcol' delimted by a tab");
+						}
+						String deme = split[0];
+						String col = split[2];
+						demeColouring.put(deme, col);
+						
+						
+						
+					}
+					
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+					demeColouring = new HashMap<String, String>();
+				}
+				
+				
+				
+			}
 
 			distance_measure = distanceMeasure.valueOf(distance_measure_input.get());
 			
@@ -269,7 +315,31 @@ public class Nexus2Json extends Runnable {
     		buf.print((first ? "" : ",\n") + indent2 + INDENT + "{"
     				+ "\"key\":\"" + key + "\"," 
 					+ "\"title\":\"" + key + "\"," 
-					+ "\"type\":\"" + attrKeys.get(key) + "\"}");
+					+ "\"type\":\"" + attrKeys.get(key) + "\"");
+    		
+    		
+    		// Scale
+    		if (color_by.get().equals(key)) {
+    			buf.println(",\"scale\":[");
+    			boolean firstLoc = true;
+    			for (NodeLocation nodeLocation : geolocations.values()) {
+    				
+    				if (!nodeLocation.getDemeCat().equals(key)) continue;
+    				String location = demeColouring.containsKey(nodeLocation.getDemeName()) ? nodeLocation.getDemeName() : "*";
+        			String col = demeColouring.get(location);
+        			buf.print((firstLoc ? "" : ",\n") + indent2 + INDENT + INDENT +  "[\"" + nodeLocation.getDemeName() + "\", \"" + col + "\"]");
+    				
+        			firstLoc = false;
+    			}
+    			buf.print("\n" + indent2 + "]");
+    			
+    			
+    		}
+    		
+    		
+    		buf.print("}");
+    		
+    		
     		first = false;
 		}
 		buf.println("\n" + indent2 + "],");
