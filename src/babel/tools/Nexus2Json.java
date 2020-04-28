@@ -59,6 +59,8 @@ public class Nexus2Json extends Runnable {
 	final public Input<Boolean> nsMetaInput = new Input<>("ns", "true if nextstrain meta data should be printed also. If this is"
 			+ "true then other details are also required", false);
 	
+
+	
 	final public Input<String> build_url = new Input<>("build_url", "build URL for NextStrain metadata");
 	final public Input<String> description = new Input<>("description", "description for NextStrain metadata (markdown)");
 	final public Input<String> title = new Input<>("title", "title of projecr for NextStrain metadata");
@@ -169,6 +171,7 @@ public class Nexus2Json extends Runnable {
         	numTrees++;
         	if (numTrees > 1) break;
         }
+        
         
         if(numTrees > 1) {
         	throw new IllegalArgumentException("Only 1 tree is allowed! Please parse a maximum clade credibility tree for example.");
@@ -312,6 +315,8 @@ public class Nexus2Json extends Runnable {
 		first = true;
 		for (String key : attrKeys.keySet()) {
 			
+			if (attrKeys.get(key).equals("array")) continue;
+			
     		buf.print((first ? "" : ",\n") + indent2 + INDENT + "{"
     				+ "\"key\":\"" + key + "\"," 
 					+ "\"title\":\"" + key + "\"," 
@@ -434,7 +439,7 @@ public class Nexus2Json extends Runnable {
 	 * @param buf
 	 * @param indent
 	 */
-    public void toJSON(Node node, PrintStream buf, String indent, double treeHeight) {
+    private void toJSON(Node node, PrintStream buf, String indent, double treeHeight) {
 
     	
     	buf.println(indent + "{");
@@ -455,9 +460,22 @@ public class Nexus2Json extends Runnable {
 
 	    		Object val = node.getMetaData(key);
 	    		if (val.toString().isEmpty()) continue;
+	    		if (val.getClass().isArray()) continue;
 	    		buf.println((first ? "" : ",\n") + indent2 + INDENT + "\"" + key + "\":{");
 	    		if (val instanceof Double || val instanceof Integer || val instanceof Boolean) {
-	    			buf.println(indent2 + INDENT + INDENT + "\"value\":" + val);
+	    			buf.print(indent2 + INDENT + INDENT + "\"value\":" + val);
+	    			
+	    			// Confidence?
+	    			if (node.getMetaData(key + "_95%_HPD") != null) {
+	    				Object confidence = node.getMetaData(key + "_95%_HPD");
+	    				if (confidence instanceof Double[]) {
+	    					Double[] conf = (Double[])confidence;
+	    					buf.println(",\"confidence\":[" + conf[0] + "," + conf[1] + "]");
+	    				}
+	    				
+	    			}
+	    			buf.println();
+	    			
 	    		}else {
 	    			buf.println(indent2 + INDENT + INDENT + "\"value\":\"" + val + "\"");
 	    		}
@@ -526,12 +544,7 @@ public class Nexus2Json extends Runnable {
 			for (String s : node.getMetaDataNames()) keys.add(s); 
     		for (String key : keys) {
     			
-    			
-    			// No arrays allows at this stage (eg. 95% HPDs). May revisit.
-        		if (node.getMetaData(key).getClass().isArray()) {
-        			node.removeMetaData(key);
-        			continue;
-        		}
+
         		
         		// Tidy the key for JSON
         		String key_tidy = key.replaceAll("([.]|[-]|[/]|[&])", "_");
@@ -544,7 +557,7 @@ public class Nexus2Json extends Runnable {
         		
         		// Categorical or continuous?
         		Object val = node.getMetaData(key_tidy);
-        		String type = val instanceof Integer || val instanceof Double ? "continuous" : "categorical";
+        		String type = val.getClass().isArray() ? "array" : val instanceof Integer || val instanceof Double ? "continuous" : "categorical";
         		if (!allKeys.containsKey(key_tidy)) allKeys.put(key_tidy, type);
         		
         		
@@ -684,41 +697,7 @@ public class Nexus2Json extends Runnable {
     		double[] val = new double[] {0, 0};
     		map.put(deme, val);
     		
-    		/*
-	    	try {
-	    		
-	    		
-				 URL coords = new URL("https://geocode.xyz/" + deme + "?json=1");
-				
-				 Scanner sc = new Scanner(coords.openStream());
-			    
-			     StringBuffer sb = new StringBuffer();
-			     while(sc.hasNext()) {
-			        sb.append(sc.next());
-			       
-			     }
-			     JSONObject json = new JSONObject(sb.toString());
-			     double latitide = Double.parseDouble(json.get("latt").toString());
-			     double longitude = Double.parseDouble(json.get("longt").toString());
-			     val[0] = latitide;
-			     val[1] = longitude;
-			    
-			     
-				
-				
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				System.out.println("Cannot locate " + deme);
-				//e.printStackTrace();
-			} catch (JSONException e) {
-				System.out.println("Cannot find the latitude/longitude of " + deme);
-				//e.printStackTrace();
-			} finally {
-				
-				map.put(deme, val);
-			}
-    		 */
+    	
     	}
     	
     	return map;
