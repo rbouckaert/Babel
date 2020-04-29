@@ -70,8 +70,8 @@ public class Nexus2Json extends Runnable {
 	
 	final public Input<OutFile> printLocationsToInput = new Input<>("printLocationsTo", "where to print all predicted locations (latitude / longitude) to. Please "
 			+ "manually inspect/adjust this file after it is done and add it to the input xml to save time on future runs.", Input.Validate.OPTIONAL);;
-	final public Input<List<String>> locationPatternInput = new Input<>("locationPattern", "order of looking up locations separated by a | delimiter, eg."
-			+ "City|Country|Continent will search for cities using continent + country + city information.", new ArrayList<String>());
+	final public Input<String> locationPatternInput = new Input<>("locationPattern", "order of looking up locations separated by a | delimiter, eg."
+			+ "City|Country|Continent will search for cities using continent + country + city information.");
 	
 	final public Input<List<NodeLocation>> nodeLocationsInput = new Input<>("location", "list of locations (for nextstrain). "
 			+ "If locations are not provided then beast2 will attempt to find them using the geocodes website.", new ArrayList<NodeLocation>());
@@ -80,7 +80,7 @@ public class Nexus2Json extends Runnable {
 	
 	final public Input<List<AuthorMaintainer>> maintainersInput = new Input<>("maintainer", "list of authors/maintainers (for nextstrain).", new ArrayList<AuthorMaintainer>());
 	
-	
+	String[] locationPattern;
 	protected distanceMeasure distance_measure;
 	final String INDENT = "  ";
 	HashMap<String, String> demeColouring;
@@ -110,6 +110,9 @@ public class Nexus2Json extends Runnable {
 			if (distance_measure_input.get() == null || distance_measure_input.get().isEmpty()) {
 				throw new IllegalArgumentException("Please specify distance_measure (or set ns to false).");
 	        }
+			if (locationPatternInput.get() != null) {
+				locationPattern = locationPatternInput.get().split(",");
+			}
 			
 			
 			// Read in deme colouring map
@@ -186,7 +189,7 @@ public class Nexus2Json extends Runnable {
         
         
         // Get geo location data of each node
-        HashMap<String, NodeLocation> geoLocations = getGeoLocations(tree, locationPatternInput.get());
+        HashMap<String, NodeLocation> geoLocations = getGeoLocations(tree, locationPattern);
         
         // Print location data to file?
         if (printLocationsToInput.get() != null) {
@@ -332,6 +335,7 @@ public class Nexus2Json extends Runnable {
     				if (!nodeLocation.getDemeCat().equals(key)) continue;
     				String location = demeColouring.containsKey(nodeLocation.getDemeName()) ? nodeLocation.getDemeName() : "*";
         			String col = demeColouring.get(location);
+        			if (col == null || col.isEmpty()) continue;
         			buf.print((firstLoc ? "" : ",\n") + indent2 + INDENT + INDENT +  "[\"" + nodeLocation.getDemeName() + "\", \"" + col + "\"]");
     				
         			firstLoc = false;
@@ -630,7 +634,7 @@ public class Nexus2Json extends Runnable {
      * @param tree
      * @return
      */
-    protected HashMap<String, NodeLocation> getGeoLocations(Tree tree, List<String> patterns){
+    protected HashMap<String, NodeLocation> getGeoLocations(Tree tree, String[] patterns){
     	
     	
     	// A lookup table of node locations so that we don't search for the coords
