@@ -54,12 +54,24 @@ public abstract class MatrixVisualiser extends Runnable {
 		int w = 500;
 		int h = 500;
 		int n = rates.length;
+		if (n > colour.length) {
+			String [] tmp = new String[n];
+			for (int i = 0; i < n; i++) {
+				tmp[i] = colour[i % colour.length];
+			}
+			colour = tmp;
+		}
+		if (label.length != n) {
+			throw new IllegalArgumentException("number of labels should be same as size of matrix (" + n + ")");
+		}
 		
 		// normalise
-		double max = rates[0][0];
+		double max = Double.NEGATIVE_INFINITY;
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
-				max = Math.max(max, rates[i][j]);
+				if (i != j) {
+					max = Math.max(max, rates[i][j]);
+				}
 			}
 		}
 		for (int i = 0; i < n; i++) {
@@ -120,7 +132,7 @@ public abstract class MatrixVisualiser extends Runnable {
 					+ "' stroke-width='4' fill='url(#grad"+i+")' />\n";
 		}
 		for (int i = 0; i < n; i++) {
-			svg += "	<text x='"+w+"' y='" + (i * 30 + 30) + "' font-family='Verdana' font-size='35' fill='#" + colour[i]
+			svg += "	<text x='"+w+"' y='" + (i * 30 + 30) + "' font-family='Verdana' font-size='28' fill='#" + colour[i]
 					+ "'>" + label[i] + "</text>\n";
 		}
 		svg += "</svg> \n";

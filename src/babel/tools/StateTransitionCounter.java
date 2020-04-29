@@ -1,5 +1,8 @@
 package babel.tools;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -10,22 +13,27 @@ import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
 import beast.core.Description;
 import beast.core.Input;
-import beast.core.Runnable;
 import beast.core.Input.Validate;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
 @Description("Counts transitions of tags along branches of a tree")
-public class StateTransitionCounter extends Runnable {	
+public class StateTransitionCounter extends MatrixVisualiser {	
 	final public Input<TreeFile> src1Input = new Input<>("in","source tree (set) file");
     final public Input<String> tagInput = new Input<String>("tag","label used to report trait", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 1000);
+//  final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
+	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
+			new OutFile("[[none]]"));
 
 
+    double [][] rates;
+    String [] tags;
+    
 	@Override
 	public void initAndValidate() {
 	}
@@ -45,7 +53,7 @@ public class StateTransitionCounter extends Runnable {
 		String tag = tagInput.get();
 		Set<String> tagSet = new HashSet<>();
 		collectTags(srcTreeSet.next().getRoot(), tagSet, tag);
-		String [] tags = tagSet.toArray(new String[] {});
+		tags = tagSet.toArray(new String[] {});
 		Arrays.sort(tags);
 		int m = tags.length;
 		Map<String, List<Integer>> transitionDistributions = new HashMap<>();
@@ -55,8 +63,8 @@ public class StateTransitionCounter extends Runnable {
 				transitionDistributions.put(id, new ArrayList<>());
 			}
 		}
-		String [] keys = transitionDistributions.keySet().toArray(new String []{});
-		Arrays.sort(keys);
+		String [] transitionKeys = transitionDistributions.keySet().toArray(new String []{});
+		Arrays.sort(transitionKeys);
 		
 		// collect data from trees
 		srcTreeSet.reset();
@@ -117,9 +125,10 @@ public class StateTransitionCounter extends Runnable {
 		
 		// output main statistics
 		out.println("Transition" + "\t" +"mean" + "\t" + "95%Low" + "\t" + "95%High");
-		int [][] histograms = new int[keys.length][];
-		int k = 0;
-		for (String id : keys) {
+		int [][] histograms = new int[transitionKeys.length][];
+		int k = 0;		
+		rates = new double[tags.length][tags.length];
+		for (String id : transitionKeys) {
 			List<Integer> counts = transitionDistributions.get(id);
 			Collections.sort(counts);
 			double sum = 0;
@@ -130,6 +139,9 @@ public class StateTransitionCounter extends Runnable {
 			double lo = counts.get((int) (0.025 * counts.size())); 
 			double hi = counts.get((int) (0.975 * counts.size())); 			
 			out.println(id + "\t" + mean + "\t" + lo + "\t" + hi);
+			String tag1 = id.substring(0, id.indexOf("="));
+			String tag2 = id.substring(id.indexOf("=")+2);
+			rates[indexOfTag(tag1)][indexOfTag(tag2)] = mean;
 			histograms[k] = histogram(counts);
 			k++;
 		}
@@ -137,7 +149,7 @@ public class StateTransitionCounter extends Runnable {
 		// output histogram
 		out.println("\nHistogram");
 		int max = 0;
-		for (int i = 0; i < keys.length; i++) {
+		for (int i = 0; i < transitionKeys.length; i++) {
 			max = Math.max(max, histograms[i].length);
 		}
 		out.print("Transition\t");
@@ -145,8 +157,8 @@ public class StateTransitionCounter extends Runnable {
 			out.print(i + "\t");
 		}
 		out.println();
-		for (int i = 0; i < keys.length; i++) {
-			out.print(keys[i] + "\t");
+		for (int i = 0; i < transitionKeys.length; i++) {
+			out.print(transitionKeys[i] + "\t");
 			for (int j : histograms[i]) {
 				out.print(j + "\t");
 			}
@@ -169,6 +181,21 @@ public class StateTransitionCounter extends Runnable {
 		}
 		
 
+		if (svgInput.get() != null && !svgInput.get().getName().equals("[[none]]")) {
+			// produce SVG visualisation
+			String str = svgInput.get().getPath();
+			Log.warning("Writing to file " + str);
+			try {
+				File tmpFile0 = new File(str);
+				FileWriter outfile = new FileWriter(tmpFile0);
+				outfile.write(getSVG(rates, tags));
+				outfile.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			out.close();
 		}
@@ -176,6 +203,15 @@ public class StateTransitionCounter extends Runnable {
 	}
 
 	
+	private int indexOfTag(String tag1) {
+		for (int i = 0; i < tags.length; i++) {
+			if (tags[i].equals(tag1)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	private int indexOf(String[] keys, String value) {
 		for (int i = 0; i < keys.length; i++) {
 			if (keys[i].equals(value)) {
@@ -223,6 +259,16 @@ public class StateTransitionCounter extends Runnable {
 		for (Node child : node.getChildren()) {
 			collectTags(child, transitionCounts, tag);
 		}		
+	}
+
+	@Override
+	public double[][] getRates() {
+		return rates;
+	}
+
+	@Override
+	public String[] getLabels(double[][] rates) {
+		return tags;
 	}
 
 	public static void main(String[] args) throws Exception {
