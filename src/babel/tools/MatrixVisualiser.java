@@ -1,14 +1,24 @@
 package babel.tools;
 
+import java.awt.Font;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import beast.app.beauti.BeautiDoc;
+import beast.app.util.Application;
+import beast.app.util.OutFile;
 import beast.core.Description;
+import beast.core.Input;
 import beast.core.Runnable;
+import beast.core.util.Log;
 
-@Description("visualises rate matrix as a graph with nodes on a circle")
-public abstract class MatrixVisualiser extends Runnable {
+@Description("Visualises rate matrix as a graph with nodes on a circle")
+public class MatrixVisualiser extends Runnable {
 
 	String [] colour = new String[]{
 			"f7eb00",
@@ -21,8 +31,34 @@ public abstract class MatrixVisualiser extends Runnable {
 			"a31c1b"};
 
 
-	public abstract double [][] getMatrix();
-	public abstract String[] getLabels(double[][] rates);
+	public double [][] getMatrix() {
+		return new double[][] {
+			{0.0, 1.0, 2.0},
+		    {0.5, 0.0, 1.5},
+		    {0.5, 1.5, 0.0}
+		};
+//		return = new double[][] {
+//			{0.0, 1.0, 2.0,1.0,3.0},
+//			{0.5, 0.0, 1.5, 0.1, 0.1},
+//			{0.5, 1.5, 0.0, 0.1, 0.1},
+//			{0.5, 1.5, 1.5, 0.0, 0.1},
+//			{0.5, 3.0, 1.5, 0.1, 0.0}
+//		};
+//		return matrix4x4 = new double[][] {
+//			{0.0, 1.0, 2.0,1.0},
+//	        {0.5, 0.0, 1.5, 0.1},
+//	        {0.5, 1.5, 0.0, 0.1},
+//	        {0.5, 1.5, 1.5, 0.0}
+//		};
+
+	}
+	public String[] getLabels(double[][] rates) {
+		String [] labels = new String[rates.length];
+		for (int i = 0; i < labels.length; i++) {
+			labels[i] = "state " + i;
+		}
+		return labels;		
+	}
 
 	
 	@Override
@@ -38,7 +74,8 @@ public abstract class MatrixVisualiser extends Runnable {
 		String svg = getSVG(matrix, labels);
 		
 		try {
-			File tmpFile0 = new File("/tmp/matrix.svg");
+			File tmpFile0 = new File(getFileName());
+			Log.warning("Writing to file " + tmpFile0.getPath());
 			FileWriter outfile = new FileWriter(tmpFile0);
 			outfile.write(svg);
 			outfile.close();
@@ -48,6 +85,10 @@ public abstract class MatrixVisualiser extends Runnable {
 			e.printStackTrace();
 		}
 		System.err.println("Done");
+	}
+	
+	String getFileName() {		
+		return "/tmp/matrix.svg";
 	}
 	
 	String getSVG(double [][] rates, String [] label) {
@@ -101,6 +142,7 @@ public abstract class MatrixVisualiser extends Runnable {
 			+ "    </marker>\n";
 		}
 		svg += " </defs>    \n";
+		svg += "<g transform='translate("+ w/2+",0)'>\n";
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				double len = Math.sqrt((x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j]));
@@ -120,10 +162,13 @@ public abstract class MatrixVisualiser extends Runnable {
 				if (i != j) {
 					double width = 10 * rates[i][j];
 					if (width < 0.25) {
-						width = 0.25;
+//						width = 0.25;
 					}
 					svg += "  <path marker-end='url(#head"+i+")' stroke-width='" + width
-							+ "' fill='none' stroke='#" + colour[i] + "' d='M" + start + " Q" + middle + " " + end + "'></path>  \n";
+							+ "' fill='none' "
+//							+ "stroke='url(#grad"+i+")' "
+							+ "stroke='#"+colour[i]+"' "
+							+ "d='M" + start + " Q" + middle + " " + end + "'></path>  \n";
 				}
 			}
 		}
@@ -131,48 +176,79 @@ public abstract class MatrixVisualiser extends Runnable {
 			svg += "   <circle cx='" + x[i] + "' cy='" + y[i] + "' r='20' stroke='#" + colour[i]
 					+ "' stroke-width='4' fill='url(#grad"+i+")' />\n";
 		}
+		
+		AffineTransform affinetransform = new AffineTransform();     
+		FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
 		for (int i = 0; i < n; i++) {
-			svg += "	<text x='"+w+"' y='" + (i * 30 + 30) + "' font-family='Verdana' font-size='28' fill='#" + colour[i]
+			double a = i * Math.PI * 2.0 / n;
+			Font font = new Font("Verdana", Font.PLAIN, 28);
+			double textWidth = 30 + font.getStringBounds(label[i], frc).getWidth();
+			double x1 = a <= Math.PI/2.0 || a >= 1.5*Math.PI ? x[i] + 30 : x[i]-textWidth;
+			double y1 = y[i]+10;
+			svg += "	<text x='"+x1+"' y='" + y1 + "' font-family='Verdana' font-size='28' fill='#" + colour[i]
 					+ "'>" + label[i].replaceAll("_", " ") + "</text>\n";
 		}
-		svg += "</svg> \n";
+		svg += "</g>\n</svg> \n";
 		return svg;
 	}
 		
-	public static void main(String[] args) throws Exception {
-		MatrixVisualiser s = new MatrixVisualiser() {
-			private double [][] matrix5x5 = new double[][] {
-				{0.0, 1.0, 2.0,1.0,3.0},
-				{0.5, 0.0, 1.5, 0.1, 0.1},
-				{0.5, 1.5, 0.0, 0.1, 0.1},
-				{0.5, 1.5, 1.5, 0.0, 0.1},
-				{0.5, 3.0, 1.5, 0.1, 0.0}
-			};
-			private double [][] matrix4x4 = new double[][] {
-				{0.0, 1.0, 2.0,1.0},
-		        {0.5, 0.0, 1.5, 0.1},
-		        {0.5, 1.5, 0.0, 0.1},
-		        {0.5, 1.5, 1.5, 0.0}
-			};
-			private double [][] matrix3x3 = new double[][] {
-				{0.0, 1.0, 2.0},
-			    {0.5, 0.0, 1.5},
-			    {0.5, 1.5, 0.0}
-			};
-			
-			public double [][] getMatrix() {
-				return matrix5x5;
-			}
-			
-			public String[] getLabels(double[][] rates) {
-				String [] labels = new String[rates.length];
-				for (int i = 0; i < labels.length; i++) {
-					labels[i] = "label" + i;
+	public class Base extends MatrixVisualiser {
+		public Input<File> inFile = new Input<>("in","tsv file containing matrix. First line contain labels, next lines the matrix (numbers only). "
+				+ "Use # at start of line for comments, empy lines are ignored", new File("[[none]]"));
+		final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
+				new OutFile("/tmp/matrix.svg"));
+
+		String [] labels;
+
+		public Base() {
+		}
+		
+		public double [][] getMatrix() {
+			try {
+				String str = BeautiDoc.load(inFile.get());
+				List<String> strs  = new ArrayList<>();
+				for (String str2 : str.split("\n")) {
+					if (str2.trim().length() != 0 && !str2.startsWith("#")) {
+						strs.add(str2);							
+					}
 				}
-				return labels;
+				if (strs.size() == 0) {
+					throw new IllegalArgumentException("Could not find any info in the input file");
+				}
+				labels = strs.get(0).split("\t");
+				int n = labels.length;
+				double [][] matrix = new double[n][n];
+				if (strs.size() != n+1) {
+					throw new IllegalArgumentException("Number of labels ("+ n + ") does not match number of lines in matrix ("+(strs.size()-1)+")");
+				}
+				for (int i = 0; i < n; i++) {
+					String [] strs2 = strs.get(i+1).split("\t");
+					if (strs2.length != n) {
+						throw new IllegalArgumentException("At row " + (i+1) + " the number of entries in matrix ("+strs2.length+") does not match number number of labels ("+ n + ")");
+					}
+					for (int j = 0; j < n; j++) {
+						matrix[i][j] = Double.parseDouble(strs2[j]);
+					}
+				}
+				return matrix;
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-		};
-		s.run();
+		}
+		
+		public String[] getLabels(double[][] rates) {
+			return labels;
+		}
+		
+		@Override
+		String getFileName() {
+			return outputInput.get().getPath();
+		}
+	}
+	
+	
+	public static void main(String[] args) throws Exception {
+		new Application(new MatrixVisualiser().new Base(), "Matrix visualiser", args);
 	}
 
 }
