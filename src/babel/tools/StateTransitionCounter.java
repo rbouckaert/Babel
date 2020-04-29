@@ -26,12 +26,12 @@ public class StateTransitionCounter extends MatrixVisualiser {
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 1000);
-//  final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
+    final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
 	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
 			new OutFile("[[none]]"));
 
 
-    double [][] rates;
+    double [][] migrations;
     String [] tags;
     
 	@Override
@@ -40,13 +40,87 @@ public class StateTransitionCounter extends MatrixVisualiser {
 
 	@Override
 	public void run() throws Exception {
-		PrintStream out = System.out;
-		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
-			String str = outputInput.get().getPath();			
-			Log.warning("Writing to file " + str);
-			out = new PrintStream(str);
+		if (epochInput.get().trim().length() == 0) {
+			PrintStream out = System.out;
+			if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+				String str = outputInput.get().getPath();			
+				Log.warning("Writing to file " + str);
+				out = new PrintStream(str);
+			}
+			
+			
+			process(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, out);
+			
+			
+			if (svgInput.get() != null && !svgInput.get().getName().equals("[[none]]")) {
+				// produce SVG visualisation
+				String str = svgInput.get().getPath();
+				Log.warning("Writing to file " + str);
+				try {
+					File tmpFile0 = new File(str);
+					FileWriter outfile = new FileWriter(tmpFile0);
+					outfile.write(getSVG(migrations, tags));
+					outfile.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+				out.close();
+			}			
+		} else {
+			String [] strs = epochInput.get().split(",");
+			double [] times = new double[strs.length + 2];
+			times[0] = Double.NEGATIVE_INFINITY;
+			times[times.length-1] = Double.POSITIVE_INFINITY;
+			for (int i = 0; i < strs.length; i++) {
+				times[i+1] = Double.parseDouble(strs[i]);
+			}
+			
+			for (int i = 0; i < times.length-1; i++) {
+				PrintStream out = System.out;
+				if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+					String str = outputInput.get().getPath();			
+					if (str.contains(".")) {
+						int k = str.lastIndexOf('.');
+						str = str.substring(0, k) + i + str.substring(k);
+					}
+					Log.warning("Writing to file " + str);
+					out = new PrintStream(str);
+				}
+				
+				
+				process(times[i], times[i+1], out);
+				
+				
+				if (svgInput.get() != null && !svgInput.get().getName().equals("[[none]]")) {
+					// produce SVG visualisation
+					String str = svgInput.get().getPath();
+					if (str.contains(".")) {
+						int k = str.lastIndexOf('.');
+						str = str.substring(0, k) + i + str.substring(k);
+					}
+					Log.warning("Writing to file " + str);
+					try {
+						File tmpFile0 = new File(str);
+						FileWriter outfile = new FileWriter(tmpFile0);
+						outfile.write(getSVG(migrations, tags));
+						outfile.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+					out.close();
+				}			
+			}
 		}
+		
+		
+		Log.info.println("Done");
+	}
 
+	private void process(double tLo, double tHi, PrintStream out) throws Exception {
 		// find all tag values
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(src1Input.get().getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
@@ -74,7 +148,7 @@ public class StateTransitionCounter extends MatrixVisualiser {
 			Tree tree = srcTreeSet.next();
 			maxX = Math.max(maxX, tree.getRoot().getHeight());
 			Map<String, Integer> transitionCounts = new HashMap<>();
-			collectTags(tree.getRoot(), transitionCounts, tag);
+			collectTags(tree.getRoot(), transitionCounts, tag, tLo, tHi);
 			
 			for (int i = 0; i < tags.length; i++) {
 				for (int j = 0; j < tags.length; j++) {
@@ -127,7 +201,7 @@ public class StateTransitionCounter extends MatrixVisualiser {
 		out.println("Transition" + "\t" +"mean" + "\t" + "95%Low" + "\t" + "95%High");
 		int [][] histograms = new int[transitionKeys.length][];
 		int k = 0;		
-		rates = new double[tags.length][tags.length];
+		migrations = new double[tags.length][tags.length];
 		for (String id : transitionKeys) {
 			List<Integer> counts = transitionDistributions.get(id);
 			Collections.sort(counts);
@@ -141,7 +215,7 @@ public class StateTransitionCounter extends MatrixVisualiser {
 			out.println(id + "\t" + mean + "\t" + lo + "\t" + hi);
 			String tag1 = id.substring(0, id.indexOf("="));
 			String tag2 = id.substring(id.indexOf("=")+2);
-			rates[indexOfTag(tag1)][indexOfTag(tag2)] = mean;
+			migrations[indexOfTag(tag1)][indexOfTag(tag2)] = mean;
 			histograms[k] = histogram(counts);
 			k++;
 		}
@@ -179,27 +253,6 @@ public class StateTransitionCounter extends MatrixVisualiser {
 			}
 			out.println();
 		}
-		
-
-		if (svgInput.get() != null && !svgInput.get().getName().equals("[[none]]")) {
-			// produce SVG visualisation
-			String str = svgInput.get().getPath();
-			Log.warning("Writing to file " + str);
-			try {
-				File tmpFile0 = new File(str);
-				FileWriter outfile = new FileWriter(tmpFile0);
-				outfile.write(getSVG(rates, tags));
-				outfile.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		
-		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
-			out.close();
-		}
-		Log.info.println("Done");
 	}
 
 	
@@ -231,11 +284,6 @@ public class StateTransitionCounter extends MatrixVisualiser {
 			n[i]++;
 		}
 		return n;
-//		StringBuilder b = new StringBuilder();
-//		for (int i = 0; i <= max; i++) {
-//			b.append(n[i]).append('\t');
-//		}
-//		return b.toString();
 	}
 
 	private void collectTags(Node root, Set<String> tags, String tag) {
@@ -245,25 +293,27 @@ public class StateTransitionCounter extends MatrixVisualiser {
 		
 	}
 
-	private void collectTags(Node node, Map<String, Integer> transitionCounts, String tag) {
+	private void collectTags(Node node, Map<String, Integer> transitionCounts, String tag, final double tLo, final double tHi) {
 		if (!node.isRoot()) {
-			String parentTag = (String) node.getParent().getMetaData(tag);
-			String nodeTag = (String) node.getMetaData(tag);
-			String id = parentTag+"=>" + nodeTag;
-			if (!transitionCounts.containsKey(id)) {
-				transitionCounts.put(id, 1);
-			} else {
-				transitionCounts.put(id,  transitionCounts.get(id) + 1);
+			if (node.getHeight() >= tLo && node.getHeight() < tHi) {
+	 			String parentTag = (String) node.getParent().getMetaData(tag);
+				String nodeTag = (String) node.getMetaData(tag);
+				String id = parentTag+"=>" + nodeTag;
+				if (!transitionCounts.containsKey(id)) {
+					transitionCounts.put(id, 1);
+				} else {
+					transitionCounts.put(id,  transitionCounts.get(id) + 1);
+				}
 			}
 		}
 		for (Node child : node.getChildren()) {
-			collectTags(child, transitionCounts, tag);
+			collectTags(child, transitionCounts, tag, tLo, tHi);
 		}		
 	}
 
 	@Override
-	public double[][] getRates() {
-		return rates;
+	public double[][] getMatrix() {
+		return migrations;
 	}
 
 	@Override

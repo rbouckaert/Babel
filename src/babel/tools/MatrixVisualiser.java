@@ -21,7 +21,7 @@ public abstract class MatrixVisualiser extends Runnable {
 			"a31c1b"};
 
 
-	public abstract double [][] getRates();
+	public abstract double [][] getMatrix();
 	public abstract String[] getLabels(double[][] rates);
 
 	
@@ -33,9 +33,9 @@ public abstract class MatrixVisualiser extends Runnable {
 	@Override
 	public void run() throws Exception {
 
-		double[][] rates = getRates();
-		String[] labels = getLabels(rates);
-		String svg = getSVG(rates, labels);
+		double[][] matrix = getMatrix();
+		String[] labels = getLabels(matrix);
+		String svg = getSVG(matrix, labels);
 		
 		try {
 			File tmpFile0 = new File("/tmp/matrix.svg");
@@ -133,7 +133,7 @@ public abstract class MatrixVisualiser extends Runnable {
 		}
 		for (int i = 0; i < n; i++) {
 			svg += "	<text x='"+w+"' y='" + (i * 30 + 30) + "' font-family='Verdana' font-size='28' fill='#" + colour[i]
-					+ "'>" + label[i] + "</text>\n";
+					+ "'>" + label[i].replaceAll("_", " ") + "</text>\n";
 		}
 		svg += "</svg> \n";
 		return svg;
@@ -141,27 +141,27 @@ public abstract class MatrixVisualiser extends Runnable {
 		
 	public static void main(String[] args) throws Exception {
 		MatrixVisualiser s = new MatrixVisualiser() {
-			private double [][] rates5x5 = new double[][] {
+			private double [][] matrix5x5 = new double[][] {
 				{0.0, 1.0, 2.0,1.0,3.0},
 				{0.5, 0.0, 1.5, 0.1, 0.1},
 				{0.5, 1.5, 0.0, 0.1, 0.1},
 				{0.5, 1.5, 1.5, 0.0, 0.1},
 				{0.5, 3.0, 1.5, 0.1, 0.0}
 			};
-			private double [][] rates4x4 = new double[][] {
+			private double [][] matrix4x4 = new double[][] {
 				{0.0, 1.0, 2.0,1.0},
 		        {0.5, 0.0, 1.5, 0.1},
 		        {0.5, 1.5, 0.0, 0.1},
 		        {0.5, 1.5, 1.5, 0.0}
 			};
-			private double [][] rates3x3 = new double[][] {
+			private double [][] matrix3x3 = new double[][] {
 				{0.0, 1.0, 2.0},
 			    {0.5, 0.0, 1.5},
 			    {0.5, 1.5, 0.0}
 			};
 			
-			public double [][] getRates() {
-				return rates3x3;
+			public double [][] getMatrix() {
+				return matrix5x5;
 			}
 			
 			public String[] getLabels(double[][] rates) {
