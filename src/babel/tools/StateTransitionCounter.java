@@ -19,7 +19,7 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
 @Description("Counts transitions of tags along branches of a tree")
-public class StateTransitionCounter extends MatrixVisualiser {	
+public class StateTransitionCounter extends MatrixVisualiserBase {	
 	final public Input<TreeFile> src1Input = new Input<>("in","source tree (set) file");
     final public Input<String> tagInput = new Input<String>("tag","label used to report trait", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
