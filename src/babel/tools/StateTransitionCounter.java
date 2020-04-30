@@ -30,6 +30,8 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
 			new OutFile("[[none]]"));
 
+	final public Input<Double> svgScaleInput = new Input<>("svgScale", "scale factor to be used for svg output. auto-scale when <= 0",
+			-1.0);
 
     double [][] migrations;
     String [] tags;
@@ -59,7 +61,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 				try {
 					File tmpFile0 = new File(str);
 					FileWriter outfile = new FileWriter(tmpFile0);
-					outfile.write(getSVG(migrations, tags));
+					outfile.write(getSVG(migrations, tags, svgScaleInput.get()));
 					outfile.close();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -104,7 +106,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 					try {
 						File tmpFile0 = new File(str);
 						FileWriter outfile = new FileWriter(tmpFile0);
-						outfile.write(getSVG(migrations, tags));
+						outfile.write(getSVG(migrations, tags, svgScaleInput.get()));
 						outfile.close();
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -130,7 +132,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		tags = tagSet.toArray(new String[] {});
 		Arrays.sort(tags);
 		int m = tags.length;
-		Map<String, List<Integer>> transitionDistributions = new HashMap<>();
+		Map<String, List<Double>> transitionDistributions = new HashMap<>();
 		for (int i = 0; i < m; i++) {
 			for (int j = 0; j < m; j++) {
 				String id = tags[i] + "=>" + tags[j];
@@ -147,7 +149,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		while (srcTreeSet.hasNext()) {
 			Tree tree = srcTreeSet.next();
 			maxX = Math.max(maxX, tree.getRoot().getHeight());
-			Map<String, Integer> transitionCounts = new HashMap<>();
+			Map<String, Double> transitionCounts = new HashMap<>();
 			collectTags(tree.getRoot(), transitionCounts, tag, tLo, tHi);
 			
 			for (int i = 0; i < tags.length; i++) {
@@ -161,7 +163,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 					if (transitionCounts.containsKey(id)) {
 						transitionDistributions.get(id).add(transitionCounts.get(id));
 					} else {
-						transitionDistributions.get(id).add(0);
+						transitionDistributions.get(id).add(0.0);
 					}
 				}
 			}
@@ -203,7 +205,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		int k = 0;		
 		migrations = new double[tags.length][tags.length];
 		for (String id : transitionKeys) {
-			List<Integer> counts = transitionDistributions.get(id);
+			List<Double> counts = transitionDistributions.get(id);
 			Collections.sort(counts);
 			double sum = 0;
 			for (double d : counts) {
@@ -274,14 +276,14 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		throw new IllegalArgumentException("value " + value + " should be in keys " + Arrays.toString(keys));
 	}
 
-	private int [] histogram(List<Integer> counts) {
+	private int [] histogram(List<Double> counts) {
 		int max = 0;
-		for (int i : counts) {
-			max = Math.max(max, i);
+		for (double i : counts) {
+			max = Math.max(max, (int)(i+0.5));
 		}
 		int [] n = new int[max + 1];
-		for (int i : counts) {
-			n[i]++;
+		for (double i : counts) {
+			n[(int)(i+0.5)]++;
 		}
 		return n;
 	}
@@ -293,16 +295,32 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		
 	}
 
-	private void collectTags(Node node, Map<String, Integer> transitionCounts, String tag, final double tLo, final double tHi) {
+	private void collectTags(Node node, Map<String, Double> transitionCounts, String tag, final double tLo, final double tHi) {
 		if (!node.isRoot()) {
-			if (node.getHeight() >= tLo && node.getHeight() < tHi) {
+			if (node.getHeight() >= tLo && node.getHeight() < tHi || 
+				node.getHeight() < tLo && node.getParent().getHeight() > tLo) {
 	 			String parentTag = (String) node.getParent().getMetaData(tag);
 				String nodeTag = (String) node.getMetaData(tag);
 				String id = parentTag+"=>" + nodeTag;
+				double weight = 1.0;
+				if (node.getHeight() >= tLo) {
+					if (node.getParent().getHeight() > tHi) {
+						// branch ends in epoch, sticks out above
+						weight = (tHi - node.getHeight()) / node.getLength();
+					}
+				} else { // node.getHeight() < tLo
+					if (node.getParent().getHeight() < tHi) {
+						// branch starts in epoch, sticks out below
+						weight = (node.getParent().getHeight() - tLo) / node.getLength();
+					} else {
+						// branch overlaps complete epoch
+						weight = (tHi - tLo) / node.getLength();
+					}
+				}
 				if (!transitionCounts.containsKey(id)) {
-					transitionCounts.put(id, 1);
+					transitionCounts.put(id, weight);
 				} else {
-					transitionCounts.put(id,  transitionCounts.get(id) + 1);
+					transitionCounts.put(id,  transitionCounts.get(id) + weight);
 				}
 			}
 		}

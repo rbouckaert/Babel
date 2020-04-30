@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import beast.core.Description;
 import beast.core.Runnable;
@@ -88,10 +89,14 @@ public class MatrixVisualiserBase extends Runnable {
 		return "/tmp/matrix.svg";
 	}
 	
-	String getSVG(double [][] rates, String [] label) {
+	String getSVG(double [][] matrix, String [] label) {
+		return getSVG(matrix, label, -1);		
+	}
+	
+	String getSVG(double [][] matrix, String [] label, double scale) {
 		int w = 500;
 		int h = 500;
-		int n = rates.length;
+		int n = matrix.length;
 		if (n > colour.length) {
 			String [] tmp = new String[n];
 			for (int i = 0; i < n; i++) {
@@ -105,17 +110,18 @@ public class MatrixVisualiserBase extends Runnable {
 		
 		// normalise
 		double max = Double.NEGATIVE_INFINITY;
+		double min = Double.POSITIVE_INFINITY;
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				if (i != j) {
-					max = Math.max(max, rates[i][j]);
+					max = Math.max(max, matrix[i][j]);
+					min = Math.min(min, matrix[i][j]);
 				}
 			}
 		}
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				rates[i][j] /= max;
-			}
+
+		if (scale <= 0) {
+			scale = 10/max;
 		}
 
 		double[] x = new double[n];
@@ -125,6 +131,7 @@ public class MatrixVisualiserBase extends Runnable {
 			y[i] = 10+(h-40) / 2.0 * (1.0 + Math.sin(i * Math.PI * 2.0 / n));
 		}
 
+        final DecimalFormat formatter = new DecimalFormat("#.##");
 		String svg = "<svg width='" + w*2 + "' height='" + h
 				+ "'  xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg'>\n"
 				+ " <defs>\n";
@@ -157,7 +164,7 @@ public class MatrixVisualiserBase extends Runnable {
 						     (y[j] + b * (y[i] - y[j]));
 				
 				if (i != j) {
-					double width = 10 * rates[i][j];
+					double width = scale * matrix[i][j];
 					if (width < 0.25) {
 //						width = 0.25;
 					}
@@ -166,6 +173,8 @@ public class MatrixVisualiserBase extends Runnable {
 //							+ "stroke='url(#grad"+i+")' "
 							+ "stroke='#"+colour[i]+"' "
 							+ "d='M" + start + " Q" + middle + " " + end + "'></path>  \n";
+					svg +=  "<text x='"+(midx + 0.8*c * (y[i] - y[j]) - 10)+"' "
+							+ "y='"+(midy - 0.8*c * (x[i] - x[j]))+"' font-family='Verdana' font-size='10' fill='#000'>" + formatter.format(matrix[i][j])  + "</text>\n";
 				}
 			}
 		}
@@ -185,7 +194,11 @@ public class MatrixVisualiserBase extends Runnable {
 			svg += "	<text x='"+x1+"' y='" + y1 + "' font-family='Verdana' font-size='28' fill='#" + colour[i]
 					+ "'>" + label[i].replaceAll("_", " ") + "</text>\n";
 		}
-		svg += "</g>\n</svg> \n";
+		svg += "</g>\n";
+		svg += "	<text x='5' y='15' font-family='Verdana' font-size='10' fill='#000'>max (biggest arrow): " + formatter.format(max)  + "</text>\n";
+		svg += "	<text x='5' y='30' font-family='Verdana' font-size='10' fill='#000'>min (thinnest arrow): " + formatter.format(min)  + "</text>\n";
+
+		svg += "</svg> \n";
 		return svg;
 	}
 
