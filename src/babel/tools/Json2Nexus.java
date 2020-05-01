@@ -247,7 +247,6 @@ public class Json2Nexus extends Runnable {
      */
     public static boolean tryParseNum(String value) {  
         try {  
-            Integer.parseInt(value);  
             Double.parseDouble(value);
             return true;  
          } catch (NumberFormatException e) {  

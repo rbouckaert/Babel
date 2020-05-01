@@ -64,6 +64,10 @@
               class="babel.tools.TreeRelabeller"
               args=""
             />
+    <packageapp description="Annotates nodes in a tree."
+              class="babel.tools.NodeAnnotator"
+              args=""
+            />
     <packageapp description="Mark specific transitions of a meta-data attribute on a tree to make it easy to visualise these transitions"
               class="babel.tools.TreeTransitionMarker"
               args=""
