@@ -25,11 +25,11 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
-	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 1000);
+	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 100);
     final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
 	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
 			new OutFile("[[none]]"));
-
+    
 	final public Input<Double> svgScaleInput = new Input<>("svgScale", "scale factor to be used for svg output. auto-scale when <= 0",
 			-1.0);
 
@@ -175,25 +175,43 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		srcTreeSet.reset();
 
 		double [][] linCount = new double[m][N + 1];
+		double [][] introductionCount = new double[m][N + 1];
+		int treeCount = 0;
 		while (srcTreeSet.hasNext()) {
 			double stepSize = maxX / N;
 			Tree tree = srcTreeSet.next();
+			treeCount++;
 			for (Node node : tree.getNodesAsArray()) {
 				if (!node.isRoot()) {
 					String value = (String) node.getMetaData(tag);
 					int k = indexOf(tags, value);
 					double [] tagLinCount = linCount[k];
+					double [] introductionCount2 = introductionCount[k];
 					int start = (int) (node.getHeight() * N / maxX + 0.5);
 					int end = (int) (node.getParent().getHeight() * N / maxX + 0.5);
 					if (start == end) {
 						tagLinCount[start] += node.getParent().getHeight() - node.getHeight();
+						if (!value.equals(node.getParent().getMetaData(tag))) {
+							introductionCount2[start] += 1;
+						}
 					} else {
 						tagLinCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
 						for (int i = start+1; i < end; i++) {
 							tagLinCount[i]++;
 						}
 						tagLinCount[end] += node.getParent().getHeight() - end * stepSize;
+
+						if (!value.equals(node.getParent().getMetaData(tag))) {
+							introductionCount2[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+							for (int i = start+1; i < end; i++) {
+								introductionCount2[i] += 1;
+							}
+							introductionCount2[end] += node.getParent().getHeight() - end * stepSize;
+						}
 					}
+					
+					
+					
 				}
 			}
 		}
@@ -252,6 +270,21 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 			out.print(tags[i] + "\t");
 			for (int j = N-1; j >= 0; j--) {
 				out.print(linCount[i][j] + "\t");
+			}
+			out.println();
+		}
+		
+		// output introductionCount
+		out.println("\nIntroduction Count through time");
+		out.print("Transition\t");
+		for (int i = 0; i <= N; i++) {
+			out.print((maxX * i) / N + "\t");
+		}
+		out.println();
+		for (int i = 0; i < m; i++) {
+			out.print(tags[i] + "\t");
+			for (int j = N-1; j >= 0; j--) {
+				out.print(introductionCount[i][j]/treeCount + "\t");
 			}
 			out.println();
 		}

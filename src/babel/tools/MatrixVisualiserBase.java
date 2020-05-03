@@ -174,7 +174,7 @@ public class MatrixVisualiserBase extends Runnable {
 							+ "stroke='#"+colour[i]+"' "
 							+ "d='M" + start + " Q" + middle + " " + end + "'></path>  \n";
 					svg +=  "<text x='"+(midx + 0.8*c * (y[i] - y[j]) - 10)+"' "
-							+ "y='"+(midy - 0.8*c * (x[i] - x[j]))+"' font-family='Verdana' font-size='10' fill='#000'>" + formatter.format(matrix[i][j])  + "</text>\n";
+							+ "y='"+(midy - 0.8*c * (x[i] - x[j]))+"' font-family='Verdana' font-size='10' fill='#" + colour[i] + "'>" + formatter.format(matrix[i][j])  + "</text>\n";
 				}
 			}
 		}
@@ -195,8 +195,8 @@ public class MatrixVisualiserBase extends Runnable {
 					+ "'>" + label[i].replaceAll("_", " ") + "</text>\n";
 		}
 		svg += "</g>\n";
-		svg += "	<text x='5' y='15' font-family='Verdana' font-size='10' fill='#000'>max (biggest arrow): " + formatter.format(max)  + "</text>\n";
-		svg += "	<text x='5' y='30' font-family='Verdana' font-size='10' fill='#000'>min (thinnest arrow): " + formatter.format(min)  + "</text>\n";
+		//svg += "	<text x='5' y='15' font-family='Verdana' font-size='10' fill='#000'>max (biggest arrow): " + formatter.format(max)  + "</text>\n";
+		//svg += "	<text x='5' y='30' font-family='Verdana' font-size='10' fill='#000'>min (thinnest arrow): " + formatter.format(min)  + "</text>\n";
 
 		svg += "</svg> \n";
 		return svg;
