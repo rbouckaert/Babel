@@ -26,6 +26,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 	final public Input<Integer> resolutionInput = new Input<>("resolution", "number of steps in lineages through time table", 100);
+	final public Input<Double> maxXInput = new Input<>("maxHeight", "maximum tree height, if specified the number of intervals is 365 * maxHeight (i.e. intervals represent 1 day) and 'resolution' is ignored. Should be larger than largest tree.");
     final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
 	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
 			new OutFile("[[none]]"));
@@ -146,8 +147,10 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		srcTreeSet.reset();
 		int n = 0;
 		double maxX = 0;
+		int treeCount = 0;
 		while (srcTreeSet.hasNext()) {
 			Tree tree = srcTreeSet.next();
+			treeCount++;
 			maxX = Math.max(maxX, tree.getRoot().getHeight());
 			Map<String, Double> transitionCounts = new HashMap<>();
 			collectTags(tree.getRoot(), transitionCounts, tag, tLo, tHi);
@@ -172,27 +175,36 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		
 		
 		int N = resolutionInput.get();
+		double stepSize = maxX / N;
+		if (maxXInput.get() != null) {
+			if (maxXInput.get() < maxX) {
+				throw new IllegalArgumentException("maxHeight should be at least as large as the largest tree: " + maxX);
+			}
+			maxX = maxXInput.get();
+			N = (int)(maxX * 365.0);
+			stepSize = 1.0 / 365.0;
+		}
 		srcTreeSet.reset();
 
 		double [][] linCount = new double[m][N + 1];
-		double [][] introductionCount = new double[m][N + 1];
-		int treeCount = 0;
+		double [][][] introductionCount = new double[m][N + 1][treeCount];
+		treeCount = 0;
 		while (srcTreeSet.hasNext()) {
-			double stepSize = maxX / N;
 			Tree tree = srcTreeSet.next();
-			treeCount++;
 			for (Node node : tree.getNodesAsArray()) {
 				if (!node.isRoot()) {
 					String value = (String) node.getMetaData(tag);
 					int k = indexOf(tags, value);
 					double [] tagLinCount = linCount[k];
-					double [] introductionCount2 = introductionCount[k];
-					int start = (int) (node.getHeight() * N / maxX + 0.5);
-					int end = (int) (node.getParent().getHeight() * N / maxX + 0.5);
+					double [][] introductionCount2 = introductionCount[k];
+					int start = (int) (node.getHeight() * N / maxX);// + 0.5);
+					int end = (int) (node.getParent().getHeight() * N / maxX);// + 0.5);
 					if (start == end) {
-						tagLinCount[start] += node.getParent().getHeight() - node.getHeight();
+						tagLinCount[start] += node.getLength();
+						
 						if (!value.equals(node.getParent().getMetaData(tag))) {
-							introductionCount2[start] += 1;
+							// double d = stepSize/node.getLength();
+							introductionCount2[start][treeCount] += 1;
 						}
 					} else {
 						tagLinCount[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
@@ -202,18 +214,17 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 						tagLinCount[end] += node.getParent().getHeight() - end * stepSize;
 
 						if (!value.equals(node.getParent().getMetaData(tag))) {
-							introductionCount2[start] += ((start+1) * stepSize  - node.getHeight())/stepSize;
+							double d = stepSize/node.getLength();
+							introductionCount2[start][treeCount] += d * ((start+1) * stepSize  - node.getHeight());
 							for (int i = start+1; i < end; i++) {
-								introductionCount2[i] += 1;
+								introductionCount2[i][treeCount] += d;
 							}
-							introductionCount2[end] += node.getParent().getHeight() - end * stepSize;
+							introductionCount2[end][treeCount] += d * (node.getParent().getHeight() - end * stepSize);
 						}
 					}
-					
-					
-					
 				}
 			}
+			treeCount++;
 		}
 		// create report
 		
@@ -230,8 +241,8 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 				sum +=d;
 			}
 			double mean = sum / n;
-			double lo = counts.get((int) (0.025 * counts.size())); 
-			double hi = counts.get((int) (0.975 * counts.size())); 			
+			double lo = lowerOf95PercentHPD(counts);//sorted)counts.get((int) (0.025 * counts.size())); 
+			double hi = upperOf95PercentHPD(counts);//counts.get((int) (0.975 * counts.size())); 			
 			out.println(id + "\t" + mean + "\t" + lo + "\t" + hi);
 			String tag1 = id.substring(0, id.indexOf("="));
 			String tag2 = id.substring(id.indexOf("=")+2);
@@ -268,11 +279,20 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		out.println();
 		for (int i = 0; i < m; i++) {
 			out.print(tags[i] + "\t");
-			for (int j = N-1; j >= 0; j--) {
-				out.print(linCount[i][j] + "\t");
+			for (int j = N; j >= 0; j--) {
+				out.print(linCount[i][j]/treeCount + "\t");
 			}
 			out.println();
 		}
+		out.print("Total\t");
+		for (int j = N; j >= 0; j--) {
+			double sum = 0;
+			for (int i = 0; i < m; i++) {
+				sum += linCount[i][j];
+			}
+			out.print(sum/treeCount + "\t");
+		}
+		out.println();
 		
 		// output introductionCount
 		out.println("\nIntroduction Count through time");
@@ -283,14 +303,78 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		out.println();
 		for (int i = 0; i < m; i++) {
 			out.print(tags[i] + "\t");
-			for (int j = N-1; j >= 0; j--) {
-				out.print(introductionCount[i][j]/treeCount + "\t");
+			for (int j = N; j >= 0; j--) {
+				out.print(mean(introductionCount[i][j]) + "\t");
+			}
+			out.println();
+			out.print(tags[i] + "-95%HPD-lower\t");
+			for (int j = N; j >= 0; j--) {
+				out.print(lowerOf95PercentHPD(introductionCount[i][j]) + "\t");
+			}
+			out.println();
+			out.print(tags[i] + "-95%HPD-upper\t");
+			for (int j = N; j >= 0; j--) {
+				out.print(upperOf95PercentHPD(introductionCount[i][j]) + "\t");
 			}
 			out.println();
 		}
 	}
 
 	
+	private double mean(double[] d) {
+		double sum = 0;
+		for (double x : d) {
+			sum += x;
+		}
+		return sum / d.length;
+	}
+
+	private double lowerOf95PercentHPD(List<Double> x) {
+		double [] y = new double[x.size()];
+		for (int i = 0; i < y.length; i++) {
+			y[i] = x.get(i);
+		}
+		return lowerOf95PercentHPD(y);
+	}
+	
+	private double lowerOf95PercentHPD(double[] sorted) {
+		Arrays.sort(sorted);
+        int n = (int) ((sorted.length - 1) * 95.0 / 100.0);
+        double minRange = Double.MAX_VALUE;
+        int hpdIndex = 0;
+        for (int k = 0; k < sorted.length - n; k++) {
+            double range = sorted[k + n] - sorted[k];
+            if (range < minRange) {
+                minRange = range;
+                hpdIndex = k;
+            }
+        }
+        return sorted[hpdIndex];
+	}
+	
+	private double upperOf95PercentHPD(List<Double> x) {
+		double [] y = new double[x.size()];
+		for (int i = 0; i < y.length; i++) {
+			y[i] = x.get(i);
+		}
+		return upperOf95PercentHPD(y);
+	}
+
+	private double upperOf95PercentHPD(double[] sorted) {
+		Arrays.sort(sorted);
+        int n = (int) ((sorted.length - 1) * 95.0 / 100.0);
+        double minRange = Double.MAX_VALUE;
+        int hpdIndex = 0;
+        for (int k = 0; k < sorted.length - n; k++) {
+            double range = sorted[k + n] - sorted[k];
+            if (range < minRange) {
+                minRange = range;
+                hpdIndex = k;
+            }
+        }
+        return sorted[hpdIndex + n];
+	}
+
 	private int indexOfTag(String tag1) {
 		for (int i = 0; i < tags.length; i++) {
 			if (tags[i].equals(tag1)) {
