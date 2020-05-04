@@ -175,15 +175,17 @@ public class NodeAnnotator extends Runnable {
 		
 		// Trees
 		trees.reset();
-		Tree tree = trees.next();
-		tree.init(out);
-		out.println();
-        
 
         // Annotate nodes
 		int i = 0;
         while (trees.hasNext()) {
-        	tree = trees.next();
+        	
+        	Tree tree = trees.next();
+        	
+        	if (i == 0) {
+        		tree.init(out);
+        		out.println();
+        	}
         	
         	if (i % 500 == 0) Log.warning("Processing tree " + i);
         	
