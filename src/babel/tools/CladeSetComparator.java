@@ -9,9 +9,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -97,6 +99,7 @@ public class CladeSetComparator extends Runnable {
 
 	
 	double maxHeight = 0.0;
+	
 	
 	@Override
 	public void run() throws Exception {
@@ -213,7 +216,8 @@ public class CladeSetComparator extends Runnable {
 		}
 		
 		// process clades in set2
-		double maxDiff = 0;
+		double maxDiff = 0, meanDiff=0;
+		int meanDiffCount = 0;
 		double [] hist = new double[40];
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);			
@@ -245,6 +249,10 @@ public class CladeSetComparator extends Runnable {
 				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
+				if (support2 + cladeMap.get(clade) > 0.01) {
+					meanDiff += Math.abs(cladeMap.get(clade) - support2);
+					meanDiffCount++;
+				}
 				cladeMap.remove(clade);
 				
 				// record difference in 95%HPD (if support > 1% in both clade sets)
@@ -267,6 +275,10 @@ public class CladeSetComparator extends Runnable {
 				// clade is not in set1
 				output(out, svg, clade, 0.0, support2, g, 0, h2, 0, h2, 0, h2);
 				maxDiff = Math.max(maxDiff, support2);
+				if (support2> 0.01) {
+					meanDiff += support2;
+					meanDiffCount++;
+				}
 			}
 		}
 		
@@ -274,10 +286,18 @@ public class CladeSetComparator extends Runnable {
 		for (String clade : cladeMap.keySet()) {
 			double h1 = cladeHeightMap.get(clade);
 			output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0, h1, 0, h1, 0);
-			maxDiff = Math.max(maxDiff, cladeMap.get(clade));
+			double s = cladeMap.get(clade);
+			maxDiff = Math.max(maxDiff, s);
+			if (s> 0.01) {
+				meanDiff += s;
+				meanDiffCount++;
+			}
 		}
 
+        final DecimalFormat formatter = new DecimalFormat("#.##");
 		if (svg != null) {
+			svg.println("<text x='110' y='35'>Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%</text>");
+			svg.println("<text x='110' y='65'>Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%</text>");
 			svg.println(footer);
 		}
 		if (bi != null) {
@@ -293,11 +313,16 @@ public class CladeSetComparator extends Runnable {
 				g.drawRect(100 + i * width, height-(int)(hist[i] * height / max), width, (int)(hist[i] * height / max));
 			}
 			
+			g.setFont(new Font("Arial", Font.PLAIN, 20));
+			g.setColor(Color.black);
+			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 35);
+			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 65);
 			String str = normalise(pngOutputInput.get().getPath(), suffix);
 			Log.warning("Writing to file " + str);
 			ImageIO.write(bi, "png", new File(str));
 		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
+		Log.info("Mean difference in clade support (when sum over 1%): " + meanDiff/meanDiffCount);
 		Log.info.println("Done");
 	}
 
