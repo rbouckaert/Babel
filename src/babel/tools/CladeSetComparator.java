@@ -1,5 +1,6 @@
 package babel.tools;
 
+
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
@@ -13,7 +14,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,7 +99,11 @@ public class CladeSetComparator extends Runnable {
 
 	
 	double maxHeight = 0.0;
-	
+	int problemCount = 0;
+	int interestCount = 0;
+	int inconsistentHeightIntervals = 0;
+	double meanHeightsDifference = 0;
+
 	
 	@Override
 	public void run() throws Exception {
@@ -219,6 +223,10 @@ public class CladeSetComparator extends Runnable {
 		double maxDiff = 0, meanDiff=0;
 		int meanDiffCount = 0;
 		double [] hist = new double[40];
+		problemCount = 0;
+		interestCount = 0;
+		meanHeightsDifference = 0;
+		inconsistentHeightIntervals = 0;
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);			
 			double support2; 
@@ -251,7 +259,11 @@ public class CladeSetComparator extends Runnable {
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
 				if (support2 + cladeMap.get(clade) > 0.01) {
 					meanDiff += Math.abs(cladeMap.get(clade) - support2);
+					meanHeightsDifference += Math.abs(hi1-hi2)/(h1+h2)/2.0;
 					meanDiffCount++;
+					if (lo1 > hi2 || lo2 > hi1) {
+						inconsistentHeightIntervals++;
+					}
 				}
 				cladeMap.remove(clade);
 				
@@ -296,8 +308,10 @@ public class CladeSetComparator extends Runnable {
 
         final DecimalFormat formatter = new DecimalFormat("#.##");
 		if (svg != null) {
-			svg.println("<text x='110' y='35'>Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%</text>");
-			svg.println("<text x='110' y='65'>Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%</text>");
+			svg.println("<text x='110' y='25'>Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%</text>");
+			svg.println("<text x='110' y='45'>Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%</text>");
+			svg.println("<text x='110' y='65'>" + interestCount + " clades >25% difference "+ problemCount + " problematic</text>");
+			svg.println("<text x='110' y='85'>" + inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff");
 			svg.println(footer);
 		}
 		if (bi != null) {
@@ -313,16 +327,21 @@ public class CladeSetComparator extends Runnable {
 				g.drawRect(100 + i * width, height-(int)(hist[i] * height / max), width, (int)(hist[i] * height / max));
 			}
 			
-			g.setFont(new Font("Arial", Font.PLAIN, 20));
+			g.setFont(new Font("Arial", Font.PLAIN, 18));
 			g.setColor(Color.black);
-			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 35);
-			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 65);
+			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 25);
+			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 45);
+			g.drawString(interestCount + " clades >25% difference "+ problemCount + " problematic", 510, 65);
+			g.drawString(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff", 510, 85);
+
 			String str = normalise(pngOutputInput.get().getPath(), suffix);
 			Log.warning("Writing to file " + str);
 			ImageIO.write(bi, "png", new File(str));
 		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info("Mean difference in clade support (when sum over 1%): " + meanDiff/meanDiffCount);
+		Log.info(interestCount + " clades >25% difference "+ problemCount + " problematic");
+		Log.info(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff");
 		Log.info.println("Done");
 	}
 
@@ -380,13 +399,16 @@ public class CladeSetComparator extends Runnable {
 	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
 			double lo1, double lo2, double hi1, double hi2) {
 		out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
-		if ((support1 < 0.1 && support2 > 0.9) ||
-			(support2 < 0.1 && support1 > 0.9)) {
+//		if ((support1 < 0.1 && support2 > 0.9) ||
+//			(support2 < 0.1 && support1 > 0.9)) {
+		if (Math.abs(support1 - support2) > 0.9) {
 			Log.warning("Problem clade: " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+			problemCount++;
 		}
 		
 		if (Math.abs(support1 - support2) > 0.25) {
 				Log.warning("Clade of interest (>25% difference): " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+				interestCount++;
 			}
 
 		if (svg != null) {
