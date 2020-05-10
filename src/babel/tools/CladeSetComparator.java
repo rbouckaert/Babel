@@ -311,7 +311,7 @@ public class CladeSetComparator extends Runnable {
 			svg.println("<text x='110' y='25'>Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%</text>");
 			svg.println("<text x='110' y='45'>Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%</text>");
 			svg.println("<text x='110' y='65'>" + interestCount + " clades >25% difference "+ problemCount + " problematic</text>");
-			svg.println("<text x='110' y='85'>" + inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff");
+			svg.println("<text x='110' y='85'>" + inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff</text>");
 			svg.println(footer);
 		}
 		if (bi != null) {
