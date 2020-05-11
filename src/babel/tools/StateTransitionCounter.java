@@ -1,5 +1,6 @@
 package babel.tools;
 
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,12 +31,15 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
     final public Input<String> epochInput = new Input<String>("epoch", "comma separated string of breakpoint, going backward in time", "");
 	final public Input<OutFile> svgInput = new Input<>("svg", "svg output file for graph visualisation of transitions",
 			new OutFile("[[none]]"));
+	final public Input<OutFile> ittInput = new Input<>("itt", "png or pdf output file for graph visualisation of introductions through time",
+			new OutFile("[[none]]"));
     
 	final public Input<Double> svgScaleInput = new Input<>("svgScale", "scale factor to be used for svg output. auto-scale when <= 0",
 			-1.0);
 
     double [][] migrations;
     String [] tags;
+    double [][] introductionsThroughTimeData;
     
 	@Override
 	public void initAndValidate() {
@@ -67,6 +71,10 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
+			if (ittInput.get() != null && !ittInput.get().getName().equals("[[none]]")) {
+				TimeSeriesPlot plot = new TimeSeriesPlot();
+				plot.draw(ittInput.get().getPath(), introductionsThroughTimeData);
 			}
 			if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 				out.close();
@@ -112,6 +120,10 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+				}
+				if (ittInput.get() != null && !ittInput.get().getName().equals("[[none]]")) {
+					TimeSeriesPlot plot = new TimeSeriesPlot();
+					plot.draw(ittInput.get().getPath(), introductionsThroughTimeData);
 				}
 				if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 					out.close();
@@ -297,27 +309,37 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		// output introductionCount
 		out.println("\nIntroduction Count through time");
 		out.print("Transition\t");
+		introductionsThroughTimeData = new double[N+1][1+m*3];
 		for (int i = 0; i <= N; i++) {
 			out.print((maxX * i) / N + "\t");
+			introductionsThroughTimeData[0][i] = (maxX * i) / N;
 		}
 		out.println();
 		for (int i = 0; i < m; i++) {
 			out.print(tags[i] + "\t");
 			for (int j = N; j >= 0; j--) {
-				out.print(mean(introductionCount[i][j]) + "\t");
+				double mean =mean(introductionCount[i][j]);
+				out.print(mean + "\t");
+				introductionsThroughTimeData[1+m*3][i] = mean;
 			}
 			out.println();
 			out.print(tags[i] + "-95%HPD-lower\t");
 			for (int j = N; j >= 0; j--) {
-				out.print(lowerOf95PercentHPD(introductionCount[i][j]) + "\t");
+				double lo = lowerOf95PercentHPD(introductionCount[i][j]);
+				out.print(lo + "\t");
+				introductionsThroughTimeData[2+m*3][i] = lo;
 			}
 			out.println();
 			out.print(tags[i] + "-95%HPD-upper\t");
 			for (int j = N; j >= 0; j--) {
-				out.print(upperOf95PercentHPD(introductionCount[i][j]) + "\t");
+				double hi = upperOf95PercentHPD(introductionCount[i][j]);
+				out.print(hi + "\t");
+				introductionsThroughTimeData[3+m*3][i] = hi;
 			}
 			out.println();
 		}
+		
+		
 	}
 
 	

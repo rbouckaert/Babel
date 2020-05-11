@@ -93,6 +93,23 @@ public class TimeSeriesPlot extends Runnable {
 		return max;
 	}
 	
+	public void draw(String path, double [][] data) throws IOException, DocumentException {
+		this.data = data;
+		if (data.length % 3 != 1) {
+			throw new IllegalArgumentException("Expected the number of columns to be 1 + 3n, but found " + data.length);
+		}
+		max = maxData();
+		if (path.toLowerCase().endsWith("png")) {
+			drawPNG(path);
+		} else if (path.endsWith("pdf")) {
+			drawPDF(path);
+		} else {
+			throw new IllegalArgumentException("Unrecognised extension of output file: should be png or pdf");
+		}
+	}
+	
+
+	
 	private void drawPDF(String path) throws IOException, DocumentException {
 		com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
 		Log.warning("Writing to file " + path);
@@ -108,15 +125,6 @@ public class TimeSeriesPlot extends Runnable {
 		
 		g.dispose();
 		doc.close();
-	}
-	
-	public void drawPNG(String pngFile, double [][] data) throws IOException {
-		this.data = data;
-		if (data.length % 3 != 1) {
-			throw new IllegalArgumentException("Expected the number of columns to be 1 + 3n, but found " + data.length);
-		}
-		max = maxData();
-		drawPNG(outputInput.get().getPath());
 	}
 	
 	private void drawPNG(String path) throws IOException {
