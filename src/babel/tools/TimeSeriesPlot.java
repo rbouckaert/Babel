@@ -49,7 +49,7 @@ public class TimeSeriesPlot extends Runnable {
     final static int WIDTH = 1200;
     final static int HEIGHT = 1200;
     
-    final static Color [] colour = new Color[]{Color.blue, Color.red, Color.green};
+    final static Color [] colour = new Color[]{Color.blue, Color.red, Color.green, Color.GRAY, Color.orange};
     // the length in pixels of a tick
     private static final int TICK_LENGTH = 5;
 
@@ -91,6 +91,11 @@ public class TimeSeriesPlot extends Runnable {
 			}
 		}
 		return max;
+	}
+	
+	public void draw(String path, double [][] data, String [] labels) throws IOException, DocumentException {
+		this.labels = labels;
+		draw(path, data);
 	}
 	
 	public void draw(String path, double [][] data) throws IOException, DocumentException {
@@ -298,7 +303,7 @@ public class TimeSeriesPlot extends Runnable {
 
 			g.setComposite(AlphaComposite.SrcOver.derive(1f));
 			g.setStroke(new BasicStroke(2.0f));
-	        g.drawPolygon(xPoints, yPoints, points);
+	        g.drawPolyline(xPoints, yPoints, points);
 	        
 	        if (labels != null) {
 	        	g.drawString(labels[m+1].replaceAll("_", " "), WIDTH - 200, TOP_MARGIN + sfm.getHeight() * (1+m/3));

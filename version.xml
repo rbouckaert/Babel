@@ -92,4 +92,8 @@
               class="babel.tools.StateTransitionCounter"
               args=""
             />
+    <packageapp description="Draw time series plot to png or pdf"
+              class="babel.tools.TimeSeriesPlot"
+              args=""
+            />
 </package>
