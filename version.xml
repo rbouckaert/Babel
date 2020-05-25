@@ -96,4 +96,9 @@
               class="babel.tools.TimeSeriesPlot"
               args=""
             />
+    <packageapp
+    		  description="filters all leafs from specified taxon sets out of a tree file based on list of taxa to include"
+              class="babel.tools.TaxonFilter"
+              args=""
+            />
 </package>

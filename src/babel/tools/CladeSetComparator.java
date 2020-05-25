@@ -52,7 +52,10 @@ public class CladeSetComparator extends Runnable {
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 
+	final public Input<Boolean> verboseInput = new Input<>("verbose", "print information about clades of interest, and if no output file is specified, all clade information", true);
+
 	double n;
+	boolean verbose;
 	
 	final String header = "<svg version=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"graph\" aria-labelledby=\"title\" role=\"img\" height=\"1200\">\n" + 
 			"<g class=\"grid x-grid\" id=\"xGrid\">\n" + 
@@ -107,6 +110,7 @@ public class CladeSetComparator extends Runnable {
 	
 	@Override
 	public void run() throws Exception {
+		verbose = verboseInput.get();
 		long start = System.currentTimeMillis();
 		if (srcInput.get().size()  == 0) {
 			CladeSetWithHeights cladeSet1 = getCladeSet(src1Input.get().getPath());
@@ -398,18 +402,24 @@ public class CladeSetComparator extends Runnable {
 
 	private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
 			double lo1, double lo2, double hi1, double hi2) {
-		out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+		if (verbose || System.out != out) {
+			out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+		}
 //		if ((support1 < 0.1 && support2 > 0.9) ||
 //			(support2 < 0.1 && support1 > 0.9)) {
 		if (Math.abs(support1 - support2) > 0.9) {
-			Log.warning("Problem clade: " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+			if (verbose) {
+				Log.warning("Problem clade: " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+			}
 			problemCount++;
 		}
 		
 		if (Math.abs(support1 - support2) > 0.25) {
+			if (verbose) {
 				Log.warning("Clade of interest (>25% difference): " + clade.replaceAll(" ", "") + " " + support1 + " " + support2);
-				interestCount++;
 			}
+			interestCount++;
+		}
 
 		if (svg != null) {
 			svg.println("  <circle style=\"opacity:0.25;fill:#a00000\" cx=\""+ (90 +1000* support1 + Randomizer.nextInt(10) - 5) + 

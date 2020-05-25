@@ -22,7 +22,7 @@ import beast.util.NexusParser;
 @Description("filters all leafs from specified taxon sets out of a tree file")
 public class TaxonFilter extends Runnable {
 	public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
-	public Input<File> subsetInput = new Input<>("subset","text file with list of taxa to include", Validate.REQUIRED);
+	public Input<File> subsetInput = new Input<>("subset","text file with list of taxa to include (one per line)", Validate.REQUIRED);
 	public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
 	public Input<Boolean> verboseInput = new Input<>("verbose","print out extra information while processing", true);
 
