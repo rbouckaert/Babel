@@ -224,13 +224,17 @@ public class CladeSetComparator extends Runnable {
 		}
 		
 		// process clades in set2
-		double maxDiff = 0, meanDiff=0;
-		int meanDiffCount = 0;
+		double maxDiff = 0, meanDiff=0, meanDiff2=0;
+		int meanDiffCount = 0, meanDiff2Count = 0;
 		double [] hist = new double[40];
 		problemCount = 0;
 		interestCount = 0;
 		meanHeightsDifference = 0;
 		inconsistentHeightIntervals = 0;
+		
+		double clade1ThresholdSupport = getThresholdSupport(cladeSet1, n1);
+		double clade2ThresholdSupport = getThresholdSupport(cladeSet2, n2);
+
 		for (int i = 0; i < cladeSet2.getCladeCount(); i++) {			
 			String clade = cladeSet2.getClade(i);			
 			double support2; 
@@ -261,13 +265,17 @@ public class CladeSetComparator extends Runnable {
 				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
-				if (support2 + cladeMap.get(clade) > 0.01) {
+				if (support2 + support1 > 0.01) {
 					meanDiff += Math.abs(cladeMap.get(clade) - support2);
 					meanHeightsDifference += Math.abs(hi1-hi2)/(h1+h2)/2.0;
 					meanDiffCount++;
 					if (lo1 > hi2 || lo2 > hi1) {
 						inconsistentHeightIntervals++;
 					}
+				}
+				if (support2 >= clade2ThresholdSupport || support1 >= clade1ThresholdSupport) {
+					meanDiff2 += (support1 - support2) * (support1 - support2);
+					meanDiff2Count++;
 				}
 				cladeMap.remove(clade);
 				
@@ -295,6 +303,10 @@ public class CladeSetComparator extends Runnable {
 					meanDiff += support2;
 					meanDiffCount++;
 				}
+				if (support2>clade2ThresholdSupport) {
+					meanDiff2 += support2*support2;
+					meanDiff2Count += 1;
+				}
 			}
 		}
 		
@@ -308,14 +320,22 @@ public class CladeSetComparator extends Runnable {
 				meanDiff += s;
 				meanDiffCount++;
 			}
+			if (s>clade1ThresholdSupport) {
+				meanDiff2 += s*s;
+				meanDiff2Count += 1;
+			}
 		}
+
+		double sqrtMeanSumSquared = Math.sqrt(meanDiff2/meanDiff2Count)*100;
+		String measure3String = "Sqrt(Mean squared difference) in clade support (when sum over union of most probable N-2 clades): ";
 
         final DecimalFormat formatter = new DecimalFormat("#.##");
 		if (svg != null) {
 			svg.println("<text x='110' y='25'>Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%</text>");
 			svg.println("<text x='110' y='45'>Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%</text>");
-			svg.println("<text x='110' y='65'>" + interestCount + " clades >25% difference "+ problemCount + " problematic</text>");
-			svg.println("<text x='110' y='85'>" + inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff</text>");
+			svg.println("<text x='110' y='65'>" + measure3String + formatter.format(sqrtMeanSumSquared)+ "%</text>");
+			svg.println("<text x='110' y='85'>" + interestCount + " clades >25% difference "+ problemCount + " problematic</text>");
+			svg.println("<text x='110' y='105'>" + inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff</text>");
 			svg.println(footer);
 		}
 		if (bi != null) {
@@ -335,8 +355,9 @@ public class CladeSetComparator extends Runnable {
 			g.setColor(Color.black);
 			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 25);
 			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 45);
-			g.drawString(interestCount + " clades >25% difference "+ problemCount + " problematic", 510, 65);
-			g.drawString(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff", 510, 85);
+			g.drawString(measure3String + formatter.format(sqrtMeanSumSquared)+ "%", 510, 65);
+			g.drawString(interestCount + " clades >25% difference "+ problemCount + " problematic", 510, 85);
+			g.drawString(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff", 510, 105);
 
 			String str = normalise(pngOutputInput.get().getPath(), suffix);
 			Log.warning("Writing to file " + str);
@@ -344,9 +365,31 @@ public class CladeSetComparator extends Runnable {
 		}
 		Log.info("Maximum difference in clade support: " + maxDiff);
 		Log.info("Mean difference in clade support (when sum over 1%): " + meanDiff/meanDiffCount);
+		Log.info(measure3String + sqrtMeanSumSquared);
 		Log.info(interestCount + " clades >25% difference "+ problemCount + " problematic");
 		Log.info(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff");
 		Log.info.println("Done");
+	}
+
+	private double getThresholdSupport(CladeSetWithHeights cladeSet, double totalCount) {
+		double[] supportValues = new double[cladeSet.getCladeCount()];
+		for (int i = 0; i < cladeSet.getCladeCount(); i++) {
+			supportValues[i] = getSupport(cladeSet, i, totalCount);
+		}
+		Arrays.sort(supportValues);
+
+		return supportValues[supportValues.length-(cladeSet.taxonSet.getTaxonCount()-2)];
+	}
+
+	private double getSupport(CladeSetWithHeights cladeSet, int cladeIndex, double totalCount) {
+		double support = 0.0;
+		if (cladeSet instanceof SummaryCladeSetWithHeights) {
+			BitSet bitset = cladeSet.get(cladeIndex);
+			support = ((SummaryCladeSetWithHeights)cladeSet).posteriors.get(bitset);
+		} else {
+			support = cladeSet.getFrequency(cladeIndex) / totalCount;
+		}
+		return support;
 	}
 
 	private String normalise(String str, String suffix) {

@@ -23,7 +23,7 @@ import beast.evolution.tree.Tree;
 @Description("Produce table for lineages through time plot with 95%HPD bounds")
 public class LineagesThroughTimeCounter extends Runnable {
 	final public Input<List<TreeFile>> treesInput = new Input<>("trees", "NEXUS file containing a tree set",
-			new ArrayList<>(), Validate.REQUIRED);
+			new ArrayList<>());
 	final public Input<OutFile> outputInput = new Input<>("out", "output file. Print to stdout if not specified");
 	final public Input<OutFile> svgOutputInput = new Input<>("svgout", "if specified, produce SVG file with graph");
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin",
