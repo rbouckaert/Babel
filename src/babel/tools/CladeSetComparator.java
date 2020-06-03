@@ -327,7 +327,7 @@ public class CladeSetComparator extends Runnable {
 		}
 
 		double sqrtMeanSumSquared = Math.sqrt(meanDiff2/meanDiff2Count)*100;
-		String measure3String = "Sqrt(Mean squared difference) in clade support (when sum over union of most probable N-2 clades): ";
+		String measure3String = "Sqrt(Mean squared difference) in clade support for most probable N-2 clades: ";
 
         final DecimalFormat formatter = new DecimalFormat("#.##");
 		if (svg != null) {
@@ -353,11 +353,11 @@ public class CladeSetComparator extends Runnable {
 			
 			g.setFont(new Font("Arial", Font.PLAIN, 18));
 			g.setColor(Color.black);
-			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 25);
-			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 45);
-			g.drawString(measure3String + formatter.format(sqrtMeanSumSquared)+ "%", 510, 65);
-			g.drawString(interestCount + " clades >25% difference "+ problemCount + " problematic", 510, 85);
-			g.drawString(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff", 510, 105);
+			g.drawString("Max difference in clade support: " + formatter.format(maxDiff * 100)+ "%", 510, 15);
+			g.drawString("Mean difference in clade support (when sum over 1%): " + formatter.format(meanDiff/meanDiffCount * 100)+ "%", 510, 35);
+			g.drawString(measure3String + formatter.format(sqrtMeanSumSquared)+ "%", 510, 55);
+			g.drawString(interestCount + " clades >25% difference "+ problemCount + " problematic", 510, 75);
+			g.drawString(inconsistentHeightIntervals + " inconsistent height intervals " + formatter.format(100.0*meanHeightsDifference/meanDiffCount) + " average % mean height diff", 510, 95);
 
 			String str = normalise(pngOutputInput.get().getPath(), suffix);
 			Log.warning("Writing to file " + str);
