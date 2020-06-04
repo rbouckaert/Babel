@@ -78,7 +78,9 @@
 		<!-- Compile the java code from ${srcBabel} into ${buildBabel} /bin -->
 		<javac srcdir="${srcBabel}" destdir="${buildBabel}" classpathref="classpath" 
 		       fork="true"
-		       memoryinitialsize="256m"
+               source="1.8"
+               target="1.8"
+ 		       memoryinitialsize="256m"
 		       memorymaximumsize="256m">
                         <include name="beast/**/**" />
 			<include name="babel/**/**" />
