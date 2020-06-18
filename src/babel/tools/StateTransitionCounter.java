@@ -201,12 +201,14 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		double [][] linCount = new double[m][N + 1];
 		double [][][] introductionCount = new double[m][N + 1][treeCount];
 		treeCount = 0;
+		int missingTagCount = 0;
 		while (srcTreeSet.hasNext()) {
 			Tree tree = srcTreeSet.next();
 			for (Node node : tree.getNodesAsArray()) {
 				if (!node.isRoot()) {
 					String value = (String) node.getMetaData(tag);
 					int k = indexOf(tags, value);
+					if (k >= 0) {
 					double [] tagLinCount = linCount[k];
 					double [][] introductionCount2 = introductionCount[k];
 					int start = (int) (node.getHeight() * N / maxX);// + 0.5);
@@ -234,11 +236,15 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 							introductionCount2[end][treeCount] += d * (node.getParent().getHeight() - end * stepSize);
 						}
 					}
+					} else {
+						missingTagCount++;
+					}
 				}
 			}
 			treeCount++;
 		}
 		// create report
+		System.err.println("Total number nodes that have tag missing: " + missingTagCount);
 		
 		// output main statistics
 		out.println("Transition" + "\t" +"mean" + "\t" + "95%Low" + "\t" + "95%High");
@@ -312,7 +318,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 		introductionsThroughTimeData = new double[N+1][1+m*3];
 		for (int i = 0; i <= N; i++) {
 			out.print((maxX * i) / N + "\t");
-			introductionsThroughTimeData[0][i] = (maxX * i) / N;
+			//introductionsThroughTimeData[0][i] = (maxX * i) / N;
 		}
 		out.println();
 		for (int i = 0; i < m; i++) {
@@ -412,7 +418,8 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 				return i;
 			}
 		}
-		throw new IllegalArgumentException("value " + value + " should be in keys " + Arrays.toString(keys));
+		return -1;
+		// throw new IllegalArgumentException("value " + value + " should be in keys " + Arrays.toString(keys));
 	}
 
 	private int [] histogram(List<Double> counts) {
