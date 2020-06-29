@@ -28,6 +28,11 @@
               class="babel.tools.Newick2Nexus"
               args=""
             />
+
+  <packageapp description="Reports exception-throwing trees in a tree file"
+              class="babel.tools.IllegalTreeCleaner"
+              args=""
+            />
     <packageapp description="Convert BEAST XML file into NEXUS alignemnt file"
               class="babel.tools.XML2Nexus"
               args=""
