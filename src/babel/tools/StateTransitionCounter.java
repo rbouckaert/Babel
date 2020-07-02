@@ -229,11 +229,17 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 
 						if (!value.equals(node.getParent().getMetaData(tag))) {
 							double d = stepSize/node.getLength();
-							introductionCount2[start][treeCount] += d * ((start+1) * stepSize  - node.getHeight());
-							for (int i = start+1; i < end; i++) {
-								introductionCount2[i][treeCount] += d;
+							d = 1.0 / node.getLength();
+							double deltaStart = d * ((start+1) * stepSize  - node.getHeight());
+							double deltaEnd = d * (node.getParent().getHeight() - end * stepSize);
+							introductionCount2[start][treeCount] += deltaStart;
+							if (end - start > 1) {
+							double delta = (1.0 - deltaStart - deltaEnd)/ (end-start - 1);
+								for (int i = start+1; i < end; i++) {
+									introductionCount2[i][treeCount] += delta;
+								}
 							}
-							introductionCount2[end][treeCount] += d * (node.getParent().getHeight() - end * stepSize);
+							introductionCount2[end][treeCount] += deltaEnd;
 						}
 					}
 					} else {
