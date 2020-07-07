@@ -15,11 +15,12 @@ import beast.core.Input.Validate;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
-@Description("Convert nexus tree file ")
+@Description("Convert nexus tree file to Newick format")
 public class Nexus2Newick extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
+	final public Input<Boolean> makeBinaryInput = new Input<>("makeBinary", "converts tree to a binary tree, so single node child sets are collapsed", false);
 
 	@Override
 	public void initAndValidate() {
@@ -40,6 +41,9 @@ public class Nexus2Newick extends Runnable {
         while (trees.hasNext()) {
             Tree tree = trees.next();
             StringBuilder buf = new StringBuilder();
+            if (makeBinaryInput.get()) {
+            	Newick2Nexus.makeBinary(tree.getRoot());
+            }
             toShortNewick(tree.getRoot(), buf);
         	out.println(buf.toString());
         }
