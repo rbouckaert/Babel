@@ -29,7 +29,8 @@ public class LeafSplitter extends Nexus2Newick {
 	final public Input<File> labelMapInput = new Input<>("labelMap","space delimited text file with list of source and target labels. "
 			+ "For taxa that need splitting, specify a comma separated list of new taxon labels.", Validate.REQUIRED);
 	final public Input<Double> meanLengthInput = new Input<>("meanLength","branch lengths are drawn from an exponential with average meanLength", 0.1);
-	
+	final public Input<Boolean> includeMetaDataInput = new Input<>("includeMetaData", "if true, any available metadata is output in trees", true);
+
 	Map<String, String[]> labelMap;
 	
 	@Override
@@ -56,7 +57,7 @@ public class LeafSplitter extends Nexus2Newick {
         	tree = trees.next();
             relabel(tree.getRoot());
             StringBuilder buf = new StringBuilder();
-            toShortNewick(tree.getRoot(), buf);
+            toShortNewick(tree.getRoot(), buf, includeMetaDataInput.get());
         	out.println(buf.toString());
         }
         out.println(); 

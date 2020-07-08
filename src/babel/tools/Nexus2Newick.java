@@ -21,6 +21,7 @@ public class Nexus2Newick extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	final public Input<Boolean> makeBinaryInput = new Input<>("makeBinary", "converts tree to a binary tree, so single node child sets are collapsed", false);
+	final public Input<Boolean> includeMetaDataInput = new Input<>("includeMetaData", "if true, any available metadata in NEXUS trees is output in Newick trees", false);
 
 	@Override
 	public void initAndValidate() {
@@ -44,14 +45,14 @@ public class Nexus2Newick extends Runnable {
             if (makeBinaryInput.get()) {
             	Newick2Nexus.makeBinary(tree.getRoot());
             }
-            toShortNewick(tree.getRoot(), buf);
+            toShortNewick(tree.getRoot(), buf, includeMetaDataInput.get());
         	out.println(buf.toString());
         }
         out.println();
         Log.err.println("Done");
  	}
 
-    static public void toShortNewick(Node node, StringBuilder buf) {
+    static public void toShortNewick(Node node, StringBuilder buf, boolean includeMetaData) {
 
         if (node.isLeaf()) {
             buf.append(node.getID());
@@ -63,12 +64,14 @@ public class Nexus2Newick extends Runnable {
                     isFirst = false;
                 else
                     buf.append(",");
-                toShortNewick(child,buf);
+                toShortNewick(child,buf, includeMetaData);
             }
             buf.append(")");
         }
         
-        buf.append(node.getNewickMetaData());
+        if (includeMetaData) {
+        	buf.append(node.getNewickMetaData());
+        }
         buf.append(":").append(node.getLength());
     }
     

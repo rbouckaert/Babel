@@ -31,6 +31,7 @@ public class AdjustTipHeight extends Runnable {
 			new OutFile("[[none]]"));
 	final public Input<Boolean> convertYearToMilleniumInput = new Input<>("year2millenium", "interpret heights in file as"
 			+ "years (forward in time) and convet to millenium (backward in time from 2000)", false);
+	final public Input<Boolean> includeMetaDataInput = new Input<>("includeMetaData", "if true, any available metadata is output in trees", true);
 
 	Map<String,Double> heightMap = new LinkedHashMap<>();
 	
@@ -58,7 +59,7 @@ public class AdjustTipHeight extends Runnable {
         	tree = trees.next();
             adjustHeights(tree.getRoot());
             StringBuilder buf = new StringBuilder();
-            Nexus2Newick.toShortNewick(tree.getRoot(), buf);
+            Nexus2Newick.toShortNewick(tree.getRoot(), buf, includeMetaDataInput.get());
         	out.println(buf.toString());
         }
         out.println(); 
