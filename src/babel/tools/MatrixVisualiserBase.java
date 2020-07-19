@@ -26,7 +26,33 @@ public class MatrixVisualiserBase extends Runnable {
 			"008c43",
 			"e27db3",
 			"f57c00",
-			"a31c1b"};
+			"a31c1b",
+
+			"2c25f0",
+			"5bad17",
+			"2e9467",
+			"8c4320",
+			"7db3e2",
+			"7c20f5",
+			"1c1ba3",
+
+			"25f02c",
+			"ad175b",
+			"94672e",
+			"43208c",
+			"b3e27d",
+			"20f57c",
+			"1ba31c",
+			
+			"f0252c",
+			"17ad5b",
+			"67942e",
+			"20438c",
+			"e2b37d",
+			"f5007c",
+			"a31b1c"
+			
+	};
 
 
 	public double [][] getMatrix() {
@@ -85,7 +111,7 @@ public class MatrixVisualiserBase extends Runnable {
 		System.err.println("Done");
 	}
 	
-	String getFileName() {		
+	public String getFileName() {		
 		return "/tmp/matrix.svg";
 	}
 	
@@ -163,7 +189,7 @@ public class MatrixVisualiserBase extends Runnable {
 				String end = (x[j] + b * (x[i] - x[j])) + "," + 
 						     (y[j] + b * (y[i] - y[j]));
 				
-				if (i != j) {
+				if (i != j && matrix[i][j] != 0) {
 					double width = scale * matrix[i][j];
 					if (width < 0.25) {
 //						width = 0.25;

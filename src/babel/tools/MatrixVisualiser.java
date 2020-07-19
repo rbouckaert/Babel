@@ -61,7 +61,7 @@ public class MatrixVisualiser extends MatrixVisualiserBase {
 	}
 	
 	@Override
-	String getFileName() {
+	public String getFileName() {
 		return outputInput.get().getPath();
 	}
 	
