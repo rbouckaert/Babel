@@ -9,6 +9,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,8 +66,12 @@ public class Nexus2Json extends Runnable {
 	final public Input<String> description = new Input<>("description", "description for NextStrain metadata (markdown)");
 	final public Input<String> title = new Input<>("title", "title of projecr for NextStrain metadata");
 	final public Input<String> geo_resolution = new Input<>("geo_resolution", "the name of the categorical variable that refers to grography");
+	final public Input<String> locationTagsInput = new Input<>("locationTags", "list of annotations which are also locations (separated by ,)");
+	
 	final public Input<String> color_by = new Input<>("color_by", "the name of the categorical variable to colour by");
 	final public Input<String> distance_measure_input = new Input<>("distance_measure", "the name of the node height variable (num_date or div)");
+	
+	
 	
 	final public Input<OutFile> printLocationsToInput = new Input<>("printLocationsTo", "where to print all predicted locations (latitude / longitude) to. Please "
 			+ "manually inspect/adjust this file after it is done and add it to the input xml to save time on future runs.", Input.Validate.OPTIONAL);;
@@ -86,6 +91,7 @@ public class Nexus2Json extends Runnable {
 	HashMap<String, String> demeColouring;
 	
 	boolean ns;
+	List<String> locationTags = new ArrayList<String>();
 	
 	public Nexus2Json() {
 		
@@ -113,6 +119,16 @@ public class Nexus2Json extends Runnable {
 			if (locationPatternInput.get() != null) {
 				locationPattern = locationPatternInput.get().split(",");
 			}
+			if (locationTagsInput.get() != null) {
+				locationTags = Arrays.asList(locationTagsInput.get().split(","));
+			}
+			if (annotationsInput.get() != null) {
+				for (AnnotationTuple annotation : annotationsInput.get()) {
+					if (annotation.isLocation()) locationTags.add(annotation.getName());
+				}
+			}
+			
+			
 			
 			
 			// Read in deme colouring map
@@ -190,6 +206,12 @@ public class Nexus2Json extends Runnable {
         
         // Get geo location data of each node
         HashMap<String, NodeLocation> geoLocations = getGeoLocations(tree, locationPattern);
+        
+        
+        for (String key : geoLocations.keySet()) {
+        	System.out.println(key + " -> " + geoLocations.get(key).getDemeCat() + "," + geoLocations.get(key).getDemeName() + "," + geoLocations.get(key).getLat());
+        }
+        
         
         // Print location data to file?
         if (printLocationsToInput.get() != null) {
@@ -385,27 +407,35 @@ public class Nexus2Json extends Runnable {
 		
 		
 
+		// Get a list of all location tags
+		//locationTags
+		
 		
 		// geo_resolutions
 		buf.println(indent2 + "\"geo_resolutions\":[");
 		first = true;
-		for (int i = 0; i < annotationsInput.get().size(); i ++) {
-			AnnotationTuple annotation = annotationsInput.get().get(i);
-			if (!annotation.isLocation()) continue;
+		//for (int i = 0; i < annotationsInput.get().size(); i ++) {
+			//AnnotationTuple annotation = annotationsInput.get().get(i);
+			//if (!annotation.isLocation()) continue;
+		for (int i = 0; i < locationTags.size(); i ++) {
+			
+			String location = locationTags.get(i);
 			
 
     		buf.println(indent2 + INDENT + (first ? "" : ",") 
     						+ "{" 
-	    					+ "\"key\":\"" + annotation.getName() + "\"," 
+	    					+ "\"key\":\"" + location + "\"," 
 	    					+ "\"demes\":{");
     		
     		
     		
     		// Find latitude and longitudes which correspond to this deme
     		boolean firstDeme = true;
-    		for (NodeLocation nodeLocation : geolocations.values()) {
-    			//System.out.println(nodeLocation.getDemeCat() + " != " + annotation.getName());
-    			if (!nodeLocation.getDemeCat().equals(annotation.getName())) continue;
+    		//for (NodeLocation nodeLocation : geolocations.values()) {
+			for (String key : geolocations.keySet()) {
+				NodeLocation nodeLocation = geolocations.get(key);
+    			System.out.println(nodeLocation.getDemeCat() + " | " + nodeLocation.getDemeName());
+    			if (!nodeLocation.getDemeCat().equals(location)) continue;
 				String deme = nodeLocation.getDemeName();
 				if (deme.isEmpty()) continue;
 				double latitude = nodeLocation.getLat();
@@ -573,7 +603,7 @@ public class Nexus2Json extends Runnable {
     		for (AnnotationTuple annotation : annotationsInput.get()) {
     			
     			    			
-    			// For the special case of \"distance_measure\", every node must be annotated with this 
+    			// For the special case of "distance_measure", every node must be annotated with this 
     			// Assumed to be a date
     			if (distance_measure.toString().equals(annotation.getName())) {
     				
@@ -647,7 +677,7 @@ public class Nexus2Json extends Runnable {
     	for (NodeLocation nodeLocation : nodeLocationsInput.get()) {
     		String query = nodeLocation.getQuery();
     		if (!query.isEmpty() && !queries.containsKey(query)) {
-    			//System.out.println("Using provided user geodata for " + query);
+    			//System.out.println("Using provided user geodata for " + query + " -> " + nodeLocation.getDemeName());
     			queries.put(query, nodeLocation);
     		}
     		

@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +40,16 @@ public class NodeAnnotator extends Runnable {
 			+ "separate variable strings with a ';'. ie. tsv1_var1,tsv1_var2,...;tsv2_var1,tsv1_var2,... ",Validate.REQUIRED);
 	final public Input<String> labelInput = new Input<>("label", "The name of the column which matches the tree labels (if not specified the 1st column will be used). Separate by '+' for each file ");
 
+	final public Input<Boolean> numberTheDatesInput = new Input<>("num_date", "Whether or not to add a new annotation called num_date which will have the node height in date format. Only applicable"
+			+ "if tips have dates. Default: true", true);
+	final public Input<String> dateFormatInput = new Input<>("dateFormat", "Format of date (if applicable)", "yyyy-M-dd");
+
 	
 	List<String[]> variables = new ArrayList<String[]>();
 	List<List<String>> annotationNames = new ArrayList<List<String>>();
 	List<Map<String, List<String>>> metadata = new ArrayList<Map<String, List<String>>>();
-	
+	boolean numberTheDates = numberTheDatesInput.get();
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormatInput.get());
 	
 	@Override
 	public void initAndValidate() {
@@ -195,6 +203,21 @@ public class NodeAnnotator extends Runnable {
         	}
         	
         	
+        	// Get youngest date
+        	if (numberTheDates) {
+        		LocalDate youngestTip = this.getYoungestTip(tree);
+        		
+        		if (youngestTip != null) {
+        			double last_num_date = youngestTip.getYear() + (youngestTip.getDayOfYear()-1.0) / (youngestTip.isLeapYear() ? 366.0 : 365.0);
+        			System.out.println("last_num_date= " + last_num_date);
+        			this.annotateDate(tree.getRoot(), last_num_date);
+        			
+        			
+        		}
+        		
+        	}
+        	
+        	
         	// Build Metadata string
     		processMetaData(tree.getRoot());
     		
@@ -221,6 +244,54 @@ public class NodeAnnotator extends Runnable {
 
 	}
 
+	
+	// Get the youngest date among the tips
+	private LocalDate getYoungestTip(Tree tree) {
+		
+		
+		LocalDate youngest = null;
+		
+		for (int i = 0; i < tree.getLeafNodeCount(); i ++) {
+			Node leaf = tree.getNode(i);
+			
+			if (!leaf.isLeaf()) throw new NullPointerException("Node is not a leaf!");
+			
+			if (leaf.getMetaData("the_date") != null) {
+				
+
+				String str = leaf.getMetaData("the_date").toString();
+		        LocalDate date = LocalDate.parse(str, formatter);
+
+		        //Log.warning.println("Using format '" + dateFormatInput.get() + "' to parse '" + str +
+		               // "' as: " + (date.getYear() + (date.getDayOfYear()-1.0) / (date.isLeapYear() ? 366.0 : 365.0)));
+
+		        //double num_date = date.getYear() + (date.getDayOfYear()-1.0) / (date.isLeapYear() ? 366.0 : 365.0);
+		        
+		        
+		        if (youngest == null || date.isAfter(youngest)) {
+		        	youngest = date;
+		        }
+				
+				
+			}else {
+				//numberTheDates = false;
+				Log.warning("Warning: cannot find a date for " + leaf.getID());
+				//return null;
+			}
+			
+			
+		}
+		
+	
+		
+		
+		Log.warning("The youngest date is " + youngest);
+		return youngest;
+		
+		
+		
+	}
+	
     private void annotate(Node node, List<String> annotationNames, Map<String, List<String>> metadata, String[] variables) {
     	
     	// Annotate this node if it has a label
@@ -233,8 +304,11 @@ public class NodeAnnotator extends Runnable {
 				// Node.java will try to convert into a double if the variable is called 'date'
 				String variableToPrint = variable;
 				if (variable.equals(TraitSet.DATE_TRAIT) || variable.equals(TraitSet.DATE_FORWARD_TRAIT) || variable.equals(TraitSet.DATE_BACKWARD_TRAIT)) {
-					variableToPrint = "num_" + variableToPrint;
+					variableToPrint = "the_" + variableToPrint;
+
 				}
+				
+
 				
 				// Column index of variable
 				int columnIndex = 0;
@@ -265,6 +339,37 @@ public class NodeAnnotator extends Runnable {
 
 			
 	}
+    
+    
+    // Create a new annoation called 'num_date' which where each node's height is equal to the latest date + its height
+    private void annotateDate(Node node, double last_num_date) {
+    	
+    	// Annotate children
+		for (Node child : node.getChildren()) {
+			this.annotateDate(child, last_num_date);
+		}
+    	
+		
+		//System.out.println(last_num_date + " + " + node.getHeight() + "=" + (last_num_date + node.getHeight()));
+		node.setMetaData("num_date", last_num_date - node.getHeight());
+		
+		// HPD?
+		if (node.getMetaData("height_95%_HPD") != null) {
+			Double[] hpd = (Double[]) node.getMetaData("height_95%_HPD");
+			if (hpd.length != 2) {
+				Log.warning("Cannot parse " + node.getMetaData("height_95%_HPD"));
+			}else {
+				
+				double lower = last_num_date - hpd[1];
+				double upper = last_num_date - hpd[0];
+				//Log.warning(lower + ", " + upper);
+				node.setMetaData("num_date_95%_HPD", new Object[] { lower, upper });
+				
+				
+			}
+		}
+		
+    }
     
     
 	

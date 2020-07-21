@@ -514,6 +514,7 @@ public class CladeSetComparator extends Runnable {
 		maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
 
 		while (srcTreeSet.hasNext()) {
+			System.out.println(n);
 			tree = srcTreeSet.next();
 			cladeSet1.add(tree);
 			n++;

@@ -36,6 +36,7 @@ public class NodeLocation extends BEASTObject {
 		
 	}
 	
+
 	
 	/**
 	 * If parsing from a pattern and a node
