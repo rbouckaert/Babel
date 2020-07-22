@@ -158,7 +158,7 @@ public class MatrixVisualiserBase extends Runnable {
 		}
 
         final DecimalFormat formatter = new DecimalFormat("#.##");
-		String svg = "<svg width='" + w*2 + "' height='" + h
+		String svg = "<svg width='" + w*2 + "' height='" + h+50
 				+ "'  xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg'>\n"
 				+ " <defs>\n";
 		for (int i = 0; i < n; i++) {
@@ -172,7 +172,7 @@ public class MatrixVisualiserBase extends Runnable {
 			+ "    </marker>\n";
 		}
 		svg += " </defs>    \n";
-		svg += "<g transform='translate("+ w/2+",0)'>\n";
+		svg += "<g transform='translate("+ w/2+",50)'>\n";
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				double len = Math.sqrt((x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j]));
