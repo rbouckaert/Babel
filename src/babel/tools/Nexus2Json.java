@@ -61,7 +61,6 @@ public class Nexus2Json extends Runnable {
 			+ "true then other details are also required", false);
 	
 
-	
 	final public Input<String> build_url = new Input<>("build_url", "build URL for NextStrain metadata");
 	final public Input<String> description = new Input<>("description", "description for NextStrain metadata (markdown)");
 	final public Input<String> title = new Input<>("title", "title of projecr for NextStrain metadata");
@@ -155,7 +154,6 @@ public class Nexus2Json extends Runnable {
 						String deme = split[0];
 						String col = split[2];
 						demeColouring.put(deme, col);
-						
 						
 						
 					}
@@ -438,6 +436,7 @@ public class Nexus2Json extends Runnable {
     			if (!nodeLocation.getDemeCat().equals(location)) continue;
 				String deme = nodeLocation.getDemeName();
 				if (deme.isEmpty()) continue;
+				deme = deme.replace("_", " ");
 				double latitude = nodeLocation.getLat();
     			double longitude = nodeLocation.getLong();
     			
