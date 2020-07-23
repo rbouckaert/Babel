@@ -53,8 +53,7 @@ public class Nexus2Json extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 	
-	final public Input<File> demes_col = new Input<>("demes_col", "tsv file containing deme colours in the format <color_by>\tdemename\tcol where <color_by> is"
-			+ "the annotation specified by color_by");
+	final public Input<File> demes_col = new Input<>("demes_col", " 2-column tsv file (with a header) containing deme colours in the format demename\tcol");
 	
 	
 	final public Input<Boolean> nsMetaInput = new Input<>("ns", "true if nextstrain meta data should be printed also. If this is"
@@ -147,12 +146,12 @@ public class Nexus2Json extends Runnable {
 						if (line.isEmpty()) continue;
 						
 						String[] split = line.split("\t");
-						if (split.length < 3) {
-							throw new IllegalArgumentException("Cannot parse " + file.getName() + ". Line '" + line + "' has less than 3 elements. Ensure format is" +
-									" 'area\tdemename\tcol' delimted by a tab");
+						if (split.length < 2) {
+							throw new IllegalArgumentException("Cannot parse " + file.getName() + ". Line '" + line + "' has less than 2 elements. Ensure format is" +
+									" 'demename\tcol' delimted by a tab");
 						}
 						String deme = split[0];
-						String col = split[2];
+						String col = split[1];
 						demeColouring.put(deme, col);
 						
 						
