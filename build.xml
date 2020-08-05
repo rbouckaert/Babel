@@ -103,7 +103,7 @@
 			<fileset dir="${buildBabel}">
 				<include name="babel/spanningtrees/*.class" />
 			</fileset>
-            <zipgroupfileset dir="${libBeast2}" includes="itextpdf-5.2.1.jar" />
+            <zipgroupfileset dir="${libBeast2}" includes="itextpdf-5.5.9.jar" />
 		</jar>
 		<!-- Put everything in ${buildBabel} into the beast.jar file -->
 		<jar jarfile="${distBabel}/Babel.jar">

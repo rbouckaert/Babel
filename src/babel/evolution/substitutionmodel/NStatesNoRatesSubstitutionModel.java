@@ -1,8 +1,9 @@
-package beast.evolution.substitutionmodel;
+package babel.evolution.substitutionmodel;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
+import beast.evolution.substitutionmodel.GeneralSubstitutionModel;
 
 /**
  * @author Luke Maurits

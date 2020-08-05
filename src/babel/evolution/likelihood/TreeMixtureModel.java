@@ -1,4 +1,4 @@
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +10,7 @@ import beast.core.Distribution;
 import beast.core.Input;
 import beast.core.State;
 import beast.evolution.alignment.Alignment;
+import beast.evolution.likelihood.TreeLikelihood;
 import beast.core.Input.Validate;
 
 @Description("Mixture model of tree likelihoods")
@@ -48,7 +49,7 @@ public class TreeMixtureModel extends Distribution {
 		}
 		// sanity check
 		for (int i = 0; i < weights.length; i++) {
-			if (likelihoods.get(i).useAscertainedSitePatterns) {
+			if (likelihoods.get(i).dataInput.get().isAscertained) {
 				throw new IllegalArgumentException("TreeMixtureModel does not work with ascertained alignments");
 			}
 		}

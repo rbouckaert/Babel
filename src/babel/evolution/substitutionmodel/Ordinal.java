@@ -1,4 +1,4 @@
-package beast.evolution.substitutionmodel;
+package babel.evolution.substitutionmodel;
 
 import beast.core.Citation;
 import beast.core.Description;

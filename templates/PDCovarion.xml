@@ -172,7 +172,7 @@
 		            <proportionInvariant spec='parameter.RealParameter' id='proportionInvariant.s:$(n)' value='0.0' lower='0' upper='1' estimate='false'/>
 		            <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='true'/>
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
-<substModel id="PDCovarion" spec="beast.evolution.substitutionmodel.BirthDeathCovarion2">
+<substModel id="PDCovarion" spec="babel.evolution.substitutionmodel.BirthDeathCovarion2">
         <hfrequencies id="hfrequencies" spec="parameter.RealParameter" dimension="2" lower="0.0" upper="1.0" estimate="false">0.5 0.5</hfrequencies>
         <vfrequencies id="frequencies" spec="parameter.RealParameter" dimension="3" lower="0.0" upper="1.0">0.95 0.05 0.0</vfrequencies>
         <originLength id="PDCOriginLength" spec='parameter.RealParameter' value='0.1'/>

@@ -70,7 +70,7 @@ name="alignment">
                 <siteModel gammaCategoryCount="4" id="SiteModel.s:a8" spec="SiteModel" shape="@gammaShape.s:a8">
                     <parameter estimate="false" id="mutationRate.s:a8" name="mutationRate" value="1.0"/>
                     <parameter estimate="false" id="proportionInvariant.s:a8" lower="0.0" name="proportionInvariant" upper="1.0" value="0.0"/>
-                    <substModel id="CTMC.s:a8" spec="BirthDeathModel">
+                    <substModel id="CTMC.s:a8" spec="babel.evolution.substitutionmodel.BirthDeathModel">
                         <frequencies frequencies="@freqParameter.s:a8" id="estimatedFreqs.s:a8" spec="Frequencies"/>
                         <!--birthrate id='cognateBirthRate.s:a8' spec='parameter.RealParameter' value='1'/-->
                         <deathprob id='cognateDeathRate.s:a8' spec='parameter.RealParameter' upper="1.0" value='0.5'/>

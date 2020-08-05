@@ -1,4 +1,4 @@
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -8,49 +8,54 @@ import beast.core.Input;
 import beast.core.Loggable;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.datatype.TwoStateCovarion;
+import beast.evolution.likelihood.TreeLikelihood;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.TreeInterface;
 
 
 @Description("Logs internal states sampled from the distribution at the MRCA of a set of taxa."
 		+ "Only the most likely state and its probability is logged")
-public class CognateCountThroughTimeLogger extends TreeLikelihood implements Loggable {
-	public Input<Double> maxHeightInput = new Input<>("maxHeight","maximum height of the interval to record");
-	public Input<Integer> intervalCountInput = new Input<>("intervalCount","number of intervals to record");
-	
+public class AncestralStateLogger2 extends TreeLikelihood implements Loggable {
+	public Input<String> valueInput = new Input<>("value", "space delimited set of labels, one for each site in the alignment. Used as site label in the tree metadata.");
 	
 	double [][] marginals;
+	String [] MAPsite;
 	double [] MAPprob;
+	String [] siteLabels;
 	
-	int intervalCount;
-	double maxHeight;
-	double intervalSize;
-	double [] intervalBoundaries;
-			
     @Override
 	public void initAndValidate() {
-    	intervalCount = intervalCountInput.get();
-    	maxHeight = maxHeightInput.get();
-    	intervalSize = maxHeight / intervalCount;
-    	intervalBoundaries = new double[intervalCount + 1];
-    	for (int i = 1; i < intervalCount + 1; i++) {
-    		intervalBoundaries[i] = intervalBoundaries[i-1] + intervalSize;
-    	}
-
-    	
 		// ensure we do not use BEAGLE
         boolean forceJava = Boolean.valueOf(System.getProperty("java.only"));
         System.setProperty("java.only", "true");
 		super.initAndValidate();
         System.setProperty("java.only", "" + forceJava);
         
-        Alignment data = dataInput.get();        
+        siteLabels = valueInput.get().trim().split("\\s+");
+        
+        int totalWeight = 0;
+        Alignment data = dataInput.get();
+        for (int weight : data.getWeights()) {
+            totalWeight += weight;
+        }
+        if (siteLabels.length != data.getSiteCount()) {
+        	siteLabels = new String[data.getSiteCount()];
+        	for (int i = 0; i < siteLabels.length; i++) {
+        		siteLabels[i] = "s" + i;
+        	}
+        }
+        
         
 		TreeInterface tree = treeInput.get();
+        MAPsite = new String[tree.getNodeCount()];
         MAPprob = new double[tree.getNodeCount()];
+        for (int i = 0; i < tree.getLeafNodeCount(); i++) {
+        	MAPsite[i] = "?";
+        }
         for (int i = 0; i < tree.getLeafNodeCount(); i++) {
             for (int j = 0; j < data.getSiteCount(); j++) {
             	if (data.getPattern(data.getPatternIndex(j))[i] == 1) {
+                	MAPsite[i] = siteLabels[j];
             		MAPprob[i] = 1;
             	}
             }
@@ -66,9 +71,6 @@ public class CognateCountThroughTimeLogger extends TreeLikelihood implements Log
     @Override
     public void init(PrintStream out) {
     	((Loggable)treeInput.get()).init(out);
-    	for (int i = 0; i < intervalCount; i++) {
-    		out.append(getID()+"." +i+"\t");
-    	}
     }
     
 	@Override
@@ -94,6 +96,7 @@ public class CognateCountThroughTimeLogger extends TreeLikelihood implements Log
 			}
 			for (int i = tree.getLeafNodeCount(); i < tree.getNodeCount(); i++) {
 				double maxProb = 0;
+				int iMax = -1;
 				double [] marginal = marginals[i];
 				for (int k = 0; k < data.getSiteCount(); k++) {
 					int j = data.getPatternIndex(k);
@@ -103,35 +106,31 @@ public class CognateCountThroughTimeLogger extends TreeLikelihood implements Log
 					} else {
 						p = marginal[j*stateCount + stateCount - 1];
 					}
-					maxProb += p;
+					if (p > maxProb) {
+						if (data.getWeights()[j] > 0) { // ignore ascertained columns
+							maxProb = p;
+							iMax = j;
+						}
+					}
 				}
 				MAPprob[i] = maxProb;
+				MAPsite[i] = siteLabels[iMax];
 			}
-			
-			
-			double [] cognateCount = new double[intervalCount];
 			
 			// assign metadata to nodes
 			Node [] node = tree.getNodesAsArray();
-			for (int i = 0; i < tree.getNodeCount() - 1; i++) {
-				double h = node[i].getHeight();
-				double hp = node[i].getParent().getHeight();
-				double p = MAPprob[i];
-				int k = (int)(intervalCount * h/maxHeight);
-				int end = (int)(intervalCount * hp/maxHeight);
-				while (k < end) {
-					cognateCount[k] += p * (intervalBoundaries[k] - h) / intervalSize;
-					h = intervalBoundaries[k];
-					k++;
-				}
-				cognateCount[k] += p * (hp - h) / intervalSize;
-			}
+			for (int i = 0; i < tree.getNodeCount(); i++) {
+				node[i].metaDataString = "site='"+ MAPsite[i]+"'," +
+						"prob=" + MAPprob[i];
+			}			
+			
+            // generate output
+	        out.print("tree STATE_" + nSample + " = ");
+	    	String newick = tree.getRoot().toSortedNewick(new int[1], true);
+	        out.print(newick);
+	        out.print(";");
 
-	    	for (int i = 0; i < intervalCount; i++) {
-	    		out.append(cognateCount[i] + "\t");
-	    	}
-
-	        
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

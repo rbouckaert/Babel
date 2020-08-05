@@ -176,7 +176,7 @@
 		            <proportionInvariant spec='parameter.RealParameter' id='proportionInvariant.s:$(n)' value='0.0' lower='0' upper='1' estimate='false'/>
 		            <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='true'/>
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
-					<substModel id="pseudodollo" spec="beast.evolution.substitutionmodel.BirthDeathModel">
+					<substModel id="pseudodollo" spec="babel.evolution.substitutionmodel.BirthDeathModel">
 							<frequencies id="PDfrequencies" spec="Frequencies">
 						        <frequencies spec="parameter.RealParameter" dimension="4" id="PDFreqParameter" lower="0.0" upper="1.0">0.95 0.03 0.02 0.00</frequencies>
 						    </frequencies>

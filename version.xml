@@ -1,6 +1,29 @@
 <package name='Babel' version='0.3.1'>
 	<depends on='beast2' atleast='2.6.0'/>
 	<depends on='BEASTLabs' atleast='1.9.0'/>
+	
+	
+	<map from="beast.evolution.datatype.MutationDeathType" to="babel.evolution.datatype.MutationDeathType"/>
+	<map from="beast.evolution.datatype.TwoStateCovarionPlus" to="babel.evolution.datatype.TwoStateCovarionPlus"/>
+
+	<map from="beast.evolution.substitutionmodel.BirthDeathCovarion2" to="babel.evolution.substitutionmodel.BirthDeathCovarion2"/>
+	<map from="beast.evolution.BirthDeathModel" to="babel.evolution.substitutionmodel.BirthDeathModel"/>
+	<map from="beast.evolution.ComplexMutationDeathModel" to="babel.evolution.substitutionmodel.ComplexMutationDeathModel"/>
+	<map from="beast.evolution.NStatesNoRatesSubstitutionModel" to="babel.evolution.substitutionmodel.NStatesNoRatesSubstitutionModel"/>
+	<map from="beast.evolution.NestedOrdinal" to="babel.evolution.substitutionmodel.NestedOrdinal"/>
+	<map from="beast.evolution.Ordinal" to="babel.evolution.substitutionmodel.Ordinal"/>
+	
+	<map from="beast.evolution.likelihood.ALSTreeLikelihood" to="babel.evolution.likelihood.ALSTreeLikelihood"/>
+	<map from="beast.evolution.likelihood.AbstractObservationProcess" to="babel.evolution.likelihood.AbstractObservationProcess"/>
+	<map from="beast.evolution.likelihood.AncestralStateLogger2" to="babel.evolution.likelihood.AncestralStateLogger2"/>
+	<map from="beast.evolution.likelihood.AnyTipObservationProcess" to="babel.evolution.likelihood.AnyTipObservationProcess"/>
+	<map from="beast.evolution.likelihood.CognateCountThroughTimeLogger" to="babel.evolution.likelihood.CognateCountThroughTimeLogger"/>
+	<map from="beast.evolution.likelihood.LastStateRootProb" to="babel.evolution.likelihood.LastStateRootProb"/>
+	<map from="beast.evolution.likelihood.MultiSiteTreeLikelihood" to="babel.evolution.likelihood.MultiSiteTreeLikelihood"/>
+	<map from="beast.evolution.likelihood.PartialsProvider" to="babel.evolution.likelihood.PartialsProvider"/>
+	<map from="beast.evolution.likelihood.SingleTipObservationProcess" to="babel.evolution.likelihood.SingleTipObservationProcess"/>
+	<map from="beast.evolution.likelihood.TreeMixtureModel" to="babel.evolution.likelihood.TreeMixtureModel"/>
+	
 	<packageapp description="CognateStats"
               class="babel.CognateStats"
               args=""

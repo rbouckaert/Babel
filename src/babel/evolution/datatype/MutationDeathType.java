@@ -1,9 +1,10 @@
-package beast.evolution.datatype;
+package babel.evolution.datatype;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.evolution.datatype.DataType;
+import beast.evolution.datatype.DataType.Base;
 
 /**
  * Package: MutationDeathType

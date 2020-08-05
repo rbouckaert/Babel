@@ -24,7 +24,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 
 import beagle.Beagle;
@@ -63,7 +63,7 @@ public class ALSTreeLikelihood extends TreeLikelihood implements PartialsProvide
 	@Override
 	public void getNodePartials(int iNode, double[] fPartials) {
 		if (beagle != null) {;
-			beagle.beagle.getPartials(beagle.partialBufferHelper.getOffsetIndex(iNode), Beagle.NONE, fPartials);
+			beagle.getBeagle().getPartials(beagle.getPartialBufferHelper().getOffsetIndex(iNode), Beagle.NONE, fPartials);
 		} else {
 			likelihoodCore.getNodePartials(iNode, fPartials);
 		}

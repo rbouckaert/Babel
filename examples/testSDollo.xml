@@ -117,8 +117,8 @@ oscan=2225
             </prior>
         </distribution>
         <distribution id="likelihood" spec="util.CompoundDistribution">
-            <distribution id="treeLikelihood.ringe" spec="ALSTreeLikelihood" tree="@Tree.t:ringe" useAmbiguities="true">
-                <observationprocess id="AnyTipObservationProcess.0" spec="AnyTipObservationProcess" integrateGainRate="true" mu="@deathRate.SDollo" tree="@Tree.t:ringe">
+            <distribution id="treeLikelihood.ringe" spec="babel.evolution.likelihood.ALSTreeLikelihood" tree="@Tree.t:ringe" useAmbiguities="true">
+                <observationprocess id="AnyTipObservationProcess.0" spec="babel.evolution.likelihood.AnyTipObservationProcess" integrateGainRate="true" mu="@deathRate.SDollo" tree="@Tree.t:ringe">
                     <data
 id="orgdata.ringe"
 spec="FilteredAlignment"

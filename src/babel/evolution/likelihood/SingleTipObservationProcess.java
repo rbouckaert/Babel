@@ -24,7 +24,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 import beast.core.Description;
 import beast.core.Input;

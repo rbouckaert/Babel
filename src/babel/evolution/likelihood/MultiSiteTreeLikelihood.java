@@ -1,10 +1,11 @@
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.parameter.IntegerParameter;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.datatype.TwoStateCovarion;
+import beast.evolution.likelihood.TreeLikelihood;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 

@@ -1,4 +1,4 @@
-package beast.evolution.substitutionmodel;
+package babel.evolution.substitutionmodel;
 
 import beast.core.Citation;
 import beast.core.Description;
@@ -8,6 +8,9 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.datatype.DataType;
 import beast.evolution.likelihood.TreeLikelihood;
 import beast.evolution.sitemodel.SiteModel;
+import beast.evolution.substitutionmodel.DefaultEigenSystem;
+import beast.evolution.substitutionmodel.EigenDecomposition;
+import beast.evolution.substitutionmodel.GeneralSubstitutionModel;
 import beast.evolution.tree.Node;
 
 @Description("Pseudo Dollo substitution model")

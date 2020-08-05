@@ -1,7 +1,8 @@
-package beast.evolution.substitutionmodel;
+package babel.evolution.substitutionmodel;
 
 import java.io.PrintStream;
 
+import babel.evolution.datatype.TwoStateCovarionPlus;
 import beast.core.Citation;
 import beast.core.Description;
 import beast.core.Input;
@@ -9,7 +10,7 @@ import beast.core.Loggable;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
 import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.TwoStateCovarionPlus;
+import beast.evolution.substitutionmodel.ComplexSubstitutionModel;
 
 @Description("Covarion model for Binary data with 3 rates")
 @Citation(value="R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571", DOI="https://doi.org/10.1101/207571")

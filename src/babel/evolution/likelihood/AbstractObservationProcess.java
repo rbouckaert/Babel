@@ -24,12 +24,13 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
 
 
 
 import java.util.Set;
 
+import babel.evolution.datatype.MutationDeathType;
 import beast.core.*;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
@@ -37,7 +38,6 @@ import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.AscertainedAlignment;
 import beast.evolution.branchratemodel.BranchRateModel;
 import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.datatype.MutationDeathType;
 import beast.evolution.likelihood.LikelihoodCore;
 import beast.evolution.sitemodel.SiteModel;
 import beast.evolution.tree.Node;

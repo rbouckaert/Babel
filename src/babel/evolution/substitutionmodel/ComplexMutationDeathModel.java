@@ -1,10 +1,14 @@
-package beast.evolution.substitutionmodel;
+package babel.evolution.substitutionmodel;
 
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
 import beast.evolution.datatype.DataType;
+import beast.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.evolution.substitutionmodel.EigenDecomposition;
+import beast.evolution.substitutionmodel.SubstitutionModel;
+import beast.evolution.substitutionmodel.SubstitutionModel.Base;
 import beast.evolution.tree.Node;
 
 @Description("Mutation Death substitution model, can be used as Stochastic Dollo model.")
@@ -42,7 +46,7 @@ public class ComplexMutationDeathModel extends ComplexSubstitutionModel {
         trMatrix = new double[(nrOfStates - 1) * (nrOfStates - 1)];
 
         if (CTMCModelInput.get() != null) {
-            if (CTMCModelInput.get().frequenciesInput.get().freqs.length != nrOfStates - 1) {
+            if (CTMCModelInput.get().frequenciesInput.get().getFreqs().length != nrOfStates - 1) {
                 throw new IllegalArgumentException("substmodel does not have the correct state space: should be " + (nrOfStates - 1));
             }
         } else {
@@ -106,7 +110,7 @@ public class ComplexMutationDeathModel extends ComplexSubstitutionModel {
     	if (CTMCModelInput.get() == null) {
     		return dataType.getStateCount() == 2;
     	} else {
-    		int states = CTMCModelInput.get().nrOfStates;
+    		int states = CTMCModelInput.get().getStateCount();
     		return dataType.getStateCount() == states + 1;
     	}
     }

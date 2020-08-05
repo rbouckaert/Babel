@@ -152,9 +152,9 @@
                 <data idref="data"/>
 			</alignment>
 
-			<distribution spec='beast.evolution.likelihood.ALSTreeLikelihood' id="treeLikelihood.$(n)" tree='@Tree.t:tree' useAmbiguities="true">
+			<distribution spec='babel.evolution.likelihood.ALSTreeLikelihood' id="treeLikelihood.$(n)" tree='@Tree.t:tree' useAmbiguities="true">
                 <data idref="orgdata.$(n)"/>
-				<observationprocess spec='beast.evolution.likelihood.AnyTipObservationProcess' tree='@Tree.t:tree' siteModel='@SiteModel.s:$(n)' integrateGainRate="true"	mu='@deathRate.SDollo'>
+				<observationprocess spec='babel.evolution.likelihood.AnyTipObservationProcess' tree='@Tree.t:tree' siteModel='@SiteModel.s:$(n)' integrateGainRate="true"	mu='@deathRate.SDollo'>
 	                <data idref="orgdata.$(n)"/>
 				</observationprocess>
 				<siteModel spec='SiteModel' id="SiteModel.s:$(n)" gammaCategoryCount="1">
@@ -163,7 +163,7 @@
 	should be set to false when every meaning class is pooled -->
 		            <mutationRate        spec='parameter.RealParameter' id='mutationRate.s:$(n)' value='1.0'        estimate='true'/>
 		            <shape               spec='parameter.RealParameter' id='gammaShape.s:$(n)' value='1.0'         estimate='false'/>
-					<substModel spec="ComplexMutationDeathModel" id="SDollo">
+					<substModel spec="babel.evolution.substitutionmodel.ComplexMutationDeathModel" id="SDollo">
 						<parameter name='deathprob' id='deathRate.SDollo' lower="0.0" value="1e-4" estimate="true"/>
 						<frequencies id='freqs.s:$(n)' spec='Frequencies'>
 							<frequencies spec='parameter.RealParameter' value='1 0'/>

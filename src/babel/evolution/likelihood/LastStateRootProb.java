@@ -1,4 +1,5 @@
-package beast.evolution.likelihood;
+package babel.evolution.likelihood;
+
 
 import java.io.PrintStream;
 
@@ -29,8 +30,8 @@ public class LastStateRootProb extends BEASTObject implements Function, Loggable
 	@Override
 	public double getArrayValue() {
 		likelihood.calculateLogP();
-		double [] partials = likelihood.m_fRootPartials;		
-		final double[] frequencies = likelihood.substitutionModel.getFrequencies();
+		double [] partials = likelihood.getRootPartials();
+		final double[] frequencies = likelihood.getSubstitutionModel().getFrequencies();
 		double [] p = new double[frequencies.length];
 		for (int i = 0; i < p.length; i++) {
 			p[i] = partials[i] * frequencies[i];
