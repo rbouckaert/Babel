@@ -125,8 +125,13 @@
               args=""
             />
     <packageapp
-    		  description="filters all leafs from specified taxon sets out of a tree file based on list of taxa to include"
+    		  description="Filters all leafs from specified taxon sets out of a tree file based on list of taxa to include"
               class="babel.tools.TaxonFilter"
+              args=""
+            />
+    <packageapp
+    		  description="Create SVG files to visualise rates for a discrete rate analysis"
+              class="babel.tools.DTARatesVisualiser"
               args=""
             />
 </package>
