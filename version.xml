@@ -43,6 +43,10 @@
               class="babel.tools.CladeSetComparator"
               args=""
             />
+    <packageapp description="Counts number of distinct clades in a tree set"
+              class="babel.tools.CladeSetCounter"
+              args=""
+            />
     <packageapp description="Convert NEXUS tree file"
               class="babel.tools.Nexus2Newick"
               args=""

@@ -1,6 +1,7 @@
 package babel.tools;
 
 
+
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
@@ -514,7 +515,7 @@ public class CladeSetComparator extends Runnable {
 		maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
 
 		while (srcTreeSet.hasNext()) {
-			System.out.println(n);
+			// System.out.println(n);
 			tree = srcTreeSet.next();
 			cladeSet1.add(tree);
 			n++;
