@@ -47,6 +47,10 @@
               class="babel.tools.CladeSetCounter"
               args=""
             />
+    <packageapp description="Estimate ESS for a tree posterior sample (as produced by BEAST)"
+              class="babel.tools.TreeESS"
+              args=""
+            />
     <packageapp description="Convert NEXUS tree file"
               class="babel.tools.Nexus2Newick"
               args=""
