@@ -106,13 +106,12 @@ public class DolloAnnotator extends Runnable {
             Log.warning("Dollo-k counts:");
             long [][] ik = null, ek = null;
             BigDecimal [][] ikbig = null, ekbig = null;
-            if (from != to) {
-	            ik = new long[tree.getNodeCount()][to+1];
-	            ek = new long[tree.getNodeCount()][to+1];
-	            for (int i = 0; i < ik.length; i++) {
-	            	Arrays.fill(ik[i], -1);
-	            	Arrays.fill(ek[i], -1);
-	            }
+
+            ik = new long[tree.getNodeCount()][to+1];
+            ek = new long[tree.getNodeCount()][to+1];
+            for (int i = 0; i < ik.length; i++) {
+            	Arrays.fill(ik[i], -1);
+            	Arrays.fill(ek[i], -1);
             }
             
             for (int k = from; k <= to; k++) {
