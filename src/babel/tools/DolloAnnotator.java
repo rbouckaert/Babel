@@ -3,9 +3,12 @@ package babel.tools;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.math.MathException;
 
 import babel.util.NexusParser;
 import beast.app.treeannotator.TreeAnnotator;
@@ -42,7 +45,7 @@ public class DolloAnnotator extends Runnable {
     		+ "Either a single number k to calculate the Dollo-k value, "
     		+ "or a lower and upper bound (inclusive) for a range. "
     		+ "If not specified, all values are calculated (which may take long for large trees).");
-    final public Input<Boolean> verboceInput = new Input<>("verboce", "display extra information, like progress of Dollo couning", false);
+    final public Input<Boolean> verboseInput = new Input<>("verboce", "display extra information, like progress of Dollo couning", false);
 
 	@Override
 	public void initAndValidate() {
@@ -102,6 +105,7 @@ public class DolloAnnotator extends Runnable {
             treeCount++;
             Log.warning("Dollo-k counts:");
             long [][] ik = null, ek = null;
+            BigDecimal [][] ikbig = null, ekbig = null;
             if (from != to) {
 	            ik = new long[tree.getNodeCount()][to+1];
 	            ek = new long[tree.getNodeCount()][to+1];
@@ -112,12 +116,27 @@ public class DolloAnnotator extends Runnable {
             }
             
             for (int k = from; k <= to; k++) {
-            	long count = from==to ? dolloKCount(tree, k) : dolloKCount(tree, k, ik, ek);
-            	//long count = dolloKCount(tree, k);
-            	if (data != null) {
-            		Log.warning(k + ": " + count);
-            	} else {
-            		out.println(k + ": " + count);
+            	if (ikbig == null) {
+	            	try {
+		            	long count = dolloKCount(tree, k, ik, ek);
+		            	//long count = dolloKCount(tree, k);
+		            	if (data != null) {
+		            		Log.warning(k + ": " + count);
+		            	} else {
+		            		out.println(k + ": " + count);
+		            	}
+	            	} catch (MathException e) {
+	            		ikbig = new BigDecimal[tree.getNodeCount()][to+1];
+	            		ekbig = new BigDecimal[tree.getNodeCount()][to+1];
+	            	}
+            	}
+            	if (ikbig != null) {
+            		BigDecimal count = dolloKCount(tree, k, ikbig, ekbig);
+	            	if (data != null) {
+	            		Log.warning(k + ": " + count);
+	            	} else {
+	            		out.println(k + ": " + count);
+	            	}
             	}
             }
         }
@@ -189,8 +208,9 @@ public class DolloAnnotator extends Runnable {
 	 * @param tree: binary tree
 	 * @param k: number of death events
 	 * @return number of possible Dollo-k characters
+	 * throws MathException when encountering underflow
 	 */
-	public long dolloKCount(Tree tree, int k) {
+	public long dolloKCount(Tree tree, int k) throws MathException{
 		if (k == 0) {
 			return tree.getNodeCount() + 1;
 		}
@@ -207,7 +227,7 @@ public class DolloAnnotator extends Runnable {
 			count += ikt;
 		}
     	if (count < 0) {
-    		throw new RuntimeException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
+    		throw new MathException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
     	}
 		return count;
 	}
@@ -240,9 +260,13 @@ public class DolloAnnotator extends Runnable {
 	 * @param k
 	 * @param ik: independent node set of size k for subtree under node. Must be initialised as -1 at first call.
 	 * @param ek: extended independent node set of size k for subtree under node.  Must be initialised as -1 at first call.
-	 * @return
+	 * @return number of possible Dollo-k characters
+	 * throws MathException when encountering underflow
 	 */
-	public long dolloKCount(Tree tree, int k, long [][] ik, long [][] ek) {
+	public long dolloKCount(Tree tree, int k, long [][] ik, long [][] ek) throws MathException {
+		if (k == 0) {
+			return tree.getNodeCount() + 1;
+		}
 		long count = 0;
 		for (int j = tree.getLeafNodeCount(); j < tree.getNodeCount(); j++) {
 			if (verboseInput.get()) System.err.print(j % 10 == 0 ? '|' : '.');
@@ -252,15 +276,21 @@ public class DolloAnnotator extends Runnable {
 			long ikt = ik[node.getNr()][k];
 			if (ikt < 0) {
 				ikt = 0;
-				for (int i = 0; i <= k; i++) {
-					ikt += extended(left, i, ek) * extended(right, k-i, ek);
-				}
+//				if (left.isLeaf()) {
+//					ikt = extended(right, k, ek);
+//				} else if (right.isLeaf()) {
+//					ikt = extended(left, k, ek);
+//				} else {
+					for (int i = 0; i <= k; i++) {
+						ikt += extended(left, i, ek) * extended(right, k-i, ek);
+					}					
+//				}
 				ik[node.getNr()][k] = ikt;
 			}
 			count += ikt;
 		}
     	if (count < 0) {
-    		throw new RuntimeException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
+    		throw new MathException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
     	}
 		return count;
 	}
@@ -279,14 +309,95 @@ public class DolloAnnotator extends Runnable {
 		long ekt = ek[node.getNr()][k];
 		if (ekt < 0) {
 			ekt = 0;
-			for (int i = 0; i <= k; i++) {
-				ekt += extended(left, i) * extended(right, k-i);
-			}
-			ekt = ekt + extended(left, k-1) + extended(right, k-1);
+//			if (left.isLeaf()) {
+//				ekt = extended(right, k, ek);
+//			} else if (right.isLeaf()) {
+//				ekt = extended(left, k, ek);
+//			} else {
+				for (int i = 0; i <= k; i++) {
+					ekt += extended(left, i, ek) * extended(right, k-i, ek);
+				}
+//			}
+			ekt = ekt + extended(left, k-1, ek) + extended(right, k-1, ek);
 			ek[node.getNr()][k] = ekt;
 		}
 		return ekt;
 	}
+	
+	
+	
+	
+	/**
+	 * As dolloCount(tree, k), but with ik and ek cached.
+	 * More efficient if multiple calls are made, otherwise use dolloCount(tree,k)
+	 * @param tree
+	 * @param k
+	 * @param ik: independent node set of size k for subtree under node. Must be initialised as null at first call.
+	 * @param ek: extended independent node set of size k for subtree under node.  Must be initialised as null at first call.
+	 * @return number of possible Dollo-k characters
+	 * throws MathException when encountering underflow
+	 */
+	public BigDecimal dolloKCount(Tree tree, int k, BigDecimal [][] ik, BigDecimal [][] ek) {
+		if (k == 0) {
+			return new BigDecimal(tree.getNodeCount() + 1);
+		}
+		BigDecimal count = new BigDecimal(0);
+		for (int j = tree.getLeafNodeCount(); j < tree.getNodeCount(); j++) {
+			if (verboseInput.get()) System.err.print(j % 10 == 0 ? '|' : '.');
+			Node node = tree.getNode(j);
+			Node left = node.getLeft();
+			Node right = node.getRight();
+			BigDecimal ikt = ik[node.getNr()][k];
+			if (ikt == null) {
+				ikt = new BigDecimal(0);
+				if (left.isLeaf()) {
+					ikt = extended(right, k, ek);
+				} else if (right.isLeaf()) {
+					ikt = extended(left, k, ek);
+				} else {
+					for (int i = 0; i <= k; i++) {
+						ikt = ikt.add(extended(left, i, ek).multiply(extended(right, k-i, ek)));
+					}					
+				}
+				ik[node.getNr()][k] = ikt;
+			}
+			count = count.add(ikt);
+		}
+		return count;
+	}
+
+	final private static BigDecimal BigDecimal0 = new BigDecimal(0);
+	final private static BigDecimal BigDecimal1 = new BigDecimal(1);
+	
+	/** as extended(node,k) but with ek cache for extended independent node set of size k for subtree under node **/
+	private BigDecimal extended(Node node, int k, BigDecimal [][] ek) {
+		if (k == 0) {
+			return BigDecimal1;
+		}
+		int n = node.getLeafNodeCount();
+		if (k > 0 && n == 1) {
+			return BigDecimal0;
+		}
+		Node left = node.getLeft();
+		Node right = node.getRight();
+		BigDecimal ekt = ek[node.getNr()][k];
+		if (ekt == null) {
+			ekt = new BigDecimal(0);
+			if (left.isLeaf()) {
+				ekt = extended(right, k, ek);
+			} else if (right.isLeaf()) {
+				ekt = extended(left, k, ek);
+			} else {
+				for (int i = 0; i <= k; i++) {
+					ekt = ekt.add(extended(left, i, ek).multiply(extended(right, k-i, ek)));
+				}
+			}
+			ekt = ekt.add(extended(left, k-1, ek)).add(extended(right, k-1, ek));
+			ek[node.getNr()][k] = ekt;
+		}
+		return ekt;
+	}	
+	
 	/**
 	 * Annotate internal nodes of a tree with Dollo-k characters
 	 * 

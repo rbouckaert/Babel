@@ -121,6 +121,15 @@
 				<include name="beagle/**/*.class" />
 				<include name="org/**/*.class" />
 			</fileset>
+	        <fileset dir="${BEASTLabsclasspath}">
+				<include name="**/*.class" />
+			</fileset>
+			<zipgroupfileset dir="${libBeast2}" includes="beagle.jar"/>
+			<zipgroupfileset dir="${libBabel}" includes="itextpdf-5.5.9.jar"/>
+			<zipgroupfileset dir="${libBeast2}" includes="antlr-runtime-4.7.jar"/>
+			<zipgroupfileset dir="${libBeast2}" includes="beagle.jar"/> 
+			<zipgroupfileset dir="${libBeast2}" includes="colt.jar"/> 
+			<zipgroupfileset dir="${libBeast2}" includes="jam.jar"/>
 		</jar>
 		<jar jarfile="${distBabel}/Babel.src.jar">
 			<fileset dir="${srcBabel}">
