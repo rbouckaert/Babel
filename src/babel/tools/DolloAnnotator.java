@@ -202,8 +202,6 @@ public class DolloAnnotator extends Runnable {
 	 * Dollo-assignments requiring k death events) on a given tree
 	 * 
 	 * Implements Algorithm 2 from the paper.
-	 * 	 
-	 * More efficient if called single time, otherwise use dolloCount(tree,k, ik, ek)
      *
 	 * @param tree: binary tree
 	 * @param k: number of death events
@@ -254,8 +252,7 @@ public class DolloAnnotator extends Runnable {
 	
 	
 	/**
-	 * As dolloCount(tree, k), but with ik and ek cached.
-	 * More efficient if multiple calls are made, otherwise use dolloCount(tree,k)
+	 * As dolloCount(tree, k), but more efficient with ik and ek cached.
 	 * @param tree
 	 * @param k
 	 * @param ik: independent node set of size k for subtree under node. Must be initialised as -1 at first call.
@@ -276,15 +273,9 @@ public class DolloAnnotator extends Runnable {
 			long ikt = ik[node.getNr()][k];
 			if (ikt < 0) {
 				ikt = 0;
-//				if (left.isLeaf()) {
-//					ikt = extended(right, k, ek);
-//				} else if (right.isLeaf()) {
-//					ikt = extended(left, k, ek);
-//				} else {
-					for (int i = 0; i <= k; i++) {
-						ikt += extended(left, i, ek) * extended(right, k-i, ek);
-					}					
-//				}
+				for (int i = 0; i <= k; i++) {
+					ikt += extended(left, i, ek) * extended(right, k-i, ek);
+				}					
 				ik[node.getNr()][k] = ikt;
 			}
 			count += ikt;
@@ -309,15 +300,9 @@ public class DolloAnnotator extends Runnable {
 		long ekt = ek[node.getNr()][k];
 		if (ekt < 0) {
 			ekt = 0;
-//			if (left.isLeaf()) {
-//				ekt = extended(right, k, ek);
-//			} else if (right.isLeaf()) {
-//				ekt = extended(left, k, ek);
-//			} else {
-				for (int i = 0; i <= k; i++) {
-					ekt += extended(left, i, ek) * extended(right, k-i, ek);
-				}
-//			}
+			for (int i = 0; i <= k; i++) {
+				ekt += extended(left, i, ek) * extended(right, k-i, ek);
+			}
 			ekt = ekt + extended(left, k-1, ek) + extended(right, k-1, ek);
 			ek[node.getNr()][k] = ekt;
 		}
