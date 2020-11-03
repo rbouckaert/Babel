@@ -118,11 +118,11 @@ public class TreeMerger extends TreeCombiner {
 		int i = 0;
 		for (String str : strs) {
 			if (!str.matches("^\\s*$")) {
-				String [] strs2 = str.split("\t");
+				String [] strs2 = str.trim().split("\t");
 				subTreeSet[i] = new TreeAnnotator().new MemoryFriendlyTreeSet(strs2[0], 0);
 				subTreeSet[i].reset();
 				subTaxonSets[i] = new HashSet<>();
-				for (String taxon : strs2[1].split(",")) {
+				for (String taxon : strs2[1].trim().split(",")) {
 					subTaxonSets[i].add(taxon);					
 				}
 				i++;

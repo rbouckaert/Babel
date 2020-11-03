@@ -1,6 +1,7 @@
 package babel.tools;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,12 +25,12 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
 
-@Description("Annotate tree with k-Dollo information")
+@Description("Annotate tree with k-Dollo information and calculate Dollo-k characters")
 @Citation("Combinatorial perspectives on Dollo-k characters in phylogenetics. 2020")
 public class DolloAnnotator extends Runnable {
-	public Input<File> nexusFileInput = new Input<>("nexus", "nexus file with binary alignment", Validate.REQUIRED);
-	public Input<TreeFile> treesInput = new Input<>("tree","NEXUS file containing a tree", Validate.REQUIRED);
-	public Input<OutFile> outputInput = new Input<>("out", "file to write annotated tree into, or stdout if not specified", new OutFile("[[none]]"));
+	final public Input<TreeFile> treesInput = new Input<>("tree","NEXUS file containing a tree of interest", Validate.REQUIRED);
+	final public Input<File> nexusFileInput = new Input<>("nexus", "nexus file with binary alignment used to annotate tree. If not specified, tree is not annotated");
+	final public Input<OutFile> outputInput = new Input<>("out", "file to write annotated tree into, or stdout if not specified", new OutFile("[[none]]"));
     final public Input<String> filterInput = new Input<>("filter", "specifies which of the sites in the input alignment should be selected " +
             "First site is 1." +
             "Filter specs are comma separated, either a singleton, a range [from]-[to] or iteration [from]:[to]:[step]; " +
@@ -37,17 +38,22 @@ public class DolloAnnotator extends Runnable {
             "1-100\3 or 1:100:3 defines every third in range 1-100, " +
             "1::3,2::3 removes every third site. " +
             "Default for range [1]-[last site], default for iterator [1]:[last site]:[1]");
+    final public Input<String> rangeInput = new Input<>("range", "range for which to calculate the Dollo-k counts. "
+    		+ "Either a single number k to calculate the Dollo-k value, "
+    		+ "or a lower and upper bound (inclusive) for a range. "
+    		+ "If not specified, all values are calculated (which may take long for large trees).");
+    final public Input<Boolean> verboceInput = new Input<>("verboce", "display extra information, like progress of Dollo couning", false);
 
 	@Override
 	public void initAndValidate() {
 	}
 
-	private Alignment data;
 	private int[][] seqs;
 	private int[] DolloK;
     private boolean [] nodesTraversed;
-    
-    private int nodesVisited;
+	private int ambiguousSites;
+
+    private int nodesVisited, from, to;
 
 	@Override
 	public void run() throws Exception {
@@ -57,56 +63,243 @@ public class DolloAnnotator extends Runnable {
 			out = new PrintStream(outputInput.get());
 		}
 
-		
-		NexusParser nexus = new NexusParser();
-		nexus.parseFile(nexusFileInput.get());
-		data = nexus.m_alignment;
-		if (data == null || !data.getDataType().getTypeDescription().equals("binary")) {
-			throw new IllegalArgumentException("Expected a binary alignment in the NEXUS file");			
-		}
-		
-		if (filterInput.get() != null) {
-			FilteredAlignment filtered = new FilteredAlignment();
-			filtered.initByName("data", data, "filter", filterInput.get());
-			data = filtered;
-		}
-		
-
+		Alignment data = getAlignment();
+				
+		long start = System.currentTimeMillis();
         FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
-        int k = 0;
+        int treeCount = 0;
         Tree tree = null;
-        Log.warning("\n");
         while (trees.hasNext()) {
             tree = trees.next();
-            seqs = new int[tree.getNodeCount()][data.getSiteCount()];
-            DolloK = new int [data.getSiteCount()];
-            
-            
-            if (k == 0) {
-            	tree.init(out);
+        	Log.warning(tree.getLeafNodeCount() + " taxa");
+            if (treeCount == 0) {
+            	processRange(tree);
             }
-            out.println();
-            out.print("tree STATE_" + k + " = ");
-
-            annotate(tree);
-
             
-            final String newick = tree.getRoot().toSortedNewick(new int[1], true);
-            out.print(newick);
-            out.print(";");
-            k++;
-            Log.warning("\nPer site Dollo losses (k)=" + Arrays.toString(DolloK));
+            if (data != null) {
+            	// annotate tree if binary alignment is available
+	            if (treeCount == 0) {
+	            	tree.init(out);
+	            }
+	            out.println();
+	            out.print("tree STATE_" + treeCount + " = ");
+	            ambiguousSites = 0;
+	
+	            annotate(tree, data);
+	
+	            
+	            final String newick = tree.getRoot().toSortedNewick(new int[1], true);
+	            out.print(newick);
+	            out.print(";");
+	            
+	            if (ambiguousSites > 0) {
+					Log.warning("\nWARNING: Encounterd " + ambiguousSites + " ambiguous site" + 
+							(ambiguousSites > 1 ? "s" : "")+ "\nWARNING: all such sites are assumed to be 0");
+	            }
+	            Log.warning("\nPer site Dollo losses (k) = " + Arrays.toString(DolloK));
+            }
+            treeCount++;
+            Log.warning("Dollo-k counts:");
+            long [][] ik = null, ek = null;
+            if (from != to) {
+	            ik = new long[tree.getNodeCount()][to+1];
+	            ek = new long[tree.getNodeCount()][to+1];
+	            for (int i = 0; i < ik.length; i++) {
+	            	Arrays.fill(ik[i], -1);
+	            	Arrays.fill(ek[i], -1);
+	            }
+            }
+            
+            for (int k = from; k <= to; k++) {
+            	long count = from==to ? dolloKCount(tree, k) : dolloKCount(tree, k, ik, ek);
+            	//long count = dolloKCount(tree, k);
+            	if (data != null) {
+            		Log.warning(k + ": " + count);
+            	} else {
+            		out.println(k + ": " + count);
+            	}
+            }
         }
-        if (tree != null) {
+        if (tree != null && data != null) {
         	tree.close(out);
         }
-        Log.warning("Done");
+		long end = System.currentTimeMillis();
+        Log.warning("Done in " + (end-start)/1000.0 + " seconds");
+	}
+
+	/**
+	 * Determine range for which to produce Dollo-k counts
+	 * @param tree
+	 */
+	private void processRange(Tree tree) {
+		from = 0;
+		to = tree.getNodeCount() - 2;
+		
+		if (rangeInput.get() != null) {
+			String [] strs = rangeInput.get().split(",");
+			if (strs.length == 1) {
+				from = Integer.parseInt(strs[0]);
+				to = from;
+			} else if (strs.length == 2) {
+				from = Integer.parseInt(strs[0]);
+				to = Integer.parseInt(strs[1]);
+				if (to < from) {
+					throw new IllegalArgumentException("Range has lower bound larger than upper bound");
+				}
+			} else {
+				throw new IllegalArgumentException("Range must consists of at most two numbers");
+			}
+		}
+		
+		if (from < 0 || to > tree.getNodeCount() - 2) {
+			throw new IllegalArgumentException("Range must be between 0 and " + (tree.getNodeCount() - 2));
+		}
+	}
+
+
+	private Alignment getAlignment() throws IOException {
+		if (nexusFileInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+			NexusParser nexus = new NexusParser();
+			nexus.parseFile(nexusFileInput.get());
+			Alignment data = nexus.m_alignment;
+			if (data == null || !data.getDataType().getTypeDescription().equals("binary")) {
+				throw new IllegalArgumentException("Expected a binary alignment in the NEXUS file");			
+			}
+			
+			if (filterInput.get() != null) {
+				FilteredAlignment filtered = new FilteredAlignment();
+				filtered.initByName("data", data, "filter", filterInput.get());
+				data = filtered;
+			}
+			return data;
+		}		
+		return null;
+	}
+
+
+	/**
+	 * Count the number of possible Dollo-k characters (that is, 
+	 * Dollo-assignments requiring k death events) on a given tree
+	 * 
+	 * Implements Algorithm 2 from the paper.
+	 * 	 
+	 * More efficient if called single time, otherwise use dolloCount(tree,k, ik, ek)
+     *
+	 * @param tree: binary tree
+	 * @param k: number of death events
+	 * @return number of possible Dollo-k characters
+	 */
+	public long dolloKCount(Tree tree, int k) {
+		if (k == 0) {
+			return tree.getNodeCount() + 1;
+		}
+		long count = 0;
+		for (int j = tree.getLeafNodeCount(); j < tree.getNodeCount(); j++) {
+			if (verboseInput.get()) System.err.print(j % 10 == 0 ? '|' : '.');
+			Node node = tree.getNode(j);
+			Node left = node.getLeft();
+			Node right = node.getRight();
+			long ikt = 0;
+			for (int i = 0; i <= k; i++) {
+				ikt += extended(left, i) * extended(right, k-i);
+			}
+			count += ikt;
+		}
+    	if (count < 0) {
+    		throw new RuntimeException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
+    	}
+		return count;
+	}
+	
+	/** extended method from Algorithm 2 in the paper **/
+	private long extended(Node node, int k) {
+		if (k == 0) {
+			return 1;
+		}
+		int n = node.getLeafNodeCount();
+		if (k > 0 && n == 1) {
+			return 0;
+		}
+		Node left = node.getLeft();
+		Node right = node.getRight();
+		long ekt = 0;
+		for (int i = 0; i <= k; i++) {
+			ekt += extended(left, i) * extended(right, k-i);
+		}
+		ekt = ekt + extended(left, k-1) + extended(right, k-1);
+		return ekt;
 	}
 
 	
-	private void annotate(Tree tree) {
-		// collect leaf data
+	
+	/**
+	 * As dolloCount(tree, k), but with ik and ek cached.
+	 * More efficient if multiple calls are made, otherwise use dolloCount(tree,k)
+	 * @param tree
+	 * @param k
+	 * @param ik: independent node set of size k for subtree under node. Must be initialised as -1 at first call.
+	 * @param ek: extended independent node set of size k for subtree under node.  Must be initialised as -1 at first call.
+	 * @return
+	 */
+	public long dolloKCount(Tree tree, int k, long [][] ik, long [][] ek) {
+		long count = 0;
+		for (int j = tree.getLeafNodeCount(); j < tree.getNodeCount(); j++) {
+			if (verboseInput.get()) System.err.print(j % 10 == 0 ? '|' : '.');
+			Node node = tree.getNode(j);
+			Node left = node.getLeft();
+			Node right = node.getRight();
+			long ikt = ik[node.getNr()][k];
+			if (ikt < 0) {
+				ikt = 0;
+				for (int i = 0; i <= k; i++) {
+					ikt += extended(left, i, ek) * extended(right, k-i, ek);
+				}
+				ik[node.getNr()][k] = ikt;
+			}
+			count += ikt;
+		}
+    	if (count < 0) {
+    		throw new RuntimeException("Underflow encountered! Count > " + Long.MAX_VALUE + " ");
+    	}
+		return count;
+	}
+
+	/** as extended(node,k) but with ek cache for extended independent node set of size k for subtree under node **/
+	private long extended(Node node, int k, long [][] ek) {
+		if (k == 0) {
+			return 1;
+		}
+		int n = node.getLeafNodeCount();
+		if (k > 0 && n == 1) {
+			return 0;
+		}
+		Node left = node.getLeft();
+		Node right = node.getRight();
+		long ekt = ek[node.getNr()][k];
+		if (ekt < 0) {
+			ekt = 0;
+			for (int i = 0; i <= k; i++) {
+				ekt += extended(left, i) * extended(right, k-i);
+			}
+			ekt = ekt + extended(left, k-1) + extended(right, k-1);
+			ek[node.getNr()][k] = ekt;
+		}
+		return ekt;
+	}
+	/**
+	 * Annotate internal nodes of a tree with Dollo-k characters
+	 * 
+	 * Implements Algorithm 1 from the paper.
+	 * 
+	 * @param tree: the tree to be annotated. The "dollo" metadata tag will be set by this method.
+	 * @param data: alignment with binary data associated with the tree
+	 */
+	public void annotate(Tree tree, Alignment data) {
+        seqs = new int[tree.getNodeCount()][data.getSiteCount()];
+        DolloK = new int [data.getSiteCount()];
+
+        // collect leaf data
 		for (int k = 0; k < tree.getLeafNodeCount(); k++) {
 			Node node = tree.getNode(k);
 			int id = data.getTaxonIndex(node.getID());
@@ -117,7 +310,7 @@ public class DolloAnnotator extends Runnable {
 			for (int i = 0; i < seq.length; i++) {
 				int site = data.getPattern(id, data.getPatternIndex(i));
 				if (site != 1 && site !=0) {
-					Log.warning("Don't know how to handle ambiguous site:" + site + " -- assume it is a 0");
+					ambiguousSites++;
 				}
 				seq[i] = site == 1 ? 1 : 0;
 			}
@@ -130,6 +323,7 @@ public class DolloAnnotator extends Runnable {
 		
 		// set meta data in tree
         for (Node node : tree.getNodesAsArray()) {
+        	node.setMetaData("dollo", seqs[node.getNr()]);
         	node.metaDataString = "dollo=\"" + Arrays.toString(seqs[node.getNr()]) + "\"";
         }
 	}
@@ -174,6 +368,9 @@ public class DolloAnnotator extends Runnable {
         }
 
         DolloK[siteIndex] = degree2nodes;
+        if (degree2nodes != nodesVisited - (2*oneLeafs.size()-1)) {
+        	Log.warning("Found one");
+        }
 	}
 	
 	

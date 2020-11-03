@@ -11,6 +11,7 @@ import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
 import beast.util.TreeParser;
+import beast.util.TreeParser.TreeParsingException;
 import beast.core.Input.Validate;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
@@ -39,22 +40,28 @@ public class Newick2Nexus extends Runnable {
         String str = null;
         int k = 0;
         TreeParser parser = null;
+        int line = 0;
         while (fin.ready()) {
+        	line++;
             str = fin.readLine();
             if (!str.matches("\\s*")) {
-	            parser = new TreeParser(str);
-	            if (k == 0) {
-	            	parser.init(out);
-	            }
-	            out.println();
-	            out.print("tree STATE_" + k + " = ");
-	            if (makeBinaryInput.get()) {
-	            	makeBinary(parser.getRoot());
-	            }
-	            final String newick = parser.getRoot().toSortedNewick(new int[1], true);
-	            out.print(newick);
-	            out.print(";");
-	            k++;
+            	try {
+		            parser = new TreeParser(str);
+		            if (k == 0) {
+		            	parser.init(out);
+		            }
+		            out.println();
+		            out.print("tree STATE_" + k + " = ");
+		            if (makeBinaryInput.get()) {
+		            	makeBinary(parser.getRoot());
+		            }
+		            final String newick = parser.getRoot().toSortedNewick(new int[1], true);
+		            out.print(newick);
+		            out.print(";");
+		            k++;
+            	} catch (TreeParsingException e) {
+            		Log.warning("Skipping line " + line + ": " + e.getMessage());
+            	}
             }
         }
         fin.close();

@@ -142,4 +142,9 @@
               class="babel.tools.DTARatesVisualiser"
               args=""
             />
+    <packageapp
+    		  description="Annotate tree with k-Dollo information and calculate Dollo-k characters"
+              class="babel.tools.DolloAnnotator"
+              args=""
+            />
 </package>
