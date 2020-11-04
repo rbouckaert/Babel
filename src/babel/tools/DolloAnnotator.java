@@ -32,9 +32,9 @@ import beast.evolution.tree.Tree;
 @Citation("Combinatorial perspectives on Dollo-k characters in phylogenetics. 2020")
 public class DolloAnnotator extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("tree","NEXUS file containing a tree of interest", Validate.REQUIRED);
-	final public Input<File> nexusFileInput = new Input<>("nexus", "nexus file with binary alignment used to annotate tree. If not specified, tree is not annotated");
+	final public Input<File> nexusFileInput = new Input<>("nexus", "nexus file with binary alignment used to annotate tree. If not specified, the tree is not annotated");
 	final public Input<OutFile> outputInput = new Input<>("out", "file to write annotated tree into, or stdout if not specified", new OutFile("[[none]]"));
-    final public Input<String> filterInput = new Input<>("filter", "specifies which of the sites in the input alignment should be selected " +
+    final public Input<String> filterInput = new Input<>("filter", "specifies which subset (if any) of the sites in the input alignment should be selected. " +
             "First site is 1." +
             "Filter specs are comma separated, either a singleton, a range [from]-[to] or iteration [from]:[to]:[step]; " +
             "1-100 defines a range, " +
@@ -43,9 +43,9 @@ public class DolloAnnotator extends Runnable {
             "Default for range [1]-[last site], default for iterator [1]:[last site]:[1]");
     final public Input<String> rangeInput = new Input<>("range", "range for which to calculate the Dollo-k counts. "
     		+ "Either a single number k to calculate the Dollo-k value, "
-    		+ "or a lower and upper bound (inclusive) for a range. "
-    		+ "If not specified, all values are calculated (which may take long for large trees).");
-    final public Input<Boolean> verboseInput = new Input<>("verboce", "display extra information, like progress of Dollo couning", false);
+    		+ "or a lower and upper bound (inclusive)  separated by a comma for a range. "
+    		+ "If not specified, all values are calculated.");
+    final public Input<Boolean> verboseInput = new Input<>("verbose", "display extra information, like progress of Dollo couning", false);
 
 	@Override
 	public void initAndValidate() {
@@ -312,8 +312,7 @@ public class DolloAnnotator extends Runnable {
 	
 	
 	/**
-	 * As dolloCount(tree, k), but with ik and ek cached.
-	 * More efficient if multiple calls are made, otherwise use dolloCount(tree,k)
+	 * As dolloCount(tree, k), but more efficient with ik and ek cached and using unlimited numbers of digits through BigDecimal.
 	 * @param tree
 	 * @param k
 	 * @param ik: independent node set of size k for subtree under node. Must be initialised as null at first call.
