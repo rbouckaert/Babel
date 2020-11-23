@@ -152,6 +152,39 @@
 		</jar>
 	</target>
 
+
+	<target name="DolloAnnotator" depends="compile-allBabel" description="create DolloAnnotator.jar">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${distBabel}" />
+
+		<!-- Put everything in ${buildBabel} into the beast.jar file -->
+		<jar jarfile="${distBabel}/DolloAnnotator.jar">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="babel.tools.DolloAnnotator" />
+			</manifest>
+			<fileset dir="${buildBabel}">
+				<include name="babel/**/*.class" />
+			</fileset>
+			<fileset dir="${beast2classpath}">
+				<include name="beast/**/*.class" />
+				<include name="beast/**/*.properties" />
+				<include name="**/*.png" />
+				<include name="beagle/**/*.class" />
+				<include name="org/**/*.class" />
+			</fileset>
+	        <fileset dir="${BEASTLabsclasspath}">
+				<include name="**/*.class" />
+			</fileset>
+			<zipgroupfileset dir="${libBeast2}" includes="beagle.jar"/>
+			<zipgroupfileset dir="${libBabel}" includes="itextpdf-5.5.9.jar"/>
+			<zipgroupfileset dir="${libBeast2}" includes="antlr-runtime-4.7.jar"/>
+			<zipgroupfileset dir="${libBeast2}" includes="beagle.jar"/> 
+			<zipgroupfileset dir="${libBeast2}" includes="colt.jar"/> 
+			<zipgroupfileset dir="${libBeast2}" includes="jam.jar"/>
+		</jar>
+	</target>
+	
 	<!-- run beast.jar -->
 	<target name="run_Babel">
 		<java jar="${distBabel}/Babel.jar" fork="true" />
