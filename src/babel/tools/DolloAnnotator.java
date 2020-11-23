@@ -45,7 +45,7 @@ public class DolloAnnotator extends Runnable {
     		+ "Either a single number k to calculate the Dollo-k value, "
     		+ "or a lower and upper bound (inclusive)  separated by a comma for a range. "
     		+ "If not specified, all values are calculated.");
-    final public Input<Boolean> verboseInput = new Input<>("verbose", "display extra information, like progress of Dollo couning", false);
+    final public Input<Boolean> verboseInput = new Input<>("verbose", "display extra information, like progress of Dollo counting", false);
 
 	@Override
 	public void initAndValidate() {
