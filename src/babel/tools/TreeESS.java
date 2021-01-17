@@ -1,5 +1,6 @@
 package babel.tools;
 
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -13,14 +14,14 @@ import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
+import beast.core.*;
 import beast.core.Runnable;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
 @Description("Estimate ESS for a tree posterior sample (as produced by BEAST)")
+@Citation(value="Lanfear R, Hua X, Warren DL. Estimating the effective sample size of tree topologies from Bayesian phylogenetic analyses. Genome Biology and Evolution. 2016 Aug 1;8(8):2319-32.", year=2016, DOI="10.1093/gbe/evw171")
 public class TreeESS extends Runnable {
 	final public Input<TreeFile> focalTreeInput = new Input<>("focalTree", "focal tree file with tree in NEXUS or Newick format. "
 			+ "This is useful for comparing traces between different runs."
