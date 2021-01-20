@@ -2,6 +2,7 @@ package babel.tools;
 
 
 
+
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
@@ -24,8 +25,7 @@ import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
-import beast.app.treeannotator.TreeAnnotator;
-import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
@@ -507,7 +507,7 @@ public class CladeSetComparator extends Runnable {
 
 	private CladeSetWithHeights getCladeSet(String path) throws IOException {
 		Log.warning("Processing " + path);
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 		CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree);

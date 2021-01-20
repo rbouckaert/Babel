@@ -46,7 +46,7 @@ public class XML2Nexus extends Runnable {
 		out.println("#NEXUS");
 		String dataType = alignment.getDataType().getTypeDescription();
 		int ntax = alignment.sequenceInput.get().size();
-		int nchar = alignment.sequenceInput.get().get(0).dataInput.get().length();
+		int nchar = alignment.sequenceInput.get().get(0).dataInput.get().replaceAll("\\s","").length();
 		out.println("begin data;\n" + 
 				"dimensions ntax=" + ntax + " nchar=" + nchar + ";\n" + 
 				"format datatype=" + dataType + 
