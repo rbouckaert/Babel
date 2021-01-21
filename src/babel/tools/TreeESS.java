@@ -192,6 +192,33 @@ public class TreeESS extends Runnable {
 	}
 	
 	private double calcEntropy(List<Double> list) {
+	    int p = 0, observedFlips = 0, n = list.size();
+	    if (list.get(0) > 0.5) {
+	    	p++;
+	    }
+		for (int i = 1; i < list.size(); i++) {
+			boolean prev = list.get(i-1) > 0.5;
+			boolean cur  = list.get(i) > 0.5;
+			if (cur) {
+				p++;
+			}
+			if (prev != cur) {
+				observedFlips++;
+			}
+		}
+
+		int q = p;
+		if (q > n/2) {
+			q = n - q;
+		}
+		
+		double maxFlips = 2*q;
+		
+		Log.warning.print("\n" + ((p+0.0)/n)+ " ");
+		return (n * observedFlips / maxFlips)/ ((double)(n-q)/n); 
+	}
+	
+	private double calcEntropyx(List<Double> list) {
 	    StringBuilder b = new StringBuilder();
 	    int p = 0;
 		for (Double d : list) {
