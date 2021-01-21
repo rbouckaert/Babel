@@ -32,8 +32,9 @@ public class TreeBootstrapESS extends Runnable {
 	final public Input<File> nexusFileInput = new Input<>("nexus", "file with alignment, used if log-input is not specified", new File("[[None]]"));
 	final public Input<ClusterTree.Type> clusterTypeInput = new Input<>("clusterType", "type of clustering algorithm used for generating initial beast.tree. " +
             "Should be one of " + Arrays.toString(Type.values()) + " (default " + Type.upgma + ")", Type.upgma, Type.values());
+	final public Input<Integer> bootStrapCountInput = new Input<>("bootStrapCount", "number of bootstrap replicates", 100);
 	
-
+	
 	List<TreeDistanceLogger> distanceLoggers;
 	
 	@Override
@@ -113,7 +114,7 @@ public class TreeBootstrapESS extends Runnable {
 		clusterTree.initByName("clusterType", clusterTypeInput.get(), "taxa", data);
 		
 		TreeDistanceLogger logger = new TreeDistanceLogger();
-		logger.initByName("tree", clusterTree, "ref", clusterTree, "bootstraps", 10, "psites", 0.0);
+		logger.initByName("tree", clusterTree, "ref", clusterTree, "bootstraps", bootStrapCountInput.get(), "psites", 0.0);
 		
 		distanceLoggers.add(logger);
 	}
