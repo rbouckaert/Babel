@@ -1,6 +1,6 @@
-<package name='Babel' version='0.3.1'>
+<package name='Babel' version='0.3.2'>
 	<depends on='beast2' atleast='2.6.0'/>
-	<depends on='BEASTLabs' atleast='1.9.0'/>
+	<depends on='BEASTLabs' atleast='1.9.6'/>
 	
 	
 	<map from="beast.evolution.datatype.MutationDeathType" to="babel.evolution.datatype.MutationDeathType"/>
