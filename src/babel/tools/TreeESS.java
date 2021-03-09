@@ -2,6 +2,7 @@ package babel.tools;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
+import beast.app.beauti.BeautiDoc;
 import beast.app.treeannotator.CladeSystem;
 import beast.app.treeannotator.CladeSystem.Clade;
 import beast.app.util.Application;
@@ -38,11 +40,16 @@ public class TreeESS extends Runnable {
 	final public Input<Boolean> logCladesInput = new Input<>("logClades", "add 0/1 logs for clades in the focalTree being present in tree file", false);
 	final public Input<Double> cladeSupportThresholdInput = new Input<>("cladeSupportThreshold", "if positive, use all clades with support above threshold instead of those from a focal tree", -1.0);
 
+	final public Input<OutFile> cladeSetOutputInput = new Input<>("cladeSetOutput", "output file with clade information. Not produced if not specified.",
+			new OutFile("[[none]]"));
+	final public Input<File> cladeSetInputInput = new Input<>("cladeSetInput", "source clades from file save via cladeSetOutput", new File("[[none]]"));
+
 	Set<BitSet> focalClades;
 	BitSet[] focalCladeArray;
 	List<List<?>> traces;
 	Tree focalTree;
 	boolean logClades;
+	String [] taxa;
 
 	@Override
 	public void initAndValidate() {
@@ -55,18 +62,23 @@ public class TreeESS extends Runnable {
 		List<List<Double>> cladeTraces = null;
 		logClades = logCladesInput.get();
 		
-		// get external focal tree, if any
-		if (logClades && cladeSupportThresholdInput.get() > 0) {
-			if (focalTreeInput.get() != null &&
+		// determine clades to be considered (if logged)
+		if (logClades) {
+			if (cladeSetInputInput.get() != null && !cladeSetInputInput.get().getName().equals("[[none]]")) {
+				loadClades();
+			} else if (cladeSupportThresholdInput.get() > 0) {
+				if (focalTreeInput.get() != null &&
+						!focalTreeInput.get().getName().equals("[[none]]")) {
+					throw new IllegalArgumentException("Either focal tree, or cladeSupportThreshold should be specified, not both");
+				}
+				findCladesAboveThreshold();
+			} else if (focalTreeInput.get() != null &&
 					!focalTreeInput.get().getName().equals("[[none]]")) {
-				throw new IllegalArgumentException("Either focal tree, or cladeSupportThreshold should be specified, not both");
+				// get external focal tree, if any
+				processFocalTree();
 			}
-			findCladesAboveThreshold();
-		} else if (focalTreeInput.get() != null &&
-				!focalTreeInput.get().getName().equals("[[none]]")) {
-			processFocalTree();
 		}
-
+		
 		// process tree files
 		for (TreeFile f : srcInput.get()) {
 			List<Double> trace = new ArrayList<>();
@@ -100,6 +112,37 @@ public class TreeESS extends Runnable {
 		Log.warning("Done");
 	}
 	
+	private void loadClades() throws IOException {
+		String [] strs = BeautiDoc.load(cladeSetInputInput.get()).split("\n");
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().get(0).getPath(), burnInPercentageInput.get());
+		srcTreeSet.reset();
+		String [] taxa = srcTreeSet.next().getTaxaNames();
+				
+
+		List<BitSet> focalClades = new ArrayList<>();
+
+		for (String str : strs) {
+			BitSet clade = new BitSet();
+			for (String taxon : str.split("\\s+")) {
+				int i = indexOf(taxon, taxa);
+				clade.set(i);
+			}
+			focalClades.add(clade);
+		}
+		focalCladeArray = focalClades.toArray(new BitSet[]{});				
+		
+		printClades(taxa);
+	}
+
+	private int indexOf(String taxon, String[] taxa) {
+		for (int i = 0; i < taxa.length; i++) {
+			if (taxa[i].equals(taxon)) {
+				return i;
+			}
+		}
+		throw new IllegalArgumentException("Taxon " + taxon + " could not be foudn in tree set");
+	}
+
 	private void findCladesAboveThreshold() throws IOException {
 		double threshold = cladeSupportThresholdInput.get();
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().get(0).getPath(), burnInPercentageInput.get());
@@ -145,7 +188,8 @@ public class TreeESS extends Runnable {
 			// sort(focalTree.getRoot());
 			focalClades = new HashSet<>();
 			addFocalClades(focalTree.getRoot());
-			if (cladeSupportThresholdInput.get() < 0) {
+			if (cladeSupportThresholdInput.get() < 0 && 
+					!(cladeSetInputInput.get() != null && !cladeSetInputInput.get().getName().equals("[[none]]"))) {
 				focalCladeArray = focalClades.toArray(new BitSet[]{});
 			}
 			// probably not useful to add first tree after burn-in to
@@ -346,8 +390,12 @@ public class TreeESS extends Runnable {
 		for (TreeFile f : srcInput.get()) {
 			out.print(f.getName() + "\t");
 			if (logClades) {
+				String prefix = f.getName();
+				if (prefix.contains(".")) {
+					prefix = prefix.substring(0, prefix.indexOf('.'));
+				}
 				for (int i = 0; i < focalCladeArray.length; i++) {
-					out.print(f.getName() + ".clade." + i + "\t");
+					out.print(prefix + '.' + getCladeName(focalCladeArray[i], taxa) + '\t');
 				}
 			}
 		}
@@ -378,6 +426,18 @@ public class TreeESS extends Runnable {
 
 	}
 
+	private String getCladeName(BitSet bitSet, String [] taxa) {
+		String name = "";
+		for (int i = 0; i < bitSet.length(); i++) {
+			if (bitSet.get(i)) {
+				name += taxa[i]+"_";
+			}
+		}
+		// remove trailing underscore
+		name = name.substring(0, name.length()-1);
+		return name;
+	}
+
 	private void processFocalTree() throws IOException {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(focalTreeInput.get().getPath(), 0);
 		srcTreeSet.reset();
@@ -388,8 +448,11 @@ public class TreeESS extends Runnable {
 		printClades(focalTree.getTaxaNames());
 	}
 	
-	private void printClades(String [] taxa) {
+	private void printClades(String [] taxa) throws IOException {
+		this.taxa = taxa;
+
 		int k = 0;
+		StringBuilder b = new StringBuilder();
 		for (BitSet clade : focalCladeArray) {
 			String set = "";
 			for (int i = 0; i < clade.length(); i++) {
@@ -399,8 +462,16 @@ public class TreeESS extends Runnable {
 			}
 			if (k != focalCladeArray.length) {
 				System.err.println(++k + ":" + set);
+				b.append(set);
+				b.append('\n');
 			}
-		}		
+		}
+		
+		if (cladeSetOutputInput.get() != null && !cladeSetOutputInput.get().getName().equals("[[none]]")) {
+			PrintStream out = new PrintStream(cladeSetOutputInput.get());
+			out.print(b.toString());
+			out.close();
+		}
 	}
 	
 	
