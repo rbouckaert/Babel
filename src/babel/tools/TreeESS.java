@@ -13,6 +13,8 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
+import beast.app.treeannotator.CladeSystem;
+import beast.app.treeannotator.CladeSystem.Clade;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
@@ -29,11 +31,12 @@ public class TreeESS extends Runnable {
 			+ "This is useful for comparing traces between different runs."
 			+ "If not specified, the first tree after burnin is used as focal tree");
 	
-	final public Input<List<TreeFile>> srcInput = new Input<>("tree","1 or more source tree files", new ArrayList<>());
+	final public Input<List<TreeFile>> srcInput = new Input<>("tree", "1 or more source tree files", new ArrayList<>());
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 	final public Input<OutFile> traceInput = new Input<>("trace", "trace output file that can be processed in Tracer. Not produced if not specified.",
 			new OutFile("[[none]]"));
 	final public Input<Boolean> logCladesInput = new Input<>("logClades", "add 0/1 logs for clades in the focalTree being present in tree file", false);
+	final public Input<Double> cladeSupportThresholdInput = new Input<>("cladeSupportThreshold", "if positive, use all clades with support above threshold instead of those from a focal tree", -1.0);
 
 	Set<BitSet> focalClades;
 	BitSet[] focalCladeArray;
@@ -53,7 +56,13 @@ public class TreeESS extends Runnable {
 		logClades = logCladesInput.get();
 		
 		// get external focal tree, if any
-		if (focalTreeInput.get() != null &&
+		if (logClades && cladeSupportThresholdInput.get() > 0) {
+			if (focalTreeInput.get() != null &&
+					!focalTreeInput.get().getName().equals("[[none]]")) {
+				throw new IllegalArgumentException("Either focal tree, or cladeSupportThreshold should be specified, not both");
+			}
+			findCladesAboveThreshold();
+		} else if (focalTreeInput.get() != null &&
 				!focalTreeInput.get().getName().equals("[[none]]")) {
 			processFocalTree();
 		}
@@ -64,16 +73,16 @@ public class TreeESS extends Runnable {
 			traces.add(trace);
 			if (logClades) {
 				cladeTraces = new ArrayList<>();
-				int n = 0;
-				if (focalTreeInput.get() != null) {
-					n = focalTree.getInternalNodeCount();
-				} else {
-					MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(f.getPath(), burnInPercentageInput.get());
-					srcTreeSet.reset();
-					Tree tree = srcTreeSet.next();
-					n = tree.getInternalNodeCount();
-				}
-				for (int i = 0; i < n - 1; i++) {
+				int n = focalCladeArray.length;
+//				if (focalTreeInput.get() != null) {
+//					n = focalTree.getInternalNodeCount();
+//				} else {
+//					MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(f.getPath(), burnInPercentageInput.get());
+//					srcTreeSet.reset();
+//					Tree tree = srcTreeSet.next();
+//					n = tree.getInternalNodeCount();
+//				}
+				for (int i = 0; i < n; i++) {
 					List<Double> cladeTrace = new ArrayList<>();
 					cladeTraces.add(cladeTrace);
 					traces.add(cladeTrace);
@@ -91,6 +100,37 @@ public class TreeESS extends Runnable {
 		Log.warning("Done");
 	}
 	
+	private void findCladesAboveThreshold() throws IOException {
+		double threshold = cladeSupportThresholdInput.get();
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().get(0).getPath(), burnInPercentageInput.get());
+		srcTreeSet.reset();
+		CladeSystem clades = new CladeSystem();
+		int k = 0;
+		while (srcTreeSet.hasNext()) {
+			clades.add(srcTreeSet.next(), false);
+			k++;
+		}
+		
+		List<BitSet> focalClades = new ArrayList<>();
+		for (BitSet bits : clades.getCladeMap().keySet()) {
+			Clade clade = clades.getCladeMap().get(bits);
+			if (clade.getCount() >= threshold * k && // add clades with required level of support
+					clade.getCount() != k) {         // but don't add 100% clades
+				BitSet halfset = new BitSet();
+				for (int i = 0; i < bits.length(); i += 2) {
+					if (bits.get(i)) {
+						halfset.set(i/2);
+					}
+				}
+				focalClades.add(halfset);
+			}
+		}
+		focalCladeArray = focalClades.toArray(new BitSet[]{});		
+
+		srcTreeSet.reset();
+		printClades(srcTreeSet.next().getTaxaNames());
+	}
+
 	private void processTreeFile(TreeFile f, List<Double> trace, List<List<Double>> cladeTraces) throws IOException {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(f.getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
@@ -105,7 +145,9 @@ public class TreeESS extends Runnable {
 			// sort(focalTree.getRoot());
 			focalClades = new HashSet<>();
 			addFocalClades(focalTree.getRoot());
-			focalCladeArray = focalClades.toArray(new BitSet[]{});
+			if (cladeSupportThresholdInput.get() < 0) {
+				focalCladeArray = focalClades.toArray(new BitSet[]{});
+			}
 			// probably not useful to add first tree after burn-in to
 			// trace, since the RF distance will be 0
 			// trace.add(0.0);
@@ -125,7 +167,7 @@ public class TreeESS extends Runnable {
 			double [] distance = new double[1]; 
 			RFDistance(tree.getRoot(), distance, map, cladeTraces);
 			if (logClades) {
-				for (int i = 0; i < focalCladeArray.length - 1; i++) {
+				for (int i = 0; i < focalCladeArray.length; i++) {
 					if (cladeTraces.get(i).size() != 1) {
 						cladeTraces.get(i).add(0.0);
 					}
@@ -142,7 +184,7 @@ public class TreeESS extends Runnable {
 			
 			if (logClades) {
 				int n = trace.size();
-				for (int i = 0; i < focalCladeArray.length - 1; i++) {
+				for (int i = 0; i < focalCladeArray.length; i++) {
 					if (cladeTraces.get(i).size() != n) {
 						cladeTraces.get(i).add(0.0);
 					}
@@ -274,11 +316,11 @@ public class TreeESS extends Runnable {
         clade.or(right);
 		if (focalClades.contains(clade)) {
 			distance[0] += 2;
-			if (logClades) {
-				int index = indexOf(clade);
-				if (index < cladeTraces.size()) {
-					cladeTraces.get(index).add(1.0);
-				}
+		}
+		if (logClades) {
+			int index = indexOf(clade);
+			if (index >= 0 && index < cladeTraces.size()) {
+				cladeTraces.get(index).add(1.0);
 			}
 		}
 		return clade;
@@ -304,7 +346,7 @@ public class TreeESS extends Runnable {
 		for (TreeFile f : srcInput.get()) {
 			out.print(f.getName() + "\t");
 			if (logClades) {
-				for (int i = 0; i < focalCladeArray.length - 1; i++) {
+				for (int i = 0; i < focalCladeArray.length; i++) {
 					out.print(f.getName() + ".clade." + i + "\t");
 				}
 			}
@@ -343,6 +385,22 @@ public class TreeESS extends Runnable {
 		// sort(focalTree.getRoot());
 		addFocalClades(focalTree.getRoot());
 		focalCladeArray = focalClades.toArray(new BitSet[]{});
+		printClades(focalTree.getTaxaNames());
+	}
+	
+	private void printClades(String [] taxa) {
+		int k = 0;
+		for (BitSet clade : focalCladeArray) {
+			String set = "";
+			for (int i = 0; i < clade.length(); i++) {
+				if (clade.get(i)) {
+					set += taxa[i]+" ";
+				}
+			}
+			if (k != focalCladeArray.length) {
+				System.err.println(++k + ":" + set);
+			}
+		}		
 	}
 	
 	
