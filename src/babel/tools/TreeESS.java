@@ -24,6 +24,7 @@ import beast.core.*;
 import beast.core.Runnable;
 import beast.core.util.Log;
 import beast.evolution.tree.Node;
+import beast.evolution.tree.RNNIMetric;
 import beast.evolution.tree.Tree;
 
 @Description("Estimate ESS for a tree posterior sample (as produced by BEAST)")
@@ -81,8 +82,10 @@ public class TreeESS extends Runnable {
 		
 		// process tree files
 		for (TreeFile f : srcInput.get()) {
-			List<Double> trace = new ArrayList<>();
-			traces.add(trace);
+			List<Double> traceRF = new ArrayList<>();
+			List<Double> traceRNNI = new ArrayList<>();
+			traces.add(traceRF);
+			traces.add(traceRNNI);
 			if (logClades) {
 				cladeTraces = new ArrayList<>();
 				int n = focalCladeArray.length;
@@ -100,7 +103,7 @@ public class TreeESS extends Runnable {
 					traces.add(cladeTrace);
 				}
 			}
-			processTreeFile(f, trace, cladeTraces);
+			processTreeFile(f, traceRF, traceRNNI, cladeTraces);
 		}
 		
 		// save trace?
@@ -174,7 +177,7 @@ public class TreeESS extends Runnable {
 		printClades(srcTreeSet.next().getTaxaNames());
 	}
 
-	private void processTreeFile(TreeFile f, List<Double> trace, List<List<Double>> cladeTraces) throws IOException {
+	private void processTreeFile(TreeFile f, List<Double> traceRF, List<Double> traceRNNI, List<List<Double>> cladeTraces) throws IOException {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(f.getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
 		int [] map;
@@ -210,6 +213,9 @@ public class TreeESS extends Runnable {
 			}
 			double [] distance = new double[1]; 
 			RFDistance(tree.getRoot(), distance, map, cladeTraces);
+			traceRF.add(distance[0]);
+			traceRNNI.add(RNNIDistance(focalTree, tree));
+
 			if (logClades) {
 				for (int i = 0; i < focalCladeArray.length; i++) {
 					if (cladeTraces.get(i).size() != 1) {
@@ -217,17 +223,17 @@ public class TreeESS extends Runnable {
 					}
 				}
 			}
-			trace.add(distance[0]);
 		}
 		
 		while (srcTreeSet.hasNext()) {
 			Tree tree = srcTreeSet.next();
 			double [] distance = new double[1]; 
 			RFDistance(tree.getRoot(), distance, map, cladeTraces);
-			trace.add(distance[0]);
+			traceRF.add(distance[0]);
+			traceRNNI.add(RNNIDistance(focalTree, tree));
 			
 			if (logClades) {
-				int n = trace.size();
+				int n = traceRF.size();
 				for (int i = 0; i < focalCladeArray.length; i++) {
 					if (cladeTraces.get(i).size() != n) {
 						cladeTraces.get(i).add(0.0);
@@ -236,15 +242,17 @@ public class TreeESS extends Runnable {
 			}
 		}
 		
-		double ESS = beast.core.util.ESS.calcESS(trace);
-		Log.info("ESS(" + srcInput.getName() + ") = " + ESS);
+		double ESSRF = beast.core.util.ESS.calcESS(traceRF);
+		Log.info("ESS(" + srcInput.getName() + "-RF) = " + ESSRF);
+		double ESSRNNI = beast.core.util.ESS.calcESS(traceRNNI);
+		Log.info("ESS(" + srcInput.getName() + "-RNI) = " + ESSRNNI);
 		if (logClades) {
 			double sum = 0;
 			double min = Double.MAX_VALUE;
 			int k = 0;
 			Log.warning.print("Clade ESSs: ");
 			for (int i = 0; i < cladeTraces.size(); i++) {
-				ESS = beast.core.util.ESS.calcESS(cladeTraces.get(i));
+				double ESS = beast.core.util.ESS.calcESS(cladeTraces.get(i));
 				Log.warning.print(" " + ESS);
 				if (Double.isFinite(ESS)) {
 					sum += ESS;
@@ -277,6 +285,17 @@ public class TreeESS extends Runnable {
 		}
 	}
 	
+	private Double RNNIDistance(Tree tree1, Tree tree2) {
+		if (tree1.getRoot().getNr() == 0) {
+			renumberInternal(tree1.getRoot(), new int[]{tree1.getLeafNodeCount()});
+		}
+		if (tree2.getRoot().getNr() == 0) {
+			renumberInternal(tree2.getRoot(), new int[]{tree2.getLeafNodeCount()});
+		}
+		RNNIMetric metric = new RNNIMetric(tree1.getTaxaNames());
+		return metric.distance(tree1, tree2);
+	}
+
 	private double calcEntropy(List<Double> list) {
 	    int p = 0, observedFlips = 0, n = list.size();
 	    if (list.get(0) > 0.5) {
@@ -388,7 +407,8 @@ public class TreeESS extends Runnable {
 		// header
 		out.print("Sample\t");
 		for (TreeFile f : srcInput.get()) {
-			out.print(f.getName() + "\t");
+			out.print(f.getName() + "-RF\t");
+			out.print(f.getName() + "-RNNI\t");
 			if (logClades) {
 				String prefix = f.getName();
 				if (prefix.contains(".")) {
@@ -442,10 +462,22 @@ public class TreeESS extends Runnable {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(focalTreeInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		focalTree = srcTreeSet.next();
+		renumberInternal(focalTree.getRoot(), new int[]{focalTree.getLeafNodeCount()});
 		// sort(focalTree.getRoot());
 		addFocalClades(focalTree.getRoot());
 		focalCladeArray = focalClades.toArray(new BitSet[]{});
 		printClades(focalTree.getTaxaNames());
+	}
+	
+	private int renumberInternal(Node node, int[] nr) {
+		for (Node child : node.getChildren()) {
+			renumberInternal(child, nr);
+		}
+		if (!node.isLeaf()) {
+			node.setNr(nr[0]);
+			nr[0]++;
+		}
+		return nr[0];
 	}
 	
 	private void printClades(String [] taxa) throws IOException {
