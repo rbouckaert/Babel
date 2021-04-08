@@ -147,4 +147,9 @@
               class="babel.tools.DolloAnnotator"
               args=""
             />
+    <packageapp
+    		  description="Creates UPGMA, NJ or other cluster tree from an alignment and save to newick format"
+              class="babel.tools.CreateClusterTree"
+              args=""
+            />
 </package>

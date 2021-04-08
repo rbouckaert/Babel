@@ -32,7 +32,7 @@ public class Nexus2Fasta extends Runnable {
 
 		// open file for writing
 		PrintStream out = System.out;
-		if (outputInput.get() != null) {
+		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + outputInput.get().getPath());
 			out = new PrintStream(outputInput.get());
 		}
