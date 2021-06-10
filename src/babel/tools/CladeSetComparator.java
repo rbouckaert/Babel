@@ -54,9 +54,11 @@ public class CladeSetComparator extends Runnable {
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
 
 	final public Input<Boolean> verboseInput = new Input<>("verbose", "print information about clades of interest, and if no output file is specified, all clade information", true);
+	final public Input<Double> thresholdInput = new Input<>("threshold", "posterior support level of clades that will be ignored", 0.0);
 
-	double n;
-	boolean verbose;
+	private double n;
+	private boolean verbose;
+	private double threshold = 0;
 	
 	final String header = "<svg version=\"1.2\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"graph\" aria-labelledby=\"title\" role=\"img\" height=\"1200\">\n" + 
 			"<g class=\"grid x-grid\" id=\"xGrid\">\n" + 
@@ -112,6 +114,7 @@ public class CladeSetComparator extends Runnable {
 	@Override
 	public void run() throws Exception {
 		verbose = verboseInput.get();
+		threshold = thresholdInput.get();
 		long start = System.currentTimeMillis();
 		if (srcInput.get().size()  == 0) {
 			CladeSetWithHeights cladeSet1 = getCladeSet(src1Input.get().getPath());
@@ -465,10 +468,25 @@ public class CladeSetComparator extends Runnable {
 			interestCount++;
 		}
 
-		if (svg != null) {
+		if (svg != null && threshold <= support1 + support2) {
 			svg.println("  <circle style=\"opacity:0.25;fill:#a00000\" cx=\""+ (90 +1000* support1 + Randomizer.nextInt(10) - 5) + 
 					"\" cy=\""+ (10 + 1000 - 1000 * support2 + Randomizer.nextInt(10) - 5) +"\" "
 							+ "data-value=\"7.2\" r=\"" + (support1 + support2) * 10 + "\"></circle>");
+			
+			if ((support1 + support2) > 0.1) {
+				int d1 = 90;
+				int d2 = 10;
+				int x1 = (int)(d1 + 1000.0 * lo1 / maxHeight);
+				int y1 = (int)(1000+d2 - 1000.0 * h2/ maxHeight);
+				int x2 = (int)(d1 + 1000.0 * hi1 / maxHeight);
+				int y2 = (int)(1000 +d2- 1000.0 * h2/ maxHeight);
+				svg.println("<line stroke=\"#0000a040\" x1=\""+x1+"\" y1=\""+y1+"\" x2=\""+x2+"\" y2=\""+y2+"\"/>");
+				x1 = (int)(d1 + 1000.0 * h1 / maxHeight);
+				y1 = (int)(1000 + d2 - 1000.0 * lo2/ maxHeight);
+				x2 = (int)(d1 + 1000.0 * h1 / maxHeight);
+				y2 = (int)(1000 + d2 - 1000.0 * hi2/ maxHeight);
+				svg.println("<line stroke=\"#0000a040\" x1=\""+x1+"\" y1=\""+y1+"\" x2=\""+x2+"\" y2=\""+y2+"\"/>");
+			}
 		}
 		
 		if (g != null) {

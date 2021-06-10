@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
@@ -48,16 +49,13 @@ public class TaxonFilter extends Runnable {
         fin.close();
 
 		// get trees
-		NexusParser parser = new NexusParser();
-		parser.parseFile(treesInput.get());
-		if (parser.trees == null || parser.trees.size() == 0) {
-			Log.err.println("File does not contain any trees " + treesInput.get().getName());
-			return;
-		}
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(treesInput.get().getPath(), 0);
+		srcTreeSet.reset();
+		Tree tree = srcTreeSet.next();
 
 		// sanity check
         Set<String> taxaInTree = new HashSet<>();
-        for (String taxon :	parser.trees.get(0).getTaxaNames()) {
+        for (String taxon :	tree.getTaxaNames()) {
         	taxaInTree.add(taxon);
         }
         StringBuilder buf = new StringBuilder();
@@ -95,7 +93,9 @@ public class TaxonFilter extends Runnable {
         	out = new PrintStream(outputInput.get());
         }
         
-		for (Tree tree : parser.trees) {
+        srcTreeSet.reset();
+        while (srcTreeSet.hasNext()) {
+        	tree = srcTreeSet.next();
 			Node root = tree.getRoot();
 			root = filter(root, taxaToInclude);
 			// print filtered tree
