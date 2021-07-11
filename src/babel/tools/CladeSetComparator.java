@@ -52,6 +52,8 @@ public class CladeSetComparator extends Runnable {
 	final public Input<OutFile> pngOutputInput = new Input<>("png", "png output file. if not specified, no PNG output is produced.",
 			new OutFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
+	final public Input<Integer> thinningInput = new Input<>("thin", "thin out tree set. When thin=`n` only the first out of every n trees "
+			+ "is processed, and n-1 trees are skipped. This can be useful for large tree sets", 1);
 
 	final public Input<Boolean> verboseInput = new Input<>("verbose", "print information about clades of interest, and if no output file is specified, all clade information", true);
 	final public Input<Double> thresholdInput = new Input<>("threshold", "posterior support level of clades that will be ignored", 0.0);
@@ -530,6 +532,7 @@ public class CladeSetComparator extends Runnable {
 		Tree tree = srcTreeSet.next();
 		CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree);
 		n = 1;
+		int thin = thinningInput.get();
 		maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
 
 		while (srcTreeSet.hasNext()) {
@@ -539,6 +542,11 @@ public class CladeSetComparator extends Runnable {
 			n++;
 			
 			maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+			int j = 1;
+			while (j < thin && srcTreeSet.hasNext()) {
+				tree = srcTreeSet.next();
+				j++;
+			}
 		}
 		
 		if (n==1) {
