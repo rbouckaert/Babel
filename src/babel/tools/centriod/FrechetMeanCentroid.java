@@ -2,9 +2,11 @@ package babel.tools.centriod;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
+import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
 import beast.core.Description;
@@ -22,29 +24,68 @@ public class FrechetMeanCentroid extends Runnable {
 	final public Input<Integer> randomizationAttemptsInput = new Input<>("trials", "number of randomisations of trees before picking centroid with lowest sum of square distance", 1);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified", new OutFile("[[none]]"));
 
+	final public Input<TreeFile> focalTreeFileInput = new Input<>("focalTreeFile", "file containing tree(s) to calcalate sumOfSquared RNNI Distances score for", new TreeFile("[[none]]"));
+
+	enum Mode {Frechet,Halfway,Binning}
+	final public Input<Mode> modeInput = new Input<>("mode", "algorithm used to for single centroid proposal. Should be one of " + Arrays.toString(Mode.values()), 
+			Mode.Frechet, Mode.values());
+	
+	private Mode mode;
+	
 	@Override
 	public void initAndValidate() {
 	}
 
 	@Override
 	public void run() throws Exception {
-		Tree [] trees = getTrees();
-		Tree centroid = new FrechetMeanTree(trees);
+		long start = System.currentTimeMillis();
+		mode = modeInput.get();
+		Tree [] trees = getTrees(treeFileInput.get(), burnInPercentageInput.get());
+		
+		// if focal tree file is specified, print sum of square RNNI distances and quite
+		if (focalTreeFileInput.get() != null && !focalTreeFileInput.get().getName().equals("[[none]]")) {
+			Tree [] focalTrees = getTrees(focalTreeFileInput.get(), 0);
+			for (Tree tree : focalTrees) {
+				
+				double sos = sumOfSquaredDistances(trees, tree);
+				Log.info(tree.getRoot().toNewick());
+				Log.info("SoS = " + sos);
+			}
+			Log.warning("Done");
+			return;
+		}
+		
+		
+		
+		
+		Tree centroid = calcCentroid(trees);
 
 		if (randomizationAttemptsInput.get() > 1) {
 			double bestSoS = sumOfSquaredDistances(trees, centroid);
 			
+			int onepercent = 1 + randomizationAttemptsInput.get()/100;
+			int tenpercent = 1 + randomizationAttemptsInput.get()/10;
+			
 			for (int i = 1; i < randomizationAttemptsInput.get(); i++) {
 				randomise(trees);
-				Tree newCentroid = new FrechetMeanTree(trees);
+				Tree newCentroid = calcCentroid(trees);
 				double sos = sumOfSquaredDistances(trees, newCentroid);
 				if (sos < bestSoS) {
 					bestSoS = sos;
 					centroid = newCentroid;
+					Log.warning(i + ": " + sos);
+				}
+				if (i % onepercent == 0) {
+					if (i % tenpercent == 0) {
+						System.err.print("|");
+					} else {
+						System.err.print(".");
+					}
 				}
 			}
 		}
-		
+		Log.info(centroid.getRoot().toNewick());
+		Log.warning("SoS = " + sumOfSquaredDistances(trees, centroid));
 		
 		
 		PrintStream out = System.out;
@@ -54,10 +95,27 @@ public class FrechetMeanCentroid extends Runnable {
 		}
 		
 		centroid.init(out);
+		out.println();
 		centroid.log(0l, out);
+		out.println();
 		centroid.close(out);
+		
+		long end = System.currentTimeMillis();
+		Log.warning("Done " + mode + " in " + (end-start)/1000 + " seconds");
 	}
 
+
+	private Tree calcCentroid(Tree[] trees) {
+		switch (mode) {
+		case Halfway:			
+			return new HalfWayMeanTree(trees);
+		case Binning:
+			return new BinnedMeanTree(trees);
+		case Frechet:
+		default:
+			return new FrechetMeanTree(trees);
+		}
+	}
 
 	private void randomise(Tree[] trees) {
 		for (int i = 0; i < trees.length; i++) {
@@ -71,19 +129,19 @@ public class FrechetMeanCentroid extends Runnable {
 	double sumOfSquaredDistances(Tree [] trees, Tree tree) {
 		double sos = 0;
 		RNNIMetric metric = new RNNIMetric();
-		metric.setReference(tree);
+		//metric.setReference(tree);
 
 		for (Tree tree2 : trees) {
-			double distance = metric.distance(tree2);
+			double distance = metric.distance(tree,tree2);
 			sos += distance * distance;
 		}
 		return sos;
 	}
 
 	
-	private Tree [] getTrees() {
+	private Tree [] getTrees(TreeFile treeFile, int burnInPercentage) {
 		try {
-			FastTreeSet srcTreeSet = new TreeAnnotator().new FastTreeSet(treeFileInput.get().getAbsolutePath(), burnInPercentageInput.get());
+			FastTreeSet srcTreeSet = new TreeAnnotator().new FastTreeSet(treeFile.getAbsolutePath(), burnInPercentage);
 			srcTreeSet.reset();
 			int n = 0;
 			while (srcTreeSet.hasNext()) {
@@ -104,9 +162,8 @@ public class FrechetMeanCentroid extends Runnable {
 		}
 	}
 	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+	public static void main(String[] args) throws Exception {
+		new Application(new FrechetMeanCentroid(), "Frechet Mean Centroid", args);
 	}
 
 }

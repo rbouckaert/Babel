@@ -64,7 +64,8 @@ public class FrechetMeanTree extends Tree {
 		boolean progress = true;
 		int i = 1;
 		
-		while (progress && i < trees.length) {
+		//while (progress && i < trees.length) {
+		while (i < trees.length) {
 			double d = metric.distance(tree, trees[i]);
 			progress = ((int)d/(i+1)) > 0;
 			if (progress) {
