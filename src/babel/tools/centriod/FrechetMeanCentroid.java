@@ -26,7 +26,7 @@ public class FrechetMeanCentroid extends Runnable {
 
 	final public Input<TreeFile> focalTreeFileInput = new Input<>("focalTreeFile", "file containing tree(s) to calcalate sumOfSquared RNNI Distances score for", new TreeFile("[[none]]"));
 
-	enum Mode {Frechet,Halfway,Binning}
+	enum Mode {Frechet,Halfway,Binning,Cluster}
 	final public Input<Mode> modeInput = new Input<>("mode", "algorithm used to for single centroid proposal. Should be one of " + Arrays.toString(Mode.values()), 
 			Mode.Frechet, Mode.values());
 	
@@ -111,6 +111,8 @@ public class FrechetMeanCentroid extends Runnable {
 			return new HalfWayMeanTree(trees);
 		case Binning:
 			return new BinnedMeanTree(trees);
+		case Cluster:
+			return new ClusterRankTree(trees);
 		case Frechet:
 		default:
 			return new FrechetMeanTree(trees);
