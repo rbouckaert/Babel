@@ -177,6 +177,8 @@ if (false) {
     private void relabel(Node node, Map<String, String> labelMap) {
 		if (labelMap.containsKey(node.getID())) {
 			node.setID(labelMap.get(node.getID()));
+		} else if (node.isLeaf()) {
+			Log.warning("No label for " + node.getID());
 		}
 		if (!node.isLeaf()) {
 			for (Node child : node.getChildren()) {

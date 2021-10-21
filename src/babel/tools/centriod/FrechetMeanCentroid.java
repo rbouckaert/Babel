@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 
+import babel.util.NexusParser;
+import beast.app.beauti.BeautiDoc;
 import beast.app.treeannotator.TreeAnnotator;
 import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
 import beast.app.util.Application;
@@ -16,6 +18,7 @@ import beast.core.util.Log;
 import beast.evolution.tree.RNNIMetric;
 import beast.evolution.tree.Tree;
 import beast.util.Randomizer;
+import beast.util.TreeParser;
 
 @Description("Calculate centroid of tree set based on Frechet mean")
 public class FrechetMeanCentroid extends Runnable {
@@ -26,7 +29,7 @@ public class FrechetMeanCentroid extends Runnable {
 
 	final public Input<TreeFile> focalTreeFileInput = new Input<>("focalTreeFile", "file containing tree(s) to calcalate sumOfSquared RNNI Distances score for", new TreeFile("[[none]]"));
 
-	enum Mode {Frechet,Halfway,Binning,Cluster}
+	enum Mode {Frechet,Halfway,Binning,Cluster,MCC}
 	final public Input<Mode> modeInput = new Input<>("mode", "algorithm used to for single centroid proposal. Should be one of " + Arrays.toString(Mode.values()), 
 			Mode.Frechet, Mode.values());
 	
@@ -113,10 +116,27 @@ public class FrechetMeanCentroid extends Runnable {
 			return new BinnedMeanTree(trees);
 		case Cluster:
 			return new ClusterRankTree(trees);
+		case MCC:
+			return MCCTree();
 		case Frechet:
 		default:
 			return new FrechetMeanTree(trees);
 		}
+	}
+
+	private Tree MCCTree() {
+		try {
+			String output = outputInput.get().getAbsolutePath();
+			TreeAnnotator.main(new String[]{"-b",burnInPercentageInput.get() + "",
+					treeFileInput.get().getPath(), output});
+			NexusParser parser = new NexusParser();
+			parser.parseFile(outputInput.get());
+			return parser.trees.get(0);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private void randomise(Tree[] trees) {
