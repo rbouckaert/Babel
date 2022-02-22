@@ -15,30 +15,36 @@ import beast.core.util.Log;
 import beast.evolution.tree.Node;
 import beast.evolution.tree.Tree;
 
-@Description("Scales trees so epochs have the same length")
-public class TreeEpochScaler extends Runnable {
+@Description("Scales trees with given scale factor or a desired height")
+public class TreeScalerApp extends Runnable {
 
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
-	final public Input<String> epochsInput = new Input<>("epochs","space delimited list of epoch boundaries: each epoch will be scaled to the same height as the first epoch", Validate.REQUIRED);
+	final public Input<Double> scaleInput = new Input<>("scaleFactor", "scale factor used to multiply heights of internal nodes of the tree with");
+	final public Input<Double> heightInput = new Input<>("height", "calculate scale factor to get desired mean tree height", Validate.XOR, scaleInput);
 
 	@Override
 	public void initAndValidate() {
 	}
 
-	double [] epochs;
 	@Override
 	public void run() throws Exception {
-		// process epochs
-		String [] strs = epochsInput.get().trim().split("\\s+");
-		epochs = new double[strs.length + 1];
-		for (int i = 0; i < strs.length; i++) {
-			epochs[i] = Double.parseDouble(strs[i]);
+		double scaleFactor = scaleInput.get();
+		
+		if (heightInput.get() != null) {
+			// calculate scale factor based on heightInput and mean tree height
+	        FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treesInput.get().getAbsolutePath(), 0);
+	        trees.reset();
+	        double sum = 0;
+	        int n = 0;
+	        while (trees.hasNext()) {
+	        	double h = trees.next().getRoot().getHeight();
+	        	sum += h;
+	        	n++;
+	        }
+	        double meanHeight = sum / n;
+	        scaleFactor = heightInput.get() / meanHeight;
 		}
-		epochs[strs.length] = Double.POSITIVE_INFINITY;
-		
-		
-		
 		
 		// open file for writing
         PrintStream out = System.out;
@@ -58,7 +64,7 @@ public class TreeEpochScaler extends Runnable {
         int i = 0;
         while (trees.hasNext()) {
         	tree = trees.next();
-        	scale(tree);
+        	scale(tree, scaleFactor);
             out.println();
             out.print("tree STATE_" + i + " = ");
             final String newick = tree.getRoot().toNewick(false);
@@ -76,24 +82,15 @@ public class TreeEpochScaler extends Runnable {
 
 	}
 
-    private void scale(Tree tree) {
-    	epochs[epochs.length - 1] = tree.getRoot().getHeight();
-    	for (Node node : tree.getNodesAsArray()) {
+    private void scale(Tree tree, double scaleFactor) {
+    	for (Node node : tree.getInternalNodes()) {
     		double h = node.getHeight();
-    		int i = 0; 
-    		while (h > epochs[i]) {
-    			i++;
-    		}
-    		if (i > 0) {
-    			double f = (h - epochs[i-1])/(epochs[i] - epochs[i-1]);
-    			h = epochs[0] * (i + f);
-    			node.setHeight(h);
-    		}
+    		node.setHeight(h * scaleFactor);
     	}
 	}
 
 	
 	public static void main(String[] args) throws Exception {
-		new Application(new TreeEpochScaler(), "Tree Epoch Scaler", args);
+		new Application(new TreeScalerApp(), "Tree Scaler", args);
 	}
 }
