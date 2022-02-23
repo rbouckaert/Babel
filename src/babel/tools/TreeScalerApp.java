@@ -29,7 +29,7 @@ public class TreeScalerApp extends Runnable {
 
 	@Override
 	public void run() throws Exception {
-		double scaleFactor = scaleInput.get();
+		double scaleFactor = scaleInput.get() == null ? 1.0 : scaleInput.get();
 		
 		if (heightInput.get() != null) {
 			// calculate scale factor based on heightInput and mean tree height
