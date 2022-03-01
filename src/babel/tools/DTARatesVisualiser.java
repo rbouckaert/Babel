@@ -22,8 +22,10 @@ public class DTARatesVisualiser extends MatrixVisualiserBase {
 	final public Input<String> prefixInput = new Input<>("prefix","prefix of rate matrix entry, e.g., geoSubstModelLogger, "
 			+ "which picks up entries geoSubstModelLogger.relGeoRate_XXX_YYY for labels XXX and YYY from labels input. "
 			+ "Attempt is made to identify them automatically if not specified.");
+	final public Input<String> separatorInput = new Input<>("separator","label separator in trace entry names", "_");
 
 	String [] labels;
+	String separator;
 	
 	@Override
 	public double [][] getMatrix() {
@@ -54,7 +56,8 @@ public class DTARatesVisualiser extends MatrixVisualiserBase {
 	}
 	
 	private String getLabelx(List<String> traceLabels, String prefix, String string1, String string2) {
-		String label = prefix + string1 + "_" + string2;
+		separator = separatorInput.get();
+		String label = prefix + string1 + separator + string2;
 		for (int i = 0; i < traceLabels.size(); i++) {
 			if (traceLabels.get(i).equals(label)) {
 				return label;
@@ -62,7 +65,7 @@ public class DTARatesVisualiser extends MatrixVisualiserBase {
 		}
 		
 		// it may be a symmetric matrix, try to flip labels
-		label = prefix + string2 + "_" + string1;
+		label = prefix + string2 + separator + string1;
 		for (int i = 0; i < traceLabels.size(); i++) {
 			if (traceLabels.get(i).equals(label)) {
 				return label;
@@ -75,7 +78,8 @@ public class DTARatesVisualiser extends MatrixVisualiserBase {
 
 	private String getPrefix(LogAnalyser tracelog) {
 		if (prefixInput.get() != null) {
-			return prefixInput.get() + ".relGeoRate_";
+			return prefixInput.get();
+			// return prefixInput.get() + ".relGeoRate_";
 		}
 		String prefix = null;
 		for (String label : tracelog.getLabels()) {

@@ -104,11 +104,34 @@ public class MatrixVisualiserBase extends Runnable {
 			outfile.write(svg);
 			outfile.close();
 
+			File tmpFile1 = tmpFile0.getName().toLowerCase().endsWith("svg") ?
+					new File(tmpFile0.getPath().replaceAll("svg", "tsv")) :
+						new File(tmpFile0.getPath()+".tsv");						
+			Log.warning("Writing to file " + tmpFile1.getPath());
+			outfile = new FileWriter(tmpFile1);
+			outfile.write(matrixToString(labels, matrix));
+			outfile.close();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.err.println("Done");
+	}
+	
+	private String matrixToString(String[] labels, double[][] matrix) {
+		StringBuilder b = new StringBuilder();
+		for (String label : labels) {
+			b.append(label).append('\t');
+		}
+		b.append('\n');
+		for (int i = 0; i < labels.length; i++) {
+			for (int j = 0; j < labels.length; j++) {
+				b.append(matrix[i][j]).append('\t');
+			}
+			b.append('\n');
+		}
+		return b.toString();
 	}
 	
 	public String getFileName() {		
