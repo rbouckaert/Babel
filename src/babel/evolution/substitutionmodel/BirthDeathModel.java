@@ -2,6 +2,7 @@ package babel.evolution.substitutionmodel;
 
 import beast.core.Citation;
 import beast.core.Description;
+import beast.core.Function;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import beast.core.parameter.RealParameter;
@@ -122,6 +123,51 @@ public class BirthDeathModel extends GeneralSubstitutionModel {
         return eigenDecomposition;
     }
     
+    protected void setupRelativeRates() {
+    	double del = delParameter.get().getValue();
+    	int k = 0;
+		switch (nrOfStates) {
+		case 3:
+		{	
+			if (relativeRates == null) {
+				relativeRates = new double[6];
+			}
+			relativeRates[k++] = 1; //birthRateInput.get().getValue();
+			relativeRates[k++] = 0;
+			relativeRates[k++] = - del;
+			relativeRates[k++] = del;
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+			break;
+		}
+		case 4:
+		{
+			if (relativeRates == null) {
+				relativeRates = new double[12];
+			}
+			relativeRates[k++] = 1.0;//birthRateInput.get().getValue();
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+			
+			relativeRates[k++] = 0;
+			relativeRates[k++] = del;
+			relativeRates[k++] = 0;
+	
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+	
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+			relativeRates[k++] = 0;
+			break;
+		}
+		default :
+			calcStateCount();
+			setupRelativeRates();
+		}   
+    }
+
 	public double[][] getRateMatrix() {
 		if (delParameter.get().getValue() > 1.0) {
 			throw new IllegalArgumentException("death rate should not exceed birthrate (1.0)");
