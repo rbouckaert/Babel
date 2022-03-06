@@ -14,6 +14,7 @@ import beast.app.seqgen.SequenceSimulator;
 import beast.app.util.Application;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
+import beast.core.BEASTInterface;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Runnable;
@@ -23,6 +24,7 @@ import beast.core.util.Log;
 import beast.evolution.alignment.Alignment;
 import beast.evolution.alignment.Sequence;
 import beast.evolution.branchratemodel.StrictClockModel;
+import beast.evolution.datatype.Binary;
 import beast.evolution.datatype.DataType;
 import beast.evolution.datatype.UserDataType;
 import beast.evolution.sitemodel.SiteModel;
@@ -44,6 +46,8 @@ public class PhonemeSimulator extends Runnable {
 	
 	private String words = "";
 	private String filters = "";
+	private Alignment binaryData;
+
 
 	@Override
 	public void initAndValidate() {
@@ -66,6 +70,7 @@ public class PhonemeSimulator extends Runnable {
 //		3: generate vowel or consonant alignments.
 		Alignment phonemeData = generatePhonemeData(tree, cognateData, wordLengths);
 		
+		
 		// output results
         PrintStream out = System.out;
         if (outputInput.get() != null) {
@@ -75,10 +80,15 @@ public class PhonemeSimulator extends Runnable {
         
         XMLProducer producer = new XMLProducer();
         out.println("{\"sequences\":\"");
-        String xml = producer.toRawXML(phonemeData);
+        String xml = producer.toRawXML(phonemeData).replaceAll("\n *\n","\n");
         out.println(xml);
         out.println("\",");
         
+        out.println("{\"binsequences\":\"");
+        xml = producer.toRawXML(binaryData).replaceAll("\n *\n","\n");
+        out.println(xml);
+        out.println("\",");
+
         out.println("\"words\":\"" + words + "\",");
         out.println("\"filters\":\"");
         out.println(filters);
@@ -90,8 +100,7 @@ public class PhonemeSimulator extends Runnable {
         Log.warning.println("Done.");
 	}
 
-	
-	
+
 	private Alignment generatePhonemeData(Tree tree, Alignment cognateData, int[] wordLengths) {
 		UserDataType dataType = new UserDataType();
 		dataType.initByName(
@@ -143,11 +152,18 @@ public class PhonemeSimulator extends Runnable {
 				"proportionInvariant", "0.0");
 
 		String [] taxa = tree.getTaxaNames();
+		StringBuilder [] binseqs = new StringBuilder[taxa.length];
+		for (int i = 0; i < binseqs.length; i++) {
+			binseqs[i] = new StringBuilder();
+			// ascertainment correction column
+			binseqs[i].append('0');
+		}
+		
 		StringBuilder [] seqs = new StringBuilder[taxa.length];
 		for (int i = 0; i < seqs.length; i++) {
 			seqs[i] = new StringBuilder();
 		}
-		
+
 		int target = sequenceLengthInput.get();
 		int length = 0;
 		int progress = 0;
@@ -185,8 +201,18 @@ public class PhonemeSimulator extends Runnable {
 						"gammaShapeSequence.xml", "siteModel", vowelSitemodel, "branchRateModel", clockmodel);
 				data = vowelSim.simulate();
 				for (int i = 0; i < seqs.length; i++) {
+					
 					String seq = data.sequenceInput.get().get(i).dataInput.get();
-					seqs[i].append(seq);
+					if (pattern[i] == 1 || pattern[1] == 3) {
+						seqs[i].append(seq);
+						binseqs[i].append("1");
+					} else {
+						// mask out sequence if pattern[i] == "0"
+						for (int j = 0; j < seq.length(); j++) {
+							seqs[i].append(".");
+						}
+						binseqs[i].append("0");
+					}
 				}
 				
 				SequenceSimulator sim = new beast.app.seqgen.SequenceSimulator();
@@ -195,7 +221,16 @@ public class PhonemeSimulator extends Runnable {
 				data = sim.simulate();		
 				for (int i = 0; i < seqs.length; i++) {
 					String seq = data.sequenceInput.get().get(i).dataInput.get();
-					seqs[i].append(seq);
+					if (pattern[i] == 1 || pattern[1] == 3) {
+						seqs[i].append(seq);
+						binseqs[i].append("1");
+					} else {
+						// mask out sequence if pattern[i] == "0"
+						for (int j = 0; j < seq.length(); j++) {
+							seqs[i].append(".");
+						}
+						binseqs[i].append("0");
+					}
 				}
 
 				length += wordLengths[cognateSite];
@@ -214,7 +249,12 @@ public class PhonemeSimulator extends Runnable {
 			cognateSite++;
 		}
 		
+		dataType.setID("phoneme");
 		data = createAlignment(dataType, taxa, seqs);
+
+		Binary binary = new Binary();
+		binary.setID("binary");
+		binaryData = createAlignment(binary, taxa, binseqs);
 		return data;
 	}
 	
@@ -290,20 +330,30 @@ public class PhonemeSimulator extends Runnable {
 		}
 
 		Alignment data = new Alignment();
-		data.initByName("sequence", seqs, "userDataType", dataType);
+		if (dataType instanceof UserDataType) {
+			data.initByName("sequence", seqs, "userDataType", dataType);
+		} else {
+			data.initByName("sequence", seqs, "dataType", dataType.getTypeDescription());
+		}
 		return data;
 	}
 
-	private Alignment createAlignment(UserDataType dataType, String[] taxa, StringBuilder[] sequences) {
+	private Alignment createAlignment(DataType dataType, String[] taxa, StringBuilder[] sequences) {
 		List<Sequence> seqs = new ArrayList<>();
 		for (int j = 0; j < taxa.length; j++) {
 			Sequence A = new Sequence();
+			A.setID("seq_"+ ((BEASTInterface)dataType).getID()+ (j < 10?"_0":"_") + j);
+			taxa[j] += "                       ".substring(taxa[j].length());
 			A.initByName("taxon", taxa[j], "value", sequences[j].toString());
 			seqs.add(A);
 		}
 
 		Alignment data = new Alignment();
-		data.initByName("sequence", seqs, "userDataType", dataType);
+		if (dataType instanceof UserDataType) {
+			data.initByName("sequence", seqs, "userDataType", dataType);
+		} else {
+			data.initByName("sequence", seqs, "dataType", dataType.getTypeDescription());
+		}
 		return data;
 	}
 
