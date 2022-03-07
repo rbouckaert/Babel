@@ -1,5 +1,7 @@
 package babel.tools;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,7 @@ public class PhonemeSimulator extends Runnable {
 	private String words = "";
 	private String filters = "";
 	private Alignment binaryData;
+	private UserDataType vowelDataType,consonantDataType;
 
 
 	@Override
@@ -61,6 +64,33 @@ public class PhonemeSimulator extends Runnable {
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 		
+		
+		if (srcTreeSet.hasNext()) {
+			// tree set contains multiple trees
+			int k = 0;
+			String path = outputInput.get().getAbsolutePath();
+			String suffix = "";
+			if (path.lastIndexOf('.') > 0) {
+				suffix = path.substring(path.lastIndexOf('.'));
+				path = path.substring(0, path.lastIndexOf('.'));
+			}
+			simulateAlignment(tree, new File(path + k + suffix));
+			while (srcTreeSet.hasNext()) {
+				tree = srcTreeSet.next();
+				k++;
+				simulateAlignment(tree, new File(path + k + suffix));
+			}
+			
+		} else {
+			// tree set contains single tree
+			simulateAlignment(tree, outputInput.get());
+		}
+		
+        Log.warning.println("Done.");
+	}
+		
+	private void simulateAlignment(Tree tree, File outFile) throws FileNotFoundException {
+		
 //		1: generate cognates on tree by pseudo Dollo model.
 		Alignment cognateData = generateCognateAllignment(tree);
 		
@@ -73,9 +103,9 @@ public class PhonemeSimulator extends Runnable {
 		
 		// output results
         PrintStream out = System.out;
-        if (outputInput.get() != null) {
-			Log.warning("Writing to file " + outputInput.get().getPath());
-        	out = new PrintStream(outputInput.get());
+        if (outFile != null) {
+			Log.warning("Writing to file " + outFile.getPath());
+        	out = new PrintStream(outFile);
         }
         
         XMLProducer producer = new XMLProducer();
@@ -84,20 +114,22 @@ public class PhonemeSimulator extends Runnable {
         out.println(xml);
         out.println("\",");
         
-        out.println("{\"binsequences\":\"");
+        out.println("\"binsequences\":\"");
         xml = producer.toRawXML(binaryData).replaceAll("\n *\n","\n");
         out.println(xml);
         out.println("\",");
+        
+        out.println("\"datatype_vowels\":\"" + producer.toRawXML(vowelDataType) + "\",");
+        out.println("\"datatype_consonants\":\"" + producer.toRawXML(consonantDataType) + "\",");
 
         out.println("\"words\":\"" + words + "\",");
         out.println("\"filters\":\"");
         out.println(filters);
         out.println("\"\n}");
 
-        if (outputInput.get() != null) {
+        if (outFile != null) {
         	out.close();
         }
-        Log.warning.println("Done.");
 	}
 
 
@@ -107,12 +139,16 @@ public class PhonemeSimulator extends Runnable {
 				"states", 28, 
 				"codelength", 2, 
 				"codeMap", "-.=0,Ŋ.=27,_.=2,A.=3,Aː=4,B.=5,E.=6,Eː=7,F.=8,G.=9,H.=10,I.=11,Iː=12,K.=13,L.=14,M.=15,N.=16,O.=17,Oː=18,P.=19,R.=20,S.=21,T.=22,U.=23,Uː=24,V.=25,W.=26,ʔ.=1,..=0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27");
-		UserDataType vowelDataType = new UserDataType();
+		
+		vowelDataType = new UserDataType();
+		vowelDataType.setID("vowels");
 		vowelDataType.initByName(
 				"states", 12, 
 				"codelength", 2, 
 				"codeMap", "-.=0,Uː=1,_.=2,A.=3,Aː=4,E.=5,Eː=6,I.=7,Iː=8,O.=9,Oː=10,U.=11,..=0 1 2 3 4 5 6 7 8 9 10 11");
-		UserDataType consonantDataType = new UserDataType();
+
+		consonantDataType = new UserDataType();
+		consonantDataType.setID("consonants");
 		consonantDataType.initByName(
 				"states", 18, 
 				"codelength", 2, 
@@ -178,7 +214,7 @@ public class PhonemeSimulator extends Runnable {
 				if (end > target) {
 					end = target;
 				}
-				filters += "<data id=\"" + word + "\" spec='FilteredAlignment' filter='" + start + "-" + end + "' data='@data'/>\n";
+				filters += "<data id='" + word + "' spec='FilteredAlignment' filter='" + start + "-" + end + "' data='@data'/>\n";
 
 				
 				// randomly pick number of vowels by flipping coin for every site
@@ -349,6 +385,7 @@ public class PhonemeSimulator extends Runnable {
 		}
 
 		Alignment data = new Alignment();
+		data.setID(((BEASTInterface)dataType).getID() + "data");
 		if (dataType instanceof UserDataType) {
 			data.initByName("sequence", seqs, "userDataType", dataType);
 		} else {
