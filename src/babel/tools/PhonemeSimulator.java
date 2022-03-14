@@ -2,6 +2,7 @@ package babel.tools;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ import babel.evolution.substitutionmodel.BirthDeathModel;
 import babel.tools.utils.MemoryFriendlyTreeSet;
 import beast.app.seqgen.SequenceSimulator;
 import beast.app.util.Application;
+import beast.app.util.LogFile;
 import beast.app.util.OutFile;
 import beast.app.util.TreeFile;
 import beast.core.BEASTInterface;
@@ -30,9 +32,11 @@ import beast.evolution.datatype.Binary;
 import beast.evolution.datatype.DataType;
 import beast.evolution.datatype.UserDataType;
 import beast.evolution.sitemodel.SiteModel;
+import beast.evolution.substitutionmodel.BinaryCovarion;
 import beast.evolution.substitutionmodel.ComplexSubstitutionModel;
 import beast.evolution.substitutionmodel.Frequencies;
 import beast.evolution.tree.Tree;
+import beast.util.LogAnalyser;
 import beast.util.Randomizer;
 import beast.util.XMLProducer;
 
@@ -44,12 +48,15 @@ public class PhonemeSimulator extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
 	final public Input<Integer> sequenceLengthInput = new Input<>("sequencelength", "nr of phonemes to generate (default 1000).", 1000);
 	final public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
+	final public Input<LogFile> logFileInput = new Input<>("log", "trace log file containing model parameter values to use for generating sequence data. Ignored if not specified.");
+	final public Input<Boolean> useGammaInput = new Input<>("useGamma", "use gamma rate heterogeneity. If true, trace log file must be specified.", false);
 
 	
 	private String words = "";
 	private String filters = "";
 	private Alignment binaryData;
 	private UserDataType vowelDataType,consonantDataType;
+	private Double[] shapes = null;
 
 
 	@Override
@@ -57,12 +64,16 @@ public class PhonemeSimulator extends Runnable {
 	}
 
 	@Override
-	public void run() throws Exception {		
-
-		// get trees
+	public void run() throws Exception {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(treesInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
+
+		
+		// get info from trace log
+		processTraceLog();
+
+		// get trees
 		
 		
 		if (srcTreeSet.hasNext()) {
@@ -74,25 +85,56 @@ public class PhonemeSimulator extends Runnable {
 				suffix = path.substring(path.lastIndexOf('.'));
 				path = path.substring(0, path.lastIndexOf('.'));
 			}
-			simulateAlignment(tree, new File(path + k + suffix));
+			simulateAlignment(tree, new File(path + k + suffix), k);
 			while (srcTreeSet.hasNext()) {
 				tree = srcTreeSet.next();
 				k++;
-				simulateAlignment(tree, new File(path + k + suffix));
+				simulateAlignment(tree, new File(path + k + suffix), k);
 			}
 			
 		} else {
 			// tree set contains single tree
-			simulateAlignment(tree, outputInput.get());
+			simulateAlignment(tree, outputInput.get(), 0);
 		}
 		
         Log.warning.println("Done.");
 	}
 		
-	private void simulateAlignment(Tree tree, File outFile) throws FileNotFoundException {
+	private void processTraceLog() throws IOException {
+		if (logFileInput.get() == null) {
+			if (useGammaInput.get()) {
+				throw new IllegalArgumentException("trace log must be specified if useGamma=true");
+			}
+			return;
+		}
+		LogAnalyser traceLog = new LogAnalyser(logFileInput.get().getPath(), 0, true, false);
+		int N = traceLog.getTrace(0).length;
+		List<String> labels = traceLog.getLabels();
+		
+		if (useGammaInput.get()) {
+			shapes = traceLog.getTrace(getIndex(labels, "gammaShape"));
+		} else {
+			shapes = new Double[N];
+			for (int i  =0; i < N; i++) {
+				shapes[i] = 1.0;
+			}
+		}
+
+	}
+
+	private int getIndex(List<String> labels, String prefix) {
+		for (int i = 0; i < labels.size(); i++) {
+			if (labels.get(i).startsWith(prefix)) {
+				return i + 1;
+			}
+		}
+		return 0;
+	}
+
+	private void simulateAlignment(Tree tree, File outFile, int i) throws FileNotFoundException {
 		
 //		1: generate cognates on tree by pseudo Dollo model.
-		Alignment cognateData = generateCognateAllignment(tree);
+		Alignment cognateData = generateCognateAllignment(tree, i);
 		
 //		2: generate word lengths + vowel or consonant sites.
 		int [] wordLengths = generateWordLengths(cognateData);
@@ -319,7 +361,7 @@ public class PhonemeSimulator extends Runnable {
 	}
 	
 
-	private Alignment generateCognateAllignment(Tree tree) {
+	private Alignment generateCognateAllignment(Tree tree, int i) {
 		UserDataType pdDataType;
 		pdDataType = new UserDataType();
 		pdDataType.initByName(
@@ -337,12 +379,25 @@ public class PhonemeSimulator extends Runnable {
 		BirthDeathModel pd = new BirthDeathModel();
 		pd.initByName("frequencies", f, "deathprob", "0.05");
 		
-
 		StrictClockModel clockmodel = new StrictClockModel();
+		clockmodel.initByName("clock.rate", "1.0");
+		
+//		RealParameter freqs = new RealParameter("0.25 0.25 0.25 0.25");
+//		Frequencies f = new Frequencies();
+//		f.initByName("frequencies", freqs);
+//
+//		BinaryCovarion covarion = new BinaryCovarion();
+//		covarion.initByName("alpha", "0.01", "switchRate", "0.25", 
+//				"vfrequencies", "0.5 0.5", 
+//				"hfrequencies", "0.5 0.5",
+//				"frequencies", f);
+//
+//		StrictClockModel clockmodel = new StrictClockModel();
+//		clockmodel.initByName("clock.rate", "1.0");
 
 		RealParameter p = new RealParameter("0.0");
 		SiteModel sitemodel = new SiteModel();
-		sitemodel.initByName("gammaCategoryCount", 1, "substModel", pd, "shape", "1.0",
+		sitemodel.initByName("gammaCategoryCount", useGammaInput.get()?4:1, "substModel", pd, "shape", useGammaInput.get()?shapes[i]+"":"1.0",
 				"proportionInvariant", p);
 		SequenceSimulator sim = new beast.app.seqgen.SequenceSimulator();
 		sim.initByName("data", data, "tree", tree, "sequencelength", sequenceLengthInput.get(), "outputFileName",
