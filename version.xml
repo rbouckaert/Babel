@@ -157,4 +157,9 @@
               class="babel.tools.TreeScalerApp"
               args=""
             />
+    <packageapp
+    		  description="Create trace log of tree distances between species tree and its gene trees"
+              class="babel.tools.SpeciesTreeDistanceLogger"
+              args=""
+            />
 </package>

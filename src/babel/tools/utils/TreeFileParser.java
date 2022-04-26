@@ -643,7 +643,18 @@ public class TreeFileParser {
             		 m_nOffset = Integer.parseInt(translation[0].trim());
             	 }
              } else {
-                 Log.err.println("Ignoring translation:" + Arrays.toString(translation));
+                 // Log.err.println("Ignoring translation:" + Arrays.toString(translation));
+                 String str = translation[1];
+                 int i = 2;
+                 while (i < translation.length) {
+                	 str += " " + translation[i];
+                	 i++;
+                 }
+                 str = str.replaceAll("\"", "");
+                 m_sLabels.add(str);
+            	 if (m_nOffset == -1) {
+            		 m_nOffset = Integer.parseInt(translation[0].trim());
+            	 }
              }
          }
          m_nNrOfLabels = m_sLabels.size();
