@@ -32,7 +32,7 @@ import beast.evolution.tree.Tree;
 public class TreeESS extends Runnable {
 	final public Input<TreeFile> focalTreeInput = new Input<>("focalTree", "focal tree file with tree in NEXUS or Newick format. "
 			+ "This is useful for comparing traces between different runs."
-			+ "If not specified, the first tree after burnin is used as focal tree");
+			+ "If not specified, the first tree after burnin is used as focal tree", new TreeFile("[[none]]"));
 	
 	final public Input<List<TreeFile>> srcInput = new Input<>("tree", "1 or more source tree files", new ArrayList<>());
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
@@ -73,10 +73,12 @@ public class TreeESS extends Runnable {
 					throw new IllegalArgumentException("Either focal tree, or cladeSupportThreshold should be specified, not both");
 				}
 				findCladesAboveThreshold();
-			} else if (focalTreeInput.get() != null &&
-					!focalTreeInput.get().getName().equals("[[none]]")) {
+			} else if (focalTreeInput.get() != null && !focalTreeInput.get().getName().equals("[[none]]")) {
 				// get external focal tree, if any
 				processFocalTree();
+			} else {
+				// first tree after burnin as focal tree
+				setFocalTreeFromTreeSet();
 			}
 		}
 		
@@ -119,6 +121,7 @@ public class TreeESS extends Runnable {
 		Log.warning("Done");
 	}
 	
+
 	private void loadClades() throws IOException {
 		String [] strs = BeautiDoc.load(cladeSetInputInput.get()).split("\n");
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().get(0).getPath(), burnInPercentageInput.get());
@@ -476,8 +479,7 @@ public class TreeESS extends Runnable {
 		return name;
 	}
 
-	private void processFocalTree() throws IOException {
-		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(focalTreeInput.get().getPath(), 0);
+	private void processFocalTree(MemoryFriendlyTreeSet srcTreeSet) throws IOException {
 		srcTreeSet.reset();
 		focalTree = srcTreeSet.next();
 		renumberInternal(focalTree.getRoot(), new int[]{focalTree.getLeafNodeCount()});
@@ -486,6 +488,18 @@ public class TreeESS extends Runnable {
 		focalCladeArray = focalClades.toArray(new BitSet[]{});
 		printClades(focalTree.getTaxaNames());
 	}
+
+	private void processFocalTree() throws IOException {
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(focalTreeInput.get().getPath(), 0);
+		processFocalTree(srcTreeSet);
+	}
+
+	private void setFocalTreeFromTreeSet() throws IOException {
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().get(0).getPath(), burnInPercentageInput.get());
+		processFocalTree(srcTreeSet);
+	}
+
+	
 	
 	private int renumberInternal(Node node, int[] nr) {
 		for (Node child : node.getChildren()) {
