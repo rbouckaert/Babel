@@ -33,9 +33,13 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 			new OutFile("[[none]]"));
 	final public Input<OutFile> ittInput = new Input<>("itt", "png or pdf output file for graph visualisation of introductions through time",
 			new OutFile("[[none]]"));
-    
 	final public Input<Double> svgScaleInput = new Input<>("svgScale", "scale factor to be used for svg output. auto-scale when <= 0",
 			-1.0);
+	final public Input<Double> thresholdInput = new Input<>("threshold", "Minimum threshold wrt most recent node in the tree. "
+			+ "Any more recent transitions will be ignored. "
+			+ "Ignored if epocs are specified.", Double.NEGATIVE_INFINITY);
+	final public Input<Boolean> internalOnlyInput = new Input<>("internalOnly", "Only consider internal nodes, and ignore transitions on leaf nodes. "
+			+ "This guarantees each transition happens before the tree splits in at least two children. " , false);
 
     double [][] migrations;
     String [] tags;
@@ -56,7 +60,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 			}
 			
 			
-			process(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, out);
+			process(Math.max(Double.NEGATIVE_INFINITY, thresholdInput.get()), Double.POSITIVE_INFINITY, out);
 			
 			
 			if (svgInput.get() != null && !svgInput.get().getName().equals("[[none]]")) {
@@ -448,7 +452,8 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 	}
 
 	private void collectTags(Node node, Map<String, Double> transitionCounts, String tag, final double tLo, final double tHi) {
-		if (!node.isRoot()) {
+		if (!node.isRoot() && 
+				!(internalOnlyInput.get() && node.isLeaf())) {
 			if (node.getHeight() >= tLo && node.getHeight() < tHi || 
 				node.getHeight() < tLo && node.getParent().getHeight() > tLo) {
 	 			String parentTag = (String) node.getParent().getMetaData(tag);
