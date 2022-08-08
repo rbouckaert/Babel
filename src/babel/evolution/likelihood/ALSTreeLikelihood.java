@@ -28,10 +28,10 @@ package babel.evolution.likelihood;
 
 
 import beagle.Beagle;
-import beast.core.Description;
-import beast.core.Input;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.sitemodel.SiteModel;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.sitemodel.SiteModel;
 
 
 @Description("Treelikelihood for running the Multi-State Stochastic Dollo process")

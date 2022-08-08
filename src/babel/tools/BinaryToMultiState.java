@@ -5,16 +5,16 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import beast.util.NexusParser;
-import beast.app.beauti.BeautiDoc;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
+import beast.base.parser.NexusParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
 
 @Description("Convert binary nexus file to multistate alignment")
 public class BinaryToMultiState extends Runnable {
@@ -146,7 +146,7 @@ public class BinaryToMultiState extends Runnable {
 				";\nFORMAT DATATYPE=Standard SYMBOLS=\"" + symbols + "\" MISSING=? GAP=- ;\nMATRIX\n");
 		
 		xml.append("<data id=\"data\">\n" +
-				"<userDataType id=\"MultiStateType\" spec=\"beast.evolution.datatype.UserDataType\"\n" + 
+				"<userDataType id=\"MultiStateType\" spec=\"beast.base.evolution.datatype.UserDataType\"\n" + 
                 "states='MAX_STATE_SIZE'\n" +
                 "codelength='1'\n" + 
                 "codeMap='");

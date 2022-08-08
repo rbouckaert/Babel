@@ -3,13 +3,13 @@ package babel.tools;
 import java.io.File;
 import java.io.PrintStream;
 import babel.util.NexusParser;
-import beast.app.beauti.BeautiDoc;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
 
 @Description("Load nexus file and based on CharsetLabels, produce nexus file with charsets")
 public class CharsetlabelsToCharsets extends Runnable {

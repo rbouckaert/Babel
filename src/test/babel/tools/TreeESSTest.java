@@ -30,7 +30,7 @@ public class TreeESSTest {
 			for (int period = 2; period < 10; period++) {
 				Double[] trace = getTrace(p, period);
 seq.println("seq" + p + "-" + period + " " + Arrays.toString(trace));				
-				double ESS = beast.core.util.ESS.calcESS(trace, 1);
+				double ESS = beast.base.inference.util.ESS.calcESS(trace, 1);
 				out.print(ESS + "\t");
 			}
 			out.println();

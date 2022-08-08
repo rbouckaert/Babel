@@ -5,20 +5,18 @@ import java.io.PrintStream;
 import java.util.Arrays;
 
 import babel.util.NexusParser;
-import beast.app.beauti.BeautiDoc;
-import beast.app.treeannotator.TreeAnnotator;
-import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.Tree;
-import beast.util.Randomizer;
-import beast.util.TreeParser;
+import beastfx.app.treeannotator.TreeAnnotator;
+import beastfx.app.treeannotator.TreeAnnotator.FastTreeSet;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beastlabs.evolution.tree.RNNIMetric;
+import beast.base.evolution.tree.Tree;
+import beast.base.util.Randomizer;
 
 @Description("Calculate centroid of tree set based on Frechet mean")
 public class FrechetMeanCentroid extends Runnable {

@@ -13,18 +13,18 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.math.MathException;
 import org.xml.sax.SAXException;
 
-import beast.app.beauti.BeautiDoc;
-import beast.core.BEASTInterface;
-import beast.core.BEASTObject;
-import beast.core.MCMC;
-import beast.evolution.alignment.Taxon;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.Node;
-import beast.math.distributions.MRCAPrior;
-import beast.math.distributions.ParametricDistribution;
-import beast.util.Randomizer;
-import beast.util.XMLParser;
-import beast.util.XMLParserException;
+import beastfx.app.inputeditor.BeautiDoc;
+import beast.base.core.BEASTInterface;
+import beast.base.core.BEASTObject;
+import beast.base.inference.MCMC;
+import beast.base.evolution.alignment.Taxon;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.MRCAPrior;
+import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.util.Randomizer;
+import beast.base.parser.XMLParser;
+import beast.base.parser.XMLParserException;
 
 public class ISOTreeParser extends BEASTObject {
 	final static int QUOT = "'".charAt(0);

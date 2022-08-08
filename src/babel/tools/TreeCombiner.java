@@ -1,15 +1,16 @@
 package babel.tools;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 
 abstract public class TreeCombiner extends Runnable {
 	final public Input<TreeFile> srcInput = new Input<>("src","source tree (set) file used as skeleton");

@@ -8,21 +8,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import beast.app.beauti.BeautiConfig;
-import beast.app.beauti.BeautiDoc;
-import beast.app.draw.BEASTObjectDialog;
-import beast.app.draw.BEASTObjectPanel;
-import beast.app.util.Application;
-import beast.app.util.ConsoleApp;
-//import beast.app.util.ConsoleApp;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.util.Log;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.util.NexusParser;
-import beast.core.Input.Validate;
+import beastfx.app.inputeditor.BeautiConfig;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.BEASTObjectDialog;
+import beastfx.app.inputeditor.BEASTObjectPanel;
+import beastfx.app.tools.Application;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.parser.NexusParser;
+import beast.base.core.Input.Validate;
 
 @Description("filters all leafs from specified taxon sets out of a tree file based on clade membership")
 public class FamilyFilter extends TaxonFilter {
@@ -136,38 +134,8 @@ public class FamilyFilter extends TaxonFilter {
         Log.warning.println("Done.");
 	}
 
-	static ConsoleApp consoleapp;
 	public static void main(String[] args) throws Exception {
-		FamilyFilter app = new FamilyFilter();
-		app.setID("Filter clades from tree set");
-	
-		if (args.length == 0) {
-			// create BeautiDoc and beauti configuration
-			BeautiDoc doc = new BeautiDoc();
-			doc.beautiConfig = new BeautiConfig();
-			doc.beautiConfig.initAndValidate();
-					
-			// create panel with entries for the application
-			BEASTObjectPanel panel = new BEASTObjectPanel(app, app.getClass(), doc);
-			
-			// wrap panel in a dialog
-			BEASTObjectDialog dialog = new BEASTObjectDialog(panel, null);
-	
-			// show the dialog
-			if (dialog.showDialog()) {
-				dialog.accept(app, doc);
-				// create a console to show standard error and standard output
-				consoleapp = new ConsoleApp("FamilyFilter", "FamilyFilter", null);
-				app.initAndValidate();
-				app.run();
-			}
-			return;
-		}
-
-		Application main = new Application(app);
-		main.parseArgs(args, false);
-		app.initAndValidate();
-		app.run();
+		new Application(new FamilyFilter(), "Filter clades from tree set", args);
 	}
 
 }

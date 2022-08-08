@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Set;
 
 import babel.tools.TreeCombiner;
-import beast.app.beauti.BeautiDoc;
-import beast.app.treeannotator.TreeAnnotator;
-import beast.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
-import beast.app.util.Application;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.util.Randomizer;
-//import beast.util.TreeParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.treeannotator.TreeAnnotator;
+import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import beastfx.app.tools.Application;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.util.Randomizer;
+//import beast.base.evolution.tree.TreeParser;
 
 @Description("Grafts nodes into a tree above the MRCA of a set of nodes")
 public class TreeGrafter extends TreeCombiner {

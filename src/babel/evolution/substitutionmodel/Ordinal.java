@@ -1,13 +1,13 @@
 package babel.evolution.substitutionmodel;
 
-import beast.core.Citation;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.evolution.datatype.Binary;
-import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.StandardData;
-import beast.evolution.tree.Node;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.evolution.datatype.Binary;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.datatype.StandardData;
+import beast.base.evolution.tree.Node;
 
 import java.util.Arrays;
 
@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class Ordinal extends NStatesNoRatesSubstitutionModel {
 
     @Override
-    protected void setupRelativeRates() {
+    public void setupRelativeRates() {
 	int i;
 	for(i=0; i<nrOfStates * (nrOfStates -1); i++) {
 		relativeRates[i] = 0;

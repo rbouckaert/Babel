@@ -1,18 +1,18 @@
 package babel.evolution.substitutionmodel;
 
-import beast.core.Citation;
-import beast.core.Description;
-import beast.core.Function;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.parameter.RealParameter;
-import beast.evolution.datatype.DataType;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.DefaultEigenSystem;
-import beast.evolution.substitutionmodel.EigenDecomposition;
-import beast.evolution.substitutionmodel.GeneralSubstitutionModel;
-import beast.evolution.tree.Node;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.substitutionmodel.DefaultEigenSystem;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
+import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;
+import beast.base.evolution.tree.Node;
 
 @Description("Pseudo Dollo substitution model")
 @Citation(value="R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571", DOI="https://doi.org/10.1101/207571")
@@ -123,7 +123,7 @@ public class BirthDeathModel extends GeneralSubstitutionModel {
         return eigenDecomposition;
     }
     
-    protected void setupRelativeRates() {
+	public void setupRelativeRates() {
     	double del = delParameter.get().getValue();
     	int k = 0;
 		switch (nrOfStates) {

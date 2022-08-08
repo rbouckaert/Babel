@@ -4,16 +4,16 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import beast.core.BEASTObject;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Loggable;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.likelihood.GenericTreeLikelihood;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.JukesCantor;
-import beast.evolution.tree.Node;
+import beast.base.core.BEASTObject;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.substitutionmodel.JukesCantor;
+import beast.base.evolution.tree.Node;
 
 @Description("Logs site rates calcualted as average over the site rates weighted by site treelikelihood")
 public class SiteRateLogger extends BEASTObject implements Loggable {

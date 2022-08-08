@@ -5,13 +5,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.PrintStream;
 
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 
 @Description("Convert phyml phy format to nexus alignment file")
 public class Phy2Nexus extends Runnable {

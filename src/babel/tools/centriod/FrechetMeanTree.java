@@ -2,13 +2,13 @@ package babel.tools.centriod;
 
 import java.io.IOException;
 
-import beast.app.treeannotator.TreeAnnotator;
-import beast.app.treeannotator.TreeAnnotator.FastTreeSet;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.Tree;
+import beastfx.app.treeannotator.TreeAnnotator;
+import beastfx.app.treeannotator.TreeAnnotator.FastTreeSet;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beastlabs.evolution.tree.RNNIMetric;
+import beast.base.evolution.tree.Tree;
 
 @Description("Tree based on Frechet Mean of a tree set")
 public class FrechetMeanTree extends Tree {

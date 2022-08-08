@@ -3,14 +3,14 @@ package babel.evolution.substitutionmodel;
 import java.io.PrintStream;
 
 import babel.evolution.datatype.TwoStateCovarionPlus;
-import beast.core.Citation;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Loggable;
-import beast.core.Input.Validate;
-import beast.core.parameter.RealParameter;
-import beast.evolution.datatype.DataType;
-import beast.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.core.Input.Validate;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.datatype.DataType;
+import beastlabs.evolution.substitutionmodel.ComplexSubstitutionModel;
 
 @Description("Covarion model for Binary data with 3 rates")
 @Citation(value="R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571", DOI="https://doi.org/10.1101/207571")
@@ -88,7 +88,7 @@ public class BirthDeathCovarion2 extends ComplexSubstitutionModel implements Log
 
 
     @Override
-    protected void setupRelativeRates() {
+    public void setupRelativeRates() {
     }
 
     
@@ -109,7 +109,7 @@ public class BirthDeathCovarion2 extends ComplexSubstitutionModel implements Log
 //    }
 
     @Override
-    protected void setupRateMatrix() {
+    public void setupRateMatrix() {
         setupUnnormalizedQMatrix();
 
         for (int i = 0; i < nrOfStates; i++) {

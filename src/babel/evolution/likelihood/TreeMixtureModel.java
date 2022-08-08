@@ -5,13 +5,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import beast.core.Description;
-import beast.core.Distribution;
-import beast.core.Input;
-import beast.core.State;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.core.Input.Validate;
+import beast.base.core.Description;
+import beast.base.inference.Distribution;
+import beast.base.core.Input;
+import beast.base.inference.State;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.core.Input.Validate;
 
 @Description("Mixture model of tree likelihoods")
 public class TreeMixtureModel extends Distribution {

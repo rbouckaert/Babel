@@ -3,14 +3,14 @@ package babel.evolution.likelihood;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Loggable;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.datatype.TwoStateCovarion;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.TreeInterface;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.datatype.TwoStateCovarion;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.TreeInterface;
 
 
 @Description("Logs internal states sampled from the distribution at the MRCA of a set of taxa."

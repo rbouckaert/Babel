@@ -15,17 +15,17 @@ import java.util.Map;
 import java.util.Set;
 
 import babel.spanningtrees.Location;
-import beast.app.beauti.BeautiDoc;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.XMLFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.util.TreeParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.XMLFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.TreeParser;
 
 @Description("Pre-process glottolog files exported from http://glottolog.org/meta/downloads")
 // To generate DPLACE stuff: first run TreeConstraintProvider without CLADE_CONSTRAINTS_FILE_NAME

@@ -5,12 +5,11 @@ import java.io.File;
 
 import javax.swing.JFrame;
 
-import beast.app.util.Application;
-import beast.app.util.ConsoleApp;
-import beast.core.Input;
-import beast.core.Input.Validate;
+import beastfx.app.tools.Application;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
 //import javafx.embed.swing.JFXPanel;
-import beast.core.Runnable;
+import beast.base.inference.Runnable;
 
 public class SpanningTree extends Runnable {
 	public Input<File> nexusFileInput = new Input<>("nexus","nexus file containing cognate data in binary format",Validate.REQUIRED);
@@ -57,7 +56,6 @@ public class SpanningTree extends Runnable {
 		frame.setVisible(true);
 	}
 
-	static ConsoleApp consoleapp;
 	public static void main(String[] args) throws Exception {
 		new Application(new SpanningTree(), "SpanningTree", args);
 	}

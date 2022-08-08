@@ -1,13 +1,13 @@
 package babel.evolution.likelihood;
 
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.parameter.IntegerParameter;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.datatype.TwoStateCovarion;
-import beast.evolution.likelihood.TreeLikelihood;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.datatype.TwoStateCovarion;
+import beast.base.evolution.likelihood.TreeLikelihood;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 
 @Description("TreeLikelihood that assumes only a single site is reconstructed as 1 at the root")
 public class MultiSiteTreeLikelihood extends TreeLikelihood {

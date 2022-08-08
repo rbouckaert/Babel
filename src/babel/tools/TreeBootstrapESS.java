@@ -9,19 +9,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.tree.Tree;
-import beast.evolution.tree.TreeDistanceLogger;
-import beast.util.ClusterTree;
-import beast.util.ClusterTree.Type;
-import beast.util.NexusParser;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beastlabs.evolution.tree.TreeDistanceLogger;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.ClusterTree;
+import beast.base.evolution.tree.ClusterTree.Type;
+import beast.base.parser.NexusParser;
 @Description("A post-processing version of TreeDistanceLogger. Logs the mean and variance distance of each tree in a tree file to a series of bootstrap reference trees")
 public class TreeBootstrapESS extends Runnable {
 	

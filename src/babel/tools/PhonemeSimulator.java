@@ -13,32 +13,32 @@ import org.apache.commons.math.distribution.PoissonDistributionImpl;
 
 import babel.evolution.substitutionmodel.BirthDeathModel;
 import babel.tools.utils.MemoryFriendlyTreeSet;
-import beast.app.seqgen.SequenceSimulator;
-import beast.app.util.Application;
-import beast.app.util.LogFile;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.BEASTInterface;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.Input.Validate;
-import beast.core.parameter.RealParameter;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.alignment.Sequence;
-import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.datatype.Binary;
-import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.UserDataType;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.substitutionmodel.BinaryCovarion;
-import beast.evolution.substitutionmodel.ComplexSubstitutionModel;
-import beast.evolution.substitutionmodel.Frequencies;
-import beast.evolution.tree.Tree;
-import beast.util.LogAnalyser;
-import beast.util.Randomizer;
-import beast.util.XMLProducer;
+import beastfx.app.seqgen.SequenceSimulator;
+import beastfx.app.tools.Application;
+import beastfx.app.util.LogFile;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Input.Validate;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.Sequence;
+import beast.base.evolution.branchratemodel.StrictClockModel;
+import beast.base.evolution.datatype.Binary;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.datatype.UserDataType;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.substitutionmodel.BinaryCovarion;
+import beastlabs.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.evolution.substitutionmodel.Frequencies;
+import beast.base.evolution.tree.Tree;
+import beastfx.app.tools.LogAnalyser;
+import beast.base.util.Randomizer;
+import beast.base.parser.XMLProducer;
 
 @Description("Simulate phoneme alignemnts on a tree. "
 		+ "1: generate cognates on tree by pseudo Dollo model. "
@@ -57,6 +57,7 @@ public class PhonemeSimulator extends Runnable {
 	private Alignment binaryData;
 	private UserDataType vowelDataType,consonantDataType;
 	private Double[] shapes = null;
+	private Double[] PDCognateDeathRate = null;
 
 
 	@Override
@@ -114,12 +115,24 @@ public class PhonemeSimulator extends Runnable {
 		if (useGammaInput.get()) {
 			shapes = traceLog.getTrace(getIndex(labels, "gammaShape"));
 		} else {
-			shapes = new Double[N];
-			for (int i  =0; i < N; i++) {
-				shapes[i] = 1.0;
-			}
+			shapes = setToDefault(N, 1.0);
+		}
+		
+		int i = getIndex(labels, "PDCognateDeathRate");
+		if (i > 0) {
+			PDCognateDeathRate = traceLog.getTrace(i);
+		} else {
+			PDCognateDeathRate = setToDefault(N, 0.05);
 		}
 
+	}
+
+	private Double[] setToDefault(int N, double d) {
+		Double [] shapes = new Double[N];
+		for (int i  = 0; i < N; i++) {
+			shapes[i] = d;
+		}
+		return shapes;
 	}
 
 	private int getIndex(List<String> labels, String prefix) {
@@ -274,7 +287,7 @@ public class PhonemeSimulator extends Runnable {
 				}
 				int consonantCount = n - vowelCount;
 				
-				SequenceSimulator vowelSim = new beast.app.seqgen.SequenceSimulator();
+				SequenceSimulator vowelSim = new SequenceSimulator();
 				vowelSim.initByName("data", vowelData, "tree", tree, "sequencelength", vowelCount, "outputFileName",
 						"gammaShapeSequence.xml", "siteModel", vowelSitemodel, "branchRateModel", clockmodel);
 				data = vowelSim.simulate();
@@ -293,7 +306,7 @@ public class PhonemeSimulator extends Runnable {
 					}
 				}
 				
-				SequenceSimulator sim = new beast.app.seqgen.SequenceSimulator();
+				SequenceSimulator sim = new SequenceSimulator();
 				sim.initByName("data", consonantData, "tree", tree, "sequencelength", consonantCount, "outputFileName",
 						"gammaShapeSequence.xml", "siteModel", consonantSitemodel, "branchRateModel", clockmodel);
 				data = sim.simulate();		
@@ -361,7 +374,7 @@ public class PhonemeSimulator extends Runnable {
 	}
 	
 
-	private Alignment generateCognateAllignment(Tree tree, int i) {
+	private Alignment generateCognateAllignment(Tree tree, int k) {
 		UserDataType pdDataType;
 		pdDataType = new UserDataType();
 		pdDataType.initByName(
@@ -377,7 +390,7 @@ public class PhonemeSimulator extends Runnable {
 		f.initByName("frequencies", freqs);
 
 		BirthDeathModel pd = new BirthDeathModel();
-		pd.initByName("frequencies", f, "deathprob", "0.05");
+		pd.initByName("frequencies", f, "deathprob", (PDCognateDeathRate == null) ? "0.05" : PDCognateDeathRate[k]+"");
 		
 		StrictClockModel clockmodel = new StrictClockModel();
 		clockmodel.initByName("clock.rate", "1.0");
@@ -397,9 +410,9 @@ public class PhonemeSimulator extends Runnable {
 
 		RealParameter p = new RealParameter("0.0");
 		SiteModel sitemodel = new SiteModel();
-		sitemodel.initByName("gammaCategoryCount", useGammaInput.get()?4:1, "substModel", pd, "shape", useGammaInput.get()?shapes[i]+"":"1.0",
+		sitemodel.initByName("gammaCategoryCount", useGammaInput.get()?4:1, "substModel", pd, "shape", useGammaInput.get()?shapes[k]+"":"1.0",
 				"proportionInvariant", p);
-		SequenceSimulator sim = new beast.app.seqgen.SequenceSimulator();
+		SequenceSimulator sim = new SequenceSimulator();
 		sim.initByName("data", data, "tree", tree, "sequencelength", sequenceLengthInput.get(), "outputFileName",
 				"gammaShapeSequence.xml", "siteModel", sitemodel, "branchRateModel", clockmodel);
 

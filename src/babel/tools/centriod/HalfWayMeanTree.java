@@ -1,8 +1,8 @@
 package babel.tools.centriod;
 
-import beast.core.Description;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.Tree;
+import beast.base.core.Description;
+import beastlabs.evolution.tree.RNNIMetric;
+import beast.base.evolution.tree.Tree;
 
 @Description("Recursively take middle of RNNI path of list of trees")
 public class HalfWayMeanTree extends Tree {

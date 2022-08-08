@@ -9,9 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
-import beast.core.Description;
-import beast.core.Runnable;
-import beast.core.util.Log;
+import beast.base.core.Description;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
 
 @Description(value="Visualises rate matrix as a graph with nodes on a circle", isInheritable=false)
 /** Do not use directly. Use MatrixVisualiser tool (or any other derived class), 

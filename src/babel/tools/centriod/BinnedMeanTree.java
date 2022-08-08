@@ -1,9 +1,9 @@
 package babel.tools.centriod;
 
-import beast.core.Description;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.Tree;
-import beast.util.Randomizer;
+import beast.base.core.Description;
+import beastlabs.evolution.tree.RNNIMetric;
+import beast.base.evolution.tree.Tree;
+import beast.base.util.Randomizer;
 
 @Description("Sort in random bins, take halfway tree from bins, then halfway tree of halfway trees")
 public class BinnedMeanTree extends Tree {

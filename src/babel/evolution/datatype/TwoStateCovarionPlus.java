@@ -1,8 +1,8 @@
 package babel.evolution.datatype;
 
-import beast.core.Description;
-import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.DataType.Base;
+import beast.base.core.Description;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.datatype.DataType.Base;
 
 @Description("Datatype for two state covarion sequences")
 public class TwoStateCovarionPlus extends Base {

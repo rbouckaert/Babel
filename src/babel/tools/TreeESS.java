@@ -14,18 +14,20 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
-import beast.app.beauti.BeautiDoc;
-import beast.app.treeannotator.CladeSystem;
-import beast.app.treeannotator.CladeSystem.Clade;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.*;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.Tree;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.treeannotator.CladeSystem;
+import beastfx.app.treeannotator.CladeSystem.Clade;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.inference.Runnable;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beastlabs.evolution.tree.RNNIMetric;
+import beast.base.evolution.tree.Tree;
 
 @Description("Estimate ESS for a tree posterior sample (as produced by BEAST)")
 @Citation(value="Lanfear R, Hua X, Warren DL. Estimating the effective sample size of tree topologies from Bayesian phylogenetic analyses. Genome Biology and Evolution. 2016 Aug 1;8(8):2319-32.", year=2016, DOI="10.1093/gbe/evw171")
@@ -88,10 +90,14 @@ public class TreeESS extends Runnable {
 			List<Double> traceRNNI = new ArrayList<>();
 			List<Double> traceNNI = new ArrayList<>();
 			List<Double> traceRankSwitches = new ArrayList<>();
+			List<Double> traceNNI2 = new ArrayList<>();
+			List<Double> traceRankSwitches2 = new ArrayList<>();
 			traces.add(traceRF);
 			traces.add(traceRNNI);
 			traces.add(traceNNI);
 			traces.add(traceRankSwitches);
+			traces.add(traceNNI2);
+			traces.add(traceRankSwitches2);
 			if (logClades) {
 				cladeTraces = new ArrayList<>();
 				int n = focalCladeArray.length;
@@ -109,7 +115,7 @@ public class TreeESS extends Runnable {
 					traces.add(cladeTrace);
 				}
 			}
-			processTreeFile(f, traceRF, traceRNNI, traceNNI, traceRankSwitches, cladeTraces);
+			processTreeFile(f, traceRF, traceRNNI, traceNNI, traceRankSwitches, traceNNI2, traceRankSwitches2, cladeTraces);
 		}
 		
 		// save trace?
@@ -186,6 +192,7 @@ public class TreeESS extends Runnable {
 
 	private void processTreeFile(TreeFile f, List<Double> traceRF, List<Double> traceRNNI,
 			List<Double> traceNNI, List<Double> traceRankSwitches,
+			List<Double> traceNNI2, List<Double> traceRankSwitches2,
 			List<List<Double>> cladeTraces) throws IOException {
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(f.getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
@@ -227,6 +234,9 @@ public class TreeESS extends Runnable {
 			traceRNNI.add(d[0]);
 			traceNNI.add(d[1]);
 			traceRankSwitches.add(d[0] - d[1]);
+			d = RNNIDistance(tree, focalTree);
+			traceNNI2.add(d[1]);
+			traceRankSwitches2.add(d[0] - d[1]);
 
 			if (logClades) {
 				for (int i = 0; i < focalCladeArray.length; i++) {
@@ -246,6 +256,9 @@ public class TreeESS extends Runnable {
 			traceRNNI.add(d[0]);
 			traceNNI.add(d[1]);
 			traceRankSwitches.add(d[0] - d[1]);
+			d = RNNIDistance(tree, focalTree);
+			traceNNI2.add(d[1]);
+			traceRankSwitches2.add(d[0] - d[1]);
 			
 			if (logClades) {
 				int n = traceRF.size();
@@ -257,21 +270,27 @@ public class TreeESS extends Runnable {
 			}
 		}
 		
-		double ESSRF = beast.core.util.ESS.calcESS(traceRF);
+		double ESSRF = beast.base.inference.util.ESS.calcESS(traceRF);
 		Log.info("ESS(" + srcInput.getName() + "-RF) = " + ESSRF);
-		double ESSRNNI = beast.core.util.ESS.calcESS(traceRNNI);
+		double ESSRNNI = beast.base.inference.util.ESS.calcESS(traceRNNI);
 		Log.info("ESS(" + srcInput.getName() + "-RNNI) = " + ESSRNNI);
-		double ESSNNI = beast.core.util.ESS.calcESS(traceNNI);
+		
+		double ESSNNI = beast.base.inference.util.ESS.calcESS(traceNNI);
 		Log.info("ESS(" + srcInput.getName() + "-NNI) = " + ESSNNI);
-		double ESSRankSwitches = beast.core.util.ESS.calcESS(traceRankSwitches);
+		double ESSRankSwitches = beast.base.inference.util.ESS.calcESS(traceRankSwitches);
 		Log.info("ESS(" + srcInput.getName() + "-RankSwitches) = " + ESSRankSwitches);
+
+		double ESSNNI2 = beast.base.inference.util.ESS.calcESS(traceNNI2);
+		Log.info("ESS(" + srcInput.getName() + "-NNI-backward) = " + ESSNNI2);
+		double ESSRankSwitches2 = beast.base.inference.util.ESS.calcESS(traceRankSwitches2);
+		Log.info("ESS(" + srcInput.getName() + "-RankSwitches-backward) = " + ESSRankSwitches2);
 		if (logClades) {
 			double sum = 0;
 			double min = Double.MAX_VALUE;
 			int k = 0;
 			Log.warning.print("Clade ESSs: ");
 			for (int i = 0; i < cladeTraces.size(); i++) {
-				double ESS = beast.core.util.ESS.calcESS(cladeTraces.get(i));
+				double ESS = beast.base.inference.util.ESS.calcESS(cladeTraces.get(i));
 				Log.warning.print(" " + ESS);
 				if (Double.isFinite(ESS)) {
 					sum += ESS;
@@ -430,6 +449,8 @@ public class TreeESS extends Runnable {
 			out.print(f.getName() + "-RNNI\t");
 			out.print(f.getName() + "-NNI\t");
 			out.print(f.getName() + "-RankSwitches\t");
+			out.print(f.getName() + "-NNI-backward\t");
+			out.print(f.getName() + "-RankSwitches-backward\t");
 			if (logClades) {
 				String prefix = f.getName();
 				if (prefix.contains(".")) {

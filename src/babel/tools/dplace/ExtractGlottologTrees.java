@@ -5,10 +5,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import babel.tools.dplace.ISOTreeParser.MODE;
-import beast.app.beauti.BeautiDoc;
-import beast.core.Description;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
+import beastfx.app.inputeditor.BeautiDoc;
+import beast.base.core.Description;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
 
 @Description("Extract Glottolog trees, one labelled with ISO codes, and one labelled with glotto code")
 public class ExtractGlottologTrees {

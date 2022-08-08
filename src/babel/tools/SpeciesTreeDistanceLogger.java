@@ -5,20 +5,20 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
-import beast.app.beauti.BeautiDoc;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.RNNIMetric;
-import beast.evolution.tree.RobinsonsFouldMetric;
-import beast.evolution.tree.Tree;
-import beast.evolution.tree.TreeMetric;
-import beast.util.NexusParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beastlabs.evolution.tree.RNNIMetric;
+import beastlabs.evolution.tree.RobinsonsFouldMetric;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeMetric;
+import beast.base.parser.NexusParser;
 
 @Description("Create trace log of tree distances between species tree and its gene trees. "
 		+ "Usefull to judge how much gene trees differ from species trees for multi species coalescent analyses.")

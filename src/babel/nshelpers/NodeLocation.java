@@ -9,10 +9,10 @@ import java.util.Scanner;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import beast.core.BEASTObject;
-import beast.core.Input;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
 
 public class NodeLocation extends BEASTObject {
 

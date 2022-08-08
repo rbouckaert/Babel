@@ -7,16 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import beast.app.beauti.BeautiDoc;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.util.NexusParser;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.parser.NexusParser;
 
 @Description("Remove languages from nexus file, remove sites that are all zeros or question marks")
 public class DeleteLanuageFromNexus extends Runnable {

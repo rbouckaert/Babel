@@ -26,18 +26,18 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.util.FrequencySet;
-import beast.util.Randomizer;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.util.FrequencySet;
+import beast.base.util.Randomizer;
 
 @Description("Match clades from two tree sets and print support for both sets so "
 		+ "they can be plotted in an X-Y plot")

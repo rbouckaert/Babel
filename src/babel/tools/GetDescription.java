@@ -1,13 +1,13 @@
 package babel.tools;
 
-import beast.app.util.Application;
-import beast.core.BEASTInterface;
-import beast.core.Citation;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Param;
-import beast.core.Runnable;
-import beast.util.BEASTClassLoader;
+import beastfx.app.tools.Application;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Citation;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Param;
+import beast.base.inference.Runnable;
+import beast.pkgmgmt.BEASTClassLoader;
 
 @Description("Prints description of a BEAST class")
 public class GetDescription extends Runnable {

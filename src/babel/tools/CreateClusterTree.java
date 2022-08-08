@@ -4,17 +4,17 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.evolution.alignment.Alignment;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
-import beast.util.ClusterTree;
-import beast.util.NexusParser;
-import beast.util.ClusterTree.Type;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
+import beast.base.evolution.tree.ClusterTree;
+import beast.base.parser.NexusParser;
+import beast.base.evolution.tree.ClusterTree.Type;
 
 @Description("Creates UPGMA, NJ or other cluster tree from an alignment and save to newick format")
 public class CreateClusterTree extends Runnable {

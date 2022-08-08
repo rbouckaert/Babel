@@ -4,17 +4,17 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintStream;
 
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.app.util.TreeFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.util.TreeParser;
-import beast.util.TreeParser.TreeParsingException;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.evolution.tree.TreeParser;
+import beast.base.evolution.tree.TreeParser.TreeParsingException;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
 
 @Description("Convert Newick tree file to NEXUS format")
 public class Newick2Nexus extends Runnable {

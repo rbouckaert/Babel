@@ -31,18 +31,20 @@ package babel.evolution.likelihood;
 import java.util.Set;
 
 import babel.evolution.datatype.MutationDeathType;
-import beast.core.*;
-import beast.core.Input.Validate;
-import beast.core.parameter.RealParameter;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.alignment.AscertainedAlignment;
-import beast.evolution.branchratemodel.BranchRateModel;
-import beast.evolution.branchratemodel.StrictClockModel;
-import beast.evolution.likelihood.LikelihoodCore;
-import beast.evolution.sitemodel.SiteModel;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.math.GammaFunction;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.CalculationNode;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.AscertainedAlignment;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.branchratemodel.StrictClockModel;
+import beast.base.evolution.likelihood.LikelihoodCore;
+import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.util.GammaFunction;
 
 
 @Description("Abstract Observation Process defines how the integration of gain events is done along the tree."+
@@ -52,13 +54,13 @@ import beast.math.GammaFunction;
         "10.1080/10635150802434394. PMID: 18853363")
 public class AbstractObservationProcess extends CalculationNode {
     //    Input<String> Name = new Input<String>("Name", "description here");
-    public Input<Tree> treeModelInput = new Input<Tree>("tree", "description here", Validate.REQUIRED);
-    public Input<Alignment> patternsInput = new Input<Alignment>("data", "description here", Validate.REQUIRED);
-    public Input<SiteModel> siteModelInput = new Input<SiteModel>("siteModel", "description here", Validate.REQUIRED);
-    public Input<BranchRateModel> branchRateModeInput = new Input<BranchRateModel>("branchRateModel", "description here");
-    public Input<RealParameter> muInput = new Input<RealParameter>("mu", "description here", Validate.REQUIRED);
-    public Input<RealParameter> lamInput = new Input<RealParameter>("lam", "description here");
-    public Input<Boolean> integrateGainRateInputInput = new Input<Boolean>("integrateGainRate", "description here", false);
+    public Input<Tree> treeModelInput = new Input<>("tree", "description here", Validate.REQUIRED);
+    public Input<Alignment> patternsInput = new Input<>("data", "description here", Validate.REQUIRED);
+    public Input<SiteModel> siteModelInput = new Input<>("siteModel", "description here", Validate.REQUIRED);
+    public Input<BranchRateModel> branchRateModeInput = new Input<>("branchRateModel", "description here");
+    public Input<RealParameter> muInput = new Input<>("mu", "description here", Validate.REQUIRED);
+    public Input<RealParameter> lamInput = new Input<>("lam", "description here");
+    public Input<Boolean> integrateGainRateInputInput = new Input<>("integrateGainRate", "description here", false);
 
 
 	@Override

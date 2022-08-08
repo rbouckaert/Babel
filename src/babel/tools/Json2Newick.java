@@ -9,15 +9,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 
 @Description("Convert JSON trees (from NextStrain) into a Newick tree")
 public class Json2Newick extends Runnable {

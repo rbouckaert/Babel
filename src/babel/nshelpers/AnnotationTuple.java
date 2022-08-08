@@ -5,10 +5,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
-import beast.core.BEASTObject;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.util.Log;
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 
 public class AnnotationTuple extends BEASTObject {
 	
@@ -119,7 +119,7 @@ public class AnnotationTuple extends BEASTObject {
 
     /**
      * See if we can convert the date to a double value *
-     * Borrowed from package beast.evolution.tree.TraitSet
+     * Borrowed from package beast.base.evolution.tree.TraitSet
      */
     protected double convertDateToDouble(String str) {
 

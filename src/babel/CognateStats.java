@@ -4,23 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import beast.app.beauti.BeautiConfig;
-import beast.app.beauti.BeautiDoc;
-import beast.app.draw.BEASTObjectDialog;
-import beast.app.draw.BEASTObjectPanel;
-import beast.app.util.Application;
-import beast.app.util.ConsoleApp;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
+import beastfx.app.inputeditor.BeautiConfig;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.BEASTObjectDialog;
+import beastfx.app.inputeditor.BEASTObjectPanel;
+import beastfx.app.tools.Application;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
 import babel.util.NexusParser;
 
 @Description("Tool to print statistics on cognate data, useful for identifyng potential anomalies in the alignment.")
-public class CognateStats extends beast.core.Runnable {
+public class CognateStats extends beast.base.inference.Runnable {
 	final public Input<File> nexusFileInput = new Input<>("nexusFile", "nexus file containing sequence alignment, charsetlabels and partition information", new File("examples/nexus/ringe.nex"));
     
-	public static ConsoleApp app = null;
 
     @Override
 	public void initAndValidate() {
@@ -102,59 +100,7 @@ public class CognateStats extends beast.core.Runnable {
 	}
 
 	public static void main(final String[] args) throws Exception {
-		{
-			// initialise JavaFX for console
-			//JFXPanel jfxPanel = new JFXPanel();
-		}
-		Application main = null;
-		try {
-			// create the class with application that we want to launch
-			CognateStats sampler = new CognateStats();
-			
-			if (args.length == 0) {
-				// try the GUI version
-				
-				// need to set the ID of the BEAST-object
-				sampler.setID("PathSampler");
-				
-				// then initialise
-				sampler.initAndValidate();
-				
-				// create BeautiDoc and beauti configuration
-				BeautiDoc doc = new BeautiDoc();
-				doc.beautiConfig = new BeautiConfig();
-				doc.beautiConfig.initAndValidate();				
-			
-				// create panel with entries for the application
-				BEASTObjectPanel panel = new BEASTObjectPanel(sampler, sampler.getClass(), doc);
-				
-				// wrap panel in a dialog
-				BEASTObjectDialog dialog = new BEASTObjectDialog(panel, null);
-
-				// show the dialog
-				if (dialog.showDialog()) {
-					dialog.accept(sampler, doc);
-					// create a console to show standard error and standard output
-					app = new ConsoleApp("Babel Stats", "Babel Stats", null);
-					sampler.initAndValidate();
-					sampler.run();
-				}
-				return;
-			}
-
-			// continue with the command line version
-			main = new Application(sampler);
-			main.parseArgs(args, false);
-			sampler.initAndValidate();
-			sampler.run();
-			
-		} catch (Exception e) {
-			// error handling
-			System.out.println(e.getMessage());
-			if (main != null) {
-				System.out.println(main.getUsage());
-			}
-		}
+		new Application(new CognateStats(), "Babel Stats", args);
 	}
 
 }

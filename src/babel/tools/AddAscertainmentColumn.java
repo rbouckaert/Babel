@@ -4,15 +4,15 @@ package babel.tools;
 
 import java.io.File;
 import java.io.PrintStream;
-import beast.util.NexusParser;
-import beast.app.util.Application;
-import beast.app.util.OutFile;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Runnable;
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.datatype.DataType;
+import beast.base.parser.NexusParser;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.inference.Runnable;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.datatype.DataType;
 
 @Description("Add ascertainment column with all zeros except for entries with missing data")
 public class AddAscertainmentColumn extends Runnable {

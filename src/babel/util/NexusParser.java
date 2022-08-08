@@ -18,27 +18,27 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import beast.core.util.Log;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.alignment.FilteredAlignment;
-import beast.evolution.alignment.Sequence;
-import beast.evolution.alignment.Taxon;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.datatype.DataType;
-import beast.evolution.datatype.StandardData;
-import beast.evolution.datatype.UserDataType;
-import beast.evolution.tree.TraitSet;
-import beast.evolution.tree.Tree;
-import beast.math.distributions.Exponential;
-import beast.math.distributions.Gamma;
-import beast.math.distributions.LogNormalDistributionModel;
-import beast.math.distributions.MRCAPrior;
-import beast.math.distributions.Normal;
-import beast.math.distributions.ParametricDistribution;
-import beast.math.distributions.Uniform;
-import beast.util.NexusParserListener;
-import beast.util.TreeParser;
-import beast.util.XMLProducer;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.FilteredAlignment;
+import beast.base.evolution.alignment.Sequence;
+import beast.base.evolution.alignment.Taxon;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.datatype.StandardData;
+import beast.base.evolution.datatype.UserDataType;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.distribution.Exponential;
+import beast.base.inference.distribution.Gamma;
+import beast.base.inference.distribution.LogNormalDistributionModel;
+import beast.base.evolution.tree.MRCAPrior;
+import beast.base.inference.distribution.Normal;
+import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.inference.distribution.Uniform;
+import beast.base.parser.NexusParserListener;
+import beast.base.evolution.tree.TreeParser;
+import beast.base.parser.XMLProducer;
 
 
 /**
