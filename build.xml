@@ -8,18 +8,19 @@
 	</description>
 
 	<!-- set global properties for this build -->
-	<property name="srcBabel" location="../Babel/src" />
-	<property name="buildBabel" location="../Babel/build" />
-	<property name="libBabel" location="../Babel/lib" />
+	<property name="Babeldir" location="../Babel" />
+	<property name="srcBabel" location="${Babeldir}/src" />
+	<property name="buildBabel" location="${Babeldir}/build" />
+	<property name="libBabel" location="${Babeldir}/lib" />
 	<property name="release_dir" value="release" />
 	<property name="distBabel" location="${buildBabel}/dist" />
 	<property name="beast2path" location="../beast2" />
 	<property name="libBeast2" location="${beast2path}/lib" />
 	<property name="srcBeast2" location="${beast2path}/src" />
 	<property name="beast2classpath" location="${beast2path}/build" />
+	<property name="beastappclasspath" location="../BeastFX/build" />
     <property name="BEASTLabsclasspath" location="../BEASTLabs/build" />
 	<property name="Add_on_dir" value="${release_dir}/add-on" />
-	<property name="version" value="0.3.2" />
 
     <import file="${beast2path}/build.xml" />
 
@@ -28,20 +29,31 @@
 
 	<path id="classpath">
         <pathelement path="${buildBabel}"/>
-		<fileset dir="${libBeast2}" includes="junit-4.8.2.jar"/>
+		<fileset dir="${libBeast2}/junit" includes="junit-platform-console-standalone-1.8.2.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/>
 		<fileset dir="${libBabel}" includes="itextpdf-5.5.9.jar"/>
-		<fileset dir="${libBeast2}" includes="antlr-runtime-4.7.jar"/>
+		<fileset dir="${libBeast2}" includes="antlr-runtime-4.10.1.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/> 
 		<fileset dir="${libBeast2}" includes="colt.jar"/> 
 		<fileset dir="${libBeast2}" includes="jam.jar"/>
+		<fileset dir="../BEASTLabs/lib" includes="nashorn-core-15.3.jar"/>
         <pathelement path="${beast2classpath}"/>
+        <pathelement path="${beastappclasspath}"/>
         <pathelement path="${BEASTLabsclasspath}"/>
 	</path>
 
 	<!-- start -->
 	<target name="initBabel">
 		<echo message="${ant.project.name}: ${ant.file}" />
+		
+		<available file="${Babeldir}/version.xml" property="versionAvailable"/>
+        <fail unless="versionAvailable">
+              ** Required file version.xml does not exist. **
+            </fail>
+
+        <!-- Read package name and version from xml file -->
+            <xmlproperty file="${Babeldir}/version.xml" prefix="fromVersionFile" />
+        <property name="Babelversion" value="${fromVersionFile.package(version)}" />
 	</target>
 
 	<target name="cleanBabel">
@@ -78,8 +90,6 @@
 		<!-- Compile the java code from ${srcBabel} into ${buildBabel} /bin -->
 		<javac srcdir="${srcBabel}" destdir="${buildBabel}" classpathref="classpath" 
 		       fork="true"
-               source="1.8"
-               target="1.8"
  		       memoryinitialsize="256m"
 		       memorymaximumsize="256m">
                         <include name="beast/**/**" />
@@ -233,7 +243,7 @@
 		<mkdir dir="${Add_on_dir}" />
 		<mkdir dir="${Add_on_dir}/lib" />
 		<mkdir dir="${Add_on_dir}/examples" />
-		<mkdir dir="${Add_on_dir}/templates" />
+		<mkdir dir="${Add_on_dir}/fxtemplates" />
 
 		<copy todir="${Add_on_dir}">
 			<fileset file="version.xml"/>
@@ -241,8 +251,8 @@
 		<copy todir="${Add_on_dir}/examples">
 			<fileset dir="examples" />
 		</copy>
-		<copy todir="${Add_on_dir}/templates">
-			<fileset dir="templates" />
+		<copy todir="${Add_on_dir}/fxtemplates">
+			<fileset dir="fxtemplates" />
 		</copy>
 		<copy todir="${Add_on_dir}/lib">
 			<fileset dir="${distBabel}" includes="Babel.addon.jar" />
@@ -253,17 +263,18 @@
 		<copy todir="${Add_on_dir}">
 			<fileset dir="${distBabel}" includes="Babel.src.jar" />
 		</copy>
-		<copy todir="${Add_on_dir}/templates">
-			<fileset file="templates/Babel.xml" />
-			<fileset file="templates/AutoPartition.xml" />
+		<copy todir="${Add_on_dir}/fxtemplates">
+			<fileset dir="fxtemplates">
+				<include name="*.xml"/>
+			</fileset>
 		</copy>
 
-		<jar jarfile="${distBabel}/Babel.addon.v${version}.zip">
+		<jar jarfile="${distBabel}/Babel.addon.v${Babelversion}.zip">
 			<fileset dir="${Add_on_dir}">
 				<include name="**/*" />
 			</fileset>
         </jar>
-		<echo message="Add-on version v${version} release is finished." />
+		<echo message="Add-on version v${Babelversion} release is finished." />
 	</target>
 
 </project>

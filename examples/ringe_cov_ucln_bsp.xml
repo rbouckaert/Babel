@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='BinaryCovarion' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" version="2.0">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='BinaryCovarion' beautistatus='' namespace="beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.alignment:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" version="2.0">
 
 
     <data
@@ -39,22 +39,22 @@ name="alignment">
 
 
     
-<map name="Uniform">beast.math.distributions.Uniform</map>
-<map name="Exponential">beast.math.distributions.Exponential</map>
-<map name="LogNormal">beast.math.distributions.LogNormalDistributionModel</map>
-<map name="Normal">beast.math.distributions.Normal</map>
-<map name="Beta">beast.math.distributions.Beta</map>
-<map name="Gamma">beast.math.distributions.Gamma</map>
-<map name="LaplaceDistribution">beast.math.distributions.LaplaceDistribution</map>
-<map name="prior">beast.math.distributions.Prior</map>
-<map name="InverseGamma">beast.math.distributions.InverseGamma</map>
-<map name="OneOnX">beast.math.distributions.OneOnX</map>
+<map name="Uniform">beast.base.inference.distribution.Uniform</map>
+<map name="Exponential">beast.base.inference.distribution.Exponential</map>
+<map name="LogNormal">beast.base.inference.distribution.LogNormalDistributionModel</map>
+<map name="Normal">beast.base.inference.distribution.Normal</map>
+<map name="Beta">beast.base.inference.distribution.Beta</map>
+<map name="Gamma">beast.base.inference.distribution.Gamma</map>
+<map name="LaplaceDistribution">beast.base.inference.distribution.LaplaceDistribution</map>
+<map name="prior">beast.base.inference.distribution.Prior</map>
+<map name="InverseGamma">beast.base.inference.distribution.InverseGamma</map>
+<map name="OneOnX">beast.base.inference.distribution.OneOnX</map>
 
 
 <run chainLength="10000000" id="mcmc" spec="MCMC">
     <state id="state" storeEvery="5000">
         <tree id="Tree.t:ringe" name="stateNode">
-            <trait id="dateTrait.t:ringe" spec="beast.evolution.tree.TraitSet" traitname="date-backward">
+            <trait id="dateTrait.t:ringe" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward">
                 oldnorse=800,
 avestan=2500,
 gothic=1650,
@@ -96,18 +96,18 @@ name="alignment"/>
         <stateNode dimension="5" id="bGroupSizes.t:ringe" spec="parameter.IntegerParameter">1</stateNode>
     </state>
 
-    <init estimate="false" id="RandomTree.t:ringe" initial="@Tree.t:ringe" spec="beast.evolution.tree.RandomTree" taxa="@ringe">
+    <init estimate="false" id="RandomTree.t:ringe" initial="@Tree.t:ringe" spec="beast.base.evolution.tree.coalescent.RandomTree" taxa="@ringe">
         <populationModel id="ConstantPopulation0.t:ringe" spec="ConstantPopulation">
             <parameter id="randomPopSize.t:ringe" name="popSize">1.0</parameter>
         </populationModel>
     </init>
 
-    <distribution id="posterior" spec="util.CompoundDistribution">
-        <distribution id="prior" spec="util.CompoundDistribution">
+    <distribution id="posterior" spec="beast.base.inference.CompoundDistribution">
+        <distribution id="prior" spec="beast.base.inference.CompoundDistribution">
             <distribution groupSizes="@bGroupSizes.t:ringe" id="BayesianSkyline.t:ringe" popSizes="@bPopSizes.t:ringe" spec="BayesianSkyline">
-                <treeIntervals id="BSPTreeIntervals.t:ringe" spec="TreeIntervals" tree="@Tree.t:ringe"/>
+                <treeIntervals id="BSPTreeIntervals.t:ringe" spec="beast.base.evolution.tree.TreeIntervals" tree="@Tree.t:ringe"/>
             </distribution>
-            <distribution id="MarkovChainedPopSizes.t:ringe" jeffreys="true" parameter="@bPopSizes.t:ringe" spec="beast.math.distributions.MarkovChainDistribution"/>
+            <distribution id="MarkovChainedPopSizes.t:ringe" jeffreys="true" parameter="@bPopSizes.t:ringe" spec="beast.base.inference.distribution.MarkovChainDistribution"/>
             <prior id="bcov_alpha_prior.s:ringe" name="distribution" x="@bcov_alpha.s:ringe">
                 <Uniform id="Uniform.0" name="distr" upper="Infinity"/>
             </prior>
@@ -127,7 +127,7 @@ name="alignment"/>
                 </Gamma>
             </prior>
         </distribution>
-        <distribution id="likelihood" spec="util.CompoundDistribution">
+        <distribution id="likelihood" spec="beast.base.inference.CompoundDistribution">
             <distribution id="treeLikelihood.ringe" spec="TreeLikelihood" tree="@Tree.t:ringe" useAmbiguities="true">
                 <data
 data="@ringe"
@@ -135,7 +135,7 @@ filter="-"
 id="orgdata.ringe"
 spec="FilteredAlignment"
 strip="true">
-                    <userDataType id="TwoStateCovarion.0" spec="beast.evolution.datatype.TwoStateCovarion"/>
+                    <userDataType id="TwoStateCovarion.0" spec="beast.base.evolution.datatype.TwoStateCovarion"/>
                 </data>
                 <siteModel gammaCategoryCount="1" id="SiteModel.s:ringe" spec="SiteModel">
                     <parameter estimate="false" id="mutationRate.s:ringe" name="mutationRate">1.0</parameter>
@@ -146,7 +146,7 @@ strip="true">
                         <frequencies data="@ringe" estimate="false" id="dummyfrequencies.s:ringe" spec="Frequencies"/>
                     </substModel>
                 </siteModel>
-                <branchRateModel clock.rate="@ucldMean.c:ringe" id="RelaxedClock.c:ringe" rateCategories="@rateCategories.c:ringe" spec="beast.evolution.branchratemodel.UCRelaxedClockModel" tree="@Tree.t:ringe">
+                <branchRateModel clock.rate="@ucldMean.c:ringe" id="RelaxedClock.c:ringe" rateCategories="@rateCategories.c:ringe" spec="beast.base.evolution.branchratemodel.UCRelaxedClockModel" tree="@Tree.t:ringe">
                     <LogNormal S="@ucldStdev.c:ringe" id="LogNormalDistributionModel.c:ringe" meanInRealSpace="true" name="distr">
                         <parameter estimate="false" id="RealParameter.04" lower="0.0" name="M" upper="1.0">1.0</parameter>
                     </LogNormal>
@@ -201,14 +201,14 @@ strip="true">
         <log idref="likelihood"/>
         <log idref="prior"/>
         <log idref="treeLikelihood.ringe"/>
-        <log id="TreeHeight.t:ringe" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:ringe"/>
+        <log id="TreeHeight.t:ringe" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:ringe"/>
         <parameter idref="bcov_alpha.s:ringe" name="log"/>
         <parameter idref="bcov_s.s:ringe" name="log"/>
         <parameter idref="frequencies.s:ringe" name="log"/>
         <parameter idref="hiddenfrequencies.s:ringe" name="log"/>
         <parameter idref="ucldMean.c:ringe" name="log"/>
         <parameter idref="ucldStdev.c:ringe" name="log"/>
-        <log branchratemodel="@RelaxedClock.c:ringe" id="rate.c:ringe" spec="beast.evolution.branchratemodel.RateStatistic" tree="@Tree.t:ringe"/>
+        <log branchratemodel="@RelaxedClock.c:ringe" id="rate.c:ringe" spec="beast.base.evolution.RateStatistic" tree="@Tree.t:ringe"/>
         <log idref="BayesianSkyline.t:ringe"/>
         <parameter idref="bPopSizes.t:ringe" name="log"/>
         <log idref="bGroupSizes.t:ringe"/>
@@ -222,7 +222,7 @@ strip="true">
     </logger>
 
     <logger fileName="ringe_cov_ucln_bsp.trees" id="treelog.t:ringe" logEvery="1000" mode="tree">
-        <log branchratemodel="@RelaxedClock.c:ringe" id="TreeWithMetaDataLogger.t:ringe" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:ringe"/>
+        <log branchratemodel="@RelaxedClock.c:ringe" id="TreeWithMetaDataLogger.t:ringe" spec="beast.base.evolution.TreeWithMetaDataLogger" tree="@Tree.t:ringe"/>
     </logger>
 
 </run>

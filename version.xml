@@ -1,7 +1,102 @@
-<package name='Babel' version='0.3.2'>
-	<depends on='beast2' atleast='2.6.0'/>
-	<depends on='BEASTLabs' atleast='1.9.6'/>
+<package name='Babel' version='0.4.0'>
+    <depends on='BEAST.base' atleast='2.7.0'/>
+    <depends on='BEAST.app' atleast='2.7.0'/>
+	<depends on='BEASTLabs' atleast='2.0.0'/>
 	
+    <service type="beast.base.core.BEASTInterface">
+        <provider classname="babel.CognateStats"/>
+        <provider classname="babel.evolution.datatype.MutationDeathType"/>
+        <provider classname="babel.evolution.datatype.TwoStateCovarionPlus"/>
+        <provider classname="babel.evolution.likelihood.AbstractObservationProcess"/>
+        <provider classname="babel.evolution.likelihood.ALSTreeLikelihood"/>
+        <provider classname="babel.evolution.likelihood.AncestralStateLogger2"/>
+        <provider classname="babel.evolution.likelihood.AnyTipObservationProcess"/>
+        <provider classname="babel.evolution.likelihood.CognateCountThroughTimeLogger"/>
+        <provider classname="babel.evolution.likelihood.LastStateRootProb"/>
+        <provider classname="babel.evolution.likelihood.MultiSiteTreeLikelihood"/>
+        <provider classname="babel.evolution.likelihood.SingleTipObservationProcess"/>
+        <provider classname="babel.evolution.likelihood.TreeMixtureModel"/>
+        <provider classname="babel.evolution.substitutionmodel.BirthDeathCovarion2"/>
+        <provider classname="babel.evolution.substitutionmodel.BirthDeathModel"/>
+        <provider classname="babel.evolution.substitutionmodel.ComplexMutationDeathModel"/>
+        <provider classname="babel.evolution.substitutionmodel.NestedOrdinal"/>
+        <provider classname="babel.evolution.substitutionmodel.NStatesNoRatesSubstitutionModel"/>
+        <provider classname="babel.evolution.substitutionmodel.Ordinal"/>
+        <provider classname="babel.nshelpers.AnnotationTuple"/>
+        <provider classname="babel.nshelpers.AuthorMaintainer"/>
+        <provider classname="babel.nshelpers.GenomeAnnotation"/>
+        <provider classname="babel.nshelpers.NodeLocation"/>
+        <provider classname="babel.preprocess.NexusFilter"/>
+        <provider classname="babel.spanningtrees.SpanningTree"/>
+        <provider classname="babel.tools.AddAscertainmentColumn"/>
+        <provider classname="babel.tools.AdjustTipHeight"/>
+        <provider classname="babel.tools.BinaryToMultiState"/>
+        <provider classname="babel.tools.BinaryToMultiState2"/>
+        <provider classname="babel.tools.centriod.BinnedMeanTree"/>
+        <provider classname="babel.tools.centriod.ClusterRankTree"/>
+        <provider classname="babel.tools.centriod.FrechetMeanCentroid"/>
+        <provider classname="babel.tools.centriod.FrechetMeanTree"/>
+        <provider classname="babel.tools.centriod.HalfWayMeanTree"/>
+        <provider classname="babel.tools.ChangesThroughTimeCounter"/>
+        <provider classname="babel.tools.CharsetlabelsToCharsets"/>
+        <provider classname="babel.tools.CladeMarker"/>
+        <provider classname="babel.tools.CladeSetComparator"/>
+        <provider classname="babel.tools.CladeSetCounter"/>
+        <provider classname="babel.tools.CladeSetOverStateComparator"/>
+        <provider classname="babel.tools.CognateSetRandomizer"/>
+        <provider classname="babel.tools.CreateClusterTree"/>
+        <provider classname="babel.tools.DeleteLanuageFromNexus"/>
+        <provider classname="babel.tools.DolloAnnotator"/>
+        <provider classname="babel.tools.dplace.ISOTreeParser"/>
+        <provider classname="babel.tools.dplace.TreeConstraintProvider"/>
+        <provider classname="babel.tools.dplace.TreeGrafter"/>
+        <provider classname="babel.tools.DTARatesVisualiser"/>
+        <provider classname="babel.tools.FamilyFilter"/>
+        <provider classname="babel.tools.FamilyPruner"/>
+        <provider classname="babel.tools.Fasta2Nexus"/>
+        <provider classname="babel.tools.GetCladeMetaData"/>
+        <provider classname="babel.tools.GetDescription"/>
+        <provider classname="babel.tools.IllegalTreeCleaner"/>
+        <provider classname="babel.tools.Json2Newick"/>
+        <provider classname="babel.tools.Json2Nexus"/>
+        <provider classname="babel.tools.LeafSplitter"/>
+        <provider classname="babel.tools.LineagesThroughTimeCounter"/>
+        <provider classname="babel.tools.MakeUltraMetric"/>
+        <provider classname="babel.tools.MatrixVisualiser"/>
+        <provider classname="babel.tools.MatrixVisualiserBase"/>
+        <provider classname="babel.tools.MetaDataMerger"/>
+        <provider classname="babel.tools.MRCAFinder"/>
+        <provider classname="babel.tools.Newick2Nexus"/>
+        <provider classname="babel.tools.NextStream2Newick"/>
+        <provider classname="babel.tools.Nexus2Fasta"/>
+        <provider classname="babel.tools.Nexus2Json"/>
+        <provider classname="babel.tools.Nexus2Newick"/>
+        <provider classname="babel.tools.NexusToCharsets"/>
+        <provider classname="babel.tools.NodeAnnotator"/>
+        <provider classname="babel.tools.PhonemeSimulator"/>
+        <provider classname="babel.tools.Phy2Nexus"/>
+        <provider classname="babel.tools.SpeciesTreeDistanceLogger"/>
+        <provider classname="babel.tools.StateTransitionCounter"/>
+        <provider classname="babel.tools.TaxonFilter"/>
+        <provider classname="babel.tools.TimeSeriesPlot"/>
+        <provider classname="babel.tools.TreeBootstrapESS"/>
+        <provider classname="babel.tools.TreeEpochScaler"/>
+        <provider classname="babel.tools.TreeESS"/>
+        <provider classname="babel.tools.TreeMerger"/>
+        <provider classname="babel.tools.TreeRelabeller"/>
+        <provider classname="babel.tools.Trees2HeightLog"/>
+        <provider classname="babel.tools.TreeScalerApp"/>
+        <provider classname="babel.tools.TreeTransitionMarker"/>
+        <provider classname="babel.tools.XML2Fasta"/>
+        <provider classname="babel.tools.XML2Nexus"/>
+        <provider classname="babel.util.SiteLikelihoodLogger"/>
+        <provider classname="babel.util.SiteRateLogger"/>
+    </service>
+
+    <service type="beast.base.evolution.datatype.DataType">
+        <provider classname="babel.evolution.datatype.MutationDeathType"/>
+        <provider classname="babel.evolution.datatype.TwoStateCovarionPlus"/>
+    </service>
 	
 	<map from="beast.evolution.datatype.MutationDeathType" to="babel.evolution.datatype.MutationDeathType"/>
 	<map from="beast.evolution.datatype.TwoStateCovarionPlus" to="babel.evolution.datatype.TwoStateCovarionPlus"/>
