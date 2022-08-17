@@ -5,7 +5,7 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.datatype.DataType;
-import beastlabs.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.evolution.substitutionmodel.ComplexSubstitutionModel;
 import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.substitutionmodel.SubstitutionModel.Base;

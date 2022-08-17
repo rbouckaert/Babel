@@ -33,7 +33,7 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.UserDataType;
 import beast.base.evolution.sitemodel.SiteModel;
 import beast.base.evolution.substitutionmodel.BinaryCovarion;
-import beastlabs.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.evolution.substitutionmodel.ComplexSubstitutionModel;
 import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.tree.Tree;
 import beastfx.app.tools.LogAnalyser;

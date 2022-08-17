@@ -10,7 +10,7 @@ import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.datatype.DataType;
-import beastlabs.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.evolution.substitutionmodel.ComplexSubstitutionModel;
 
 @Description("Covarion model for Binary data with 3 rates")
 @Citation(value="R.Bouckaert, M. Robbeets. Pseudo Dollo models for the evolution of binary characters along a tree. BIORXIV/2017/207571", DOI="https://doi.org/10.1101/207571")
