@@ -23,6 +23,8 @@ public class CreateClusterTree extends Runnable {
             "Should be one of " + Arrays.toString(Type.values()) + " (default " + Type.upgma + ")", Type.average, Type.values());
 	final public Input<OutFile> outputInput = new Input<>("out", "output file with newick tree, or standard output if not specified",
 			new OutFile("[[none]]"));
+    final public Input<Double> rootHeightInput = new Input<>("rootHeight", "If specified the tree will be scaled to match the root height, if constraints allow this");
+
 
 	@Override
 	public void initAndValidate() {
@@ -39,6 +41,10 @@ public class CreateClusterTree extends Runnable {
                 "clusterType", clusterTypeInput.get(),
                 "taxa", alignment);
 
+        if (rootHeightInput.get() != null) {
+        	tree.scale(rootHeightInput.get() / tree.getRoot().getHeight());
+        }
+
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + outputInput.get().getPath());
@@ -48,8 +54,8 @@ public class CreateClusterTree extends Runnable {
 
 		Log.info("Done");        
 	}
-
-	public static void main(String[] args) throws Exception {
+    
+    public static void main(String[] args) throws Exception {
 		new Application(new CreateClusterTree(), "Create Cluster Tree", args);
 	}
 }
