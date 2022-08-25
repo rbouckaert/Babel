@@ -77,7 +77,8 @@ public class MRCAFinder extends GetCladeMetaData {
     			out.println(";");
             	//out.println(tree.getRoot().toNewick());
             }
-            dataout.println(node.getHeight());
+            boolean isMonophyletic = (nseen == 2 * taxa.size() - 1); 
+            dataout.println(node.getHeight() + "\t" + isMonophyletic);
         }
         if (out != null) {
             tree.close(out);

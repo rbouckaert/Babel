@@ -257,4 +257,9 @@
               class="babel.tools.SpeciesTreeDistanceLogger"
               args=""
             />
+    <packageapp
+          description="MRCAFinder Finds MRCA of set of nodes in a tree log."
+              class="babel.tools.MRCAFinder"
+              args=""
+            />
 </package>

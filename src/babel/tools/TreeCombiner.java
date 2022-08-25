@@ -18,7 +18,7 @@ abstract public class TreeCombiner extends Runnable {
 			new OutFile("[[none]]"));
 
     boolean [] nodesTraversed;
-    int nseen;
+    protected int nseen;
 	
     protected Node getCommonAncestor(Node n1, Node n2) {
         // assert n1.getTree() == n2.getTree();
@@ -93,6 +93,7 @@ abstract public class TreeCombiner extends Runnable {
 		}
 
         nodesTraversed = new boolean[tree.getNodeCount()];
+        nseen = 0;
         Node cur = leafs.get(0);
 
         for (int k = 1; k < leafs.size(); ++k) {
