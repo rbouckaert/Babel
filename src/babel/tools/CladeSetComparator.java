@@ -271,12 +271,13 @@ public class CladeSetComparator extends Runnable {
 				// System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 				
 				maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
-				if (support2 + support1 > 0.01) {
+				if (support1 > 0.01 && support2 > 0.01) {
 					meanDiff += Math.abs(cladeMap.get(clade) - support2);
 					meanHeightsDifference += Math.abs(hi1-hi2)/(h1+h2)/2.0;
 					meanDiffCount++;
 					if (lo1 > hi2 || lo2 > hi1) {
 						inconsistentHeightIntervals++;
+						System.err.println("Inconsistent clade height found for clade"  + clade.replaceAll(" ", ""));
 					}
 				}
 				if (support2 >= clade2ThresholdSupport || support1 >= clade1ThresholdSupport) {
