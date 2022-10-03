@@ -82,6 +82,12 @@ public class TreeESS extends Runnable {
 				// first tree after burnin as focal tree
 				setFocalTreeFromTreeSet();
 			}
+		} else if (focalTreeInput.get() != null && !focalTreeInput.get().getName().equals("[[none]]")) {
+			// get external focal tree, if any
+			processFocalTree();
+		} else {
+			// first tree after burnin as focal tree
+			setFocalTreeFromTreeSet();
 		}
 		
 		// process tree files
