@@ -262,4 +262,9 @@
               class="babel.tools.MRCAFinder"
               args=""
             />
+    <packageapp
+          description="Add `cartoon` annotations to summary tree, so FigTree shows them as triangle"
+              class="babel.tools.TreeCartooniser"
+              args=""
+            />
 </package>
