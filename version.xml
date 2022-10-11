@@ -267,4 +267,9 @@
               class="babel.tools.TreeCartooniser"
               args=""
             />
+    <packageapp
+          description="Produce statistics on taxa that form the sister clade of a given clade"
+              class="babel.tools.SisterCladeCounter"
+              args=""
+            />
 </package>

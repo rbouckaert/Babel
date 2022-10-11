@@ -19,6 +19,10 @@ abstract public class TreeCombiner extends Runnable {
 
     boolean [] nodesTraversed;
     protected int nseen;
+    
+	@Override
+	public void initAndValidate() {
+	}
 	
     protected Node getCommonAncestor(Node n1, Node n2) {
         // assert n1.getTree() == n2.getTree();
