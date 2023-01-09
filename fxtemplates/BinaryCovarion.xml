@@ -1,5 +1,5 @@
 <beast version='2.0'
-       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions'
+       namespace='beast.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.math.distributions:beastfx.app.inputeditor:beastfx.app.beauti'
 	templateinfo='Binary covarion model for binary data&lt;br>useful for linguistic analysis'>
 
 <map name='connect'>beastfx.app.inputeditor.BeautiConnector</map>
@@ -198,7 +198,7 @@
             </plugin>
 
             <!--plugin spec='beast.base.evolution.tree.coalescent.RandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)' initial='@Tree.t:tree'-->
-            <plugin spec='beast.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' initial='@Tree.t:tree'>
+            <plugin spec='beastlabs.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' initial='@Tree.t:tree'>
                 <taxa spec='Alignment' idref='$(n)'/>
                 <!--
                 <populationModel id='ConstantPopulation0.t:tree' spec='ConstantPopulation'>
@@ -215,7 +215,7 @@
             <plugin id='TreeHeight.t:tree' spec='beast.base.evolution.tree.TreeStatLogger' tree='@Tree.t:tree'/>
 
             <logger id='treelog.t:tree' spec='beast.base.inference.Logger' logEvery="1000" fileName="$(n).trees" mode='tree'>
-	            <log id='TreeWithMetaDataLogger.t:tree' spec='beast.base.evolution.tree.TreeWithMetaDataLogger' tree='@Tree.t:tree'>
+	            <log id='TreeWithMetaDataLogger.t:tree' spec='beast.base.evolution.TreeWithMetaDataLogger' tree='@Tree.t:tree'>
 	            </log>
             </logger>
 
@@ -338,9 +338,9 @@
 <!-- Tree initialisation -->
 <!-- Random tree -->
 
-        <subtemplate id='RandomTree' class='beast.evolution.tree.SimpleRandomTree' mainid='RandomTree.t:tree'>
+        <subtemplate id='RandomTree' class='beastlabs.evolution.tree.SimpleRandomTree' mainid='RandomTree.t:tree'>
 <![CDATA[
-            <tree spec='beast.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)'>
+            <tree spec='beastlabs.evolution.tree.SimpleRandomTree' id='RandomTree.t:tree' estimate='false' trait='@datetrait.$(n)'>
                 <taxa spec='Alignment' idref='data'/>
                 <!--
                 <populationModel id='ConstantPopulation0.t:tree' spec='ConstantPopulation'>
@@ -399,7 +399,7 @@
         <logger id='screenlog' logEvery="1000">
 	        <!--model idref='posterior'/-->
             <log idref="posterior"/>
-      	    <ESS spec='ESS' name='log' arg="@posterior"/>
+      	    <ESS spec='beast.base.inference.util.ESS' name='log' arg="@posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
         </logger>
