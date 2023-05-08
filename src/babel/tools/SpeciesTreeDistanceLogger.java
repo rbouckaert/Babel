@@ -57,7 +57,9 @@ public class SpeciesTreeDistanceLogger extends Runnable {
 			for (String str : BeautiDoc.load(mapInput.get()).split("\n")) {
 				String [] strs = str.split("\t");
 				if (strs.length >= 2) {
-					map.put(strs[0], strs[1]);
+					map.put(strs[0].trim(), strs[1].trim());
+				} else {
+					Log.warning("Ignoring this line from " + mapInput.get().getName() + " :" + str);
 				}
 			}
 		}
@@ -104,8 +106,12 @@ public class SpeciesTreeDistanceLogger extends Runnable {
 	private void normaliseLabels(Tree geneTree) {
 		Node [] nodes = geneTree.getNodesAsArray();
 		for (int i = 0; i < nodes.length/2+1; i++) {
-			if (nodes[i].getID() != null && map.containsKey(nodes[i].getID())) {
-				nodes[i].setID(map.get(nodes[i].getID()));
+			if (nodes[i].getID() != null) {
+				if (map.containsKey(nodes[i].getID())) {
+					nodes[i].setID(map.get(nodes[i].getID()));
+				} else {
+					throw new IllegalArgumentException("Could not find " + nodes[i].getID() + " in map");
+				}
 			}
 		}
 	}
