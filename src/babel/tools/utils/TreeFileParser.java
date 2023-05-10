@@ -235,7 +235,7 @@ public class TreeFileParser {
 						sLabel = sLabel.substring(1, sLabel.length() - 1);
 					}
 	        	}
-				int iLabel = new Integer(sStr.substring(0, k)).intValue();
+				int iLabel = Integer.parseInt(sStr.substring(0, k));
 				//String sLabel = sStrs[1];
 				if (m_sLabels.size() < iLabel) {
 					//m_sLabels.add("__dummy__");

@@ -18,6 +18,7 @@ import beastlabs.evolution.tree.RNNIMetric;
 import beastlabs.evolution.tree.RobinsonsFouldMetric;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeMetric;
+import beast.base.evolution.tree.TreeParser;
 import beast.base.parser.NexusParser;
 
 @Description("Create trace log of tree distances between species tree and its gene trees. "
@@ -88,10 +89,16 @@ public class SpeciesTreeDistanceLogger extends Runnable {
 		geneTreeParser.parseFile(f);
 		List<Tree> geneTrees = geneTreeParser.trees;
 
+		Set<String> missingTaxa = getMissingTaxa(geneTrees.get(0));
+		
 		for (int k = 0; k < speciesTrees.size() && k < geneTrees.size(); k++) {
 			Tree speciesTree = speciesTrees.get(k);
+			if (missingTaxa.size() > 0) {
+				speciesTree = filterOutTaxa(speciesTree, missingTaxa);
+			}
 			Tree geneTree = geneTrees.get(k);
 			normaliseLabels(geneTree);
+			
 			TreeMetric metric =
 					useRNNI ?
 					new RNNIMetric(speciesTree.getTaxaNames()):
@@ -102,7 +109,63 @@ public class SpeciesTreeDistanceLogger extends Runnable {
 		
 		return distances;
 	}
+	
+	private Tree filterOutTaxa(Tree speciesTree, Set<String> taxaToExclude) {
+		Tree copy = speciesTree.copy();
+		Node root = filter(copy.getRoot(), taxaToExclude);
+		String newick = root.toNewick();
+		TreeParser parser = new TreeParser(newick);
+		return parser;
+	}
+	
+	private Node filter(Node node, Set<String> taxaToExclude) {
+		if (node.isLeaf()) {
+			if (taxaToExclude.contains(node.getID())) {
+				return null;
+			} else {
+				return node;
+			}
+		} else {
+			Node left_ = node.getLeft(); 
+			Node right_ = node.getRight(); 
+			left_ = filter(left_, taxaToExclude);
+			right_ = filter(right_, taxaToExclude);
+			if (left_ == null && right_ == null) {
+				return null;
+			}
+			if (left_ == null) {
+				return right_;
+			}
+			if (right_ == null) {
+				return left_;
+			}
+			node.removeAllChildren(false);
+			node.addChild(left_);
+			node.addChild(right_);
+			return node;
+		}
+	}
 
+
+	private Set<String> getMissingTaxa(Tree geneTree) {
+		Node [] nodes = geneTree.getNodesAsArray();
+		Set<String> taxaSeen = new HashSet<>();
+		for (int i = 0; i < nodes.length/2+1; i++) {
+			if (nodes[i].getID() != null) {
+				if (map.containsKey(nodes[i].getID())) {
+					taxaSeen.add(map.get(nodes[i].getID()));
+				} else {
+					throw new IllegalArgumentException("Could not find " + nodes[i].getID() + " in map");
+				}
+			}
+		}
+		
+		Set<String> taxaMissed = new HashSet<>();
+		taxaMissed.addAll(map.values()); 
+		taxaMissed.removeAll(taxaSeen);
+		return taxaMissed;
+	}
+	
 	private void normaliseLabels(Tree geneTree) {
 		Node [] nodes = geneTree.getNodesAsArray();
 		for (int i = 0; i < nodes.length/2+1; i++) {

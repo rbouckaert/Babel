@@ -272,4 +272,9 @@
               class="babel.tools.SisterCladeCounter"
               args=""
             />
+    <packageapp
+          description="Estimate migration speed for a tree posterior sample of phylogeographic analysis (as produced by BEAST)"
+              class="babel.tools.SpeedCalculator"
+              args=""
+            />
 </package>

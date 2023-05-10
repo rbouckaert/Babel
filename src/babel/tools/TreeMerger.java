@@ -20,7 +20,7 @@ import beast.base.evolution.tree.Tree;
 @Description("Merge sub-trees into skeleton tree")
 public class TreeMerger extends TreeCombiner {
 	final public Input<File> cgfFileInput = new Input<>("cfg", "tab separated configuration file containing info for one tree set per line. "
-			+ "Firts column is name of tree file, second column a comma separated list of taxa to be transfered to source tree.");
+			+ "First column is name of tree file, second column a comma separated list of taxa to be transfered to source tree.");
 
 	int subTreeCount;
 	Set<String> [] subTaxonSets;
@@ -68,6 +68,7 @@ public class TreeMerger extends TreeCombiner {
 							replaced = true;
 						}
 					}
+					System.err.println("#leafs merging " + subTreeSet[i] + ":" + tree.getRoot().getAllLeafNodes().size());
 					if (!replaced) {
 						throw new RuntimeException("Something went wrong replacing node");
 					}
@@ -118,7 +119,7 @@ public class TreeMerger extends TreeCombiner {
 		int i = 0;
 		for (String str : strs) {
 			if (!str.matches("^\\s*$")) {
-				String [] strs2 = str.trim().split("\t");
+				String [] strs2 = str.trim().split("\t+");
 				subTreeSet[i] = new TreeAnnotator().new MemoryFriendlyTreeSet(strs2[0], 0);
 				subTreeSet[i].reset();
 				subTaxonSets[i] = new HashSet<>();
