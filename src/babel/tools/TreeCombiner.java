@@ -90,13 +90,13 @@ abstract public class TreeCombiner extends Runnable {
 
 	protected Node getMRCA(Tree tree, Set<String> taxa) {
 		List<Node> leafs = new ArrayList<>();
-		for (Node node : tree.getExternalNodes()) {
+		for (Node node : tree.getRoot().getAllLeafNodes()) {
 			if (taxa.contains(node.getID())) {
 				leafs.add(node);
 			}
 		}
 
-        nodesTraversed = new boolean[tree.getNodeCount()];
+        nodesTraversed = new boolean[tree.getRoot().getAllChildNodesAndSelf().size()];
         nseen = 0;
         Node cur = leafs.get(0);
 

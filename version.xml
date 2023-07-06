@@ -39,6 +39,7 @@
         <provider classname="babel.tools.centriod.HalfWayMeanTree"/>
         <provider classname="babel.tools.ChangesThroughTimeCounter"/>
         <provider classname="babel.tools.CharsetlabelsToCharsets"/>
+        <provider classname="babel.tools.CladeHeights"/>
         <provider classname="babel.tools.CladeMarker"/>
         <provider classname="babel.tools.CladeSetComparator"/>
         <provider classname="babel.tools.CladeSetCounter"/>
@@ -275,6 +276,11 @@
     <packageapp
           description="Estimate migration speed for a tree posterior sample of phylogeographic analysis (as produced by BEAST)"
               class="babel.tools.SpeedCalculator"
+              args=""
+            />
+    <packageapp
+          description="Extract clade heights from tree posterior sample (as produced by BEAST)"
+              class="babel.tools.CladeHeights"
               args=""
             />
 </package>
