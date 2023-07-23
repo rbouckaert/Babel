@@ -256,6 +256,24 @@
                 <log id="AncestralStateLogger.$(n)" spec="beastlabs.evolution.likelihood.AncestralStateLogger" logParent="false" data="@orgdata.$(n)" branchRateModel="@StrictClock.c:clock" tree="@Tree.t:tree" siteModel="@SiteModel.s:$(n)">
                         <taxonset idref="TaxonSet.$(n)"/>
                 </log>
+                
+			<operator id="AVMNOperator.$(n)" spec="beast.base.evolution.operator.kernel.AdaptableVarianceMultivariateNormalOperator" weight="0.1" 
+                coefficient="1.0"
+                scaleFactor="1"
+                beta="0.05"
+                initial="800"
+                burnin="400"
+                every="1" allowNonsense="true">
+                <transformations id="AVMNSumTransform.$(n)" spec="beast.base.inference.operator.kernel.Transform$LogConstrainedSumTransform" sum="1.0">
+                        <!-- frequencies -->
+                </transformations>
+                <transformations id="AVMNLogTransform.$(n)" spec="beast.base.inference.operator.kernel.Transform$LogTransform">
+                        <!-- site and substitution model parameters -->
+                </transformations>
+                <transformations id="AVMNNoTransform.$(n)" spec="beast.base.inference.operator.kernel.Transform$NoTransform">
+                        <!-- tree -->
+                </transformations>
+            </operator>
         ]]>
             <connect srcID='treeLikelihood.$(n)'            targetID='likelihood' inputName='distribution' if="isInitializing"/>
             <connect srcID='YuleModel.t:tree'               targetID='prior' inputName='distribution' if="isInitializing"/>
