@@ -1,12 +1,9 @@
 package babel.tools;
 
-import java.io.IOException;
+
 import java.io.PrintStream;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
+import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.XMLFile;
@@ -17,9 +14,6 @@ import beast.base.inference.Runnable;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.alignment.Sequence;
-import beast.base.parser.XMLParser;
-import beast.base.parser.XMLParserException;
 
 @Description("Convert BEAST XML file into fasta alignemnt file")
 public class XML2Fasta extends Runnable {
@@ -27,6 +21,8 @@ public class XML2Fasta extends Runnable {
 			Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
+	final public Input<Boolean> ignoreEmptySequencesInput = new Input<>("ignoreEmpty", "ignore sequences that have no data",
+			true);
 
 	@Override
 	public void initAndValidate() {
@@ -34,41 +30,54 @@ public class XML2Fasta extends Runnable {
 
 	@Override
 	public void run() throws Exception {
-		Alignment alignment = loadFile(xmlInput.get());
-
 		// open file for writing
 		PrintStream out = System.out;
-		if (outputInput.get() != null) {
+		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
 			Log.warning("Writing to file " + outputInput.get().getPath());
 			out = new PrintStream(outputInput.get());
 		}
 
-		for (Sequence seq : alignment.sequenceInput.get()) {
-			String taxon = seq.taxonInput.get();
-			out.println(">" + taxon);
-			out.println(seq.dataInput.get());
+		String xml = BeautiDoc.load(xmlInput.get());
+		String [] strs = xml.split("<");
+		for (String str : strs) {
+			if (str.startsWith("sequence")) {
+				int i = str.indexOf("taxon=");
+				if (i >= 0) {
+					char c = str.charAt(i + 6);
+					int j = str.indexOf(c, i + 8);
+					if (j < 0) {
+						throw new IllegalArgumentException("ill formed XML sequence: could not find matching " +c + "-character for taxon");
+					}
+					String taxon = str.substring(i+7, j);
+					
+					i = str.indexOf("value=");
+					if (i < 0) {
+						Log.warning("ill formed XML sequence: sequence without value attribute found");
+					} else {
+						c = str.charAt(i + 6);
+						j = str.indexOf(c, i + 8);
+						if (j < 0) {
+							throw new IllegalArgumentException("ill formed XML sequence: could not find matching " +c + "-character for value");
+						}
+						String data = str.substring(i+7, j);
+						boolean hasData = data.length() > 1 || (data.charAt(0)!='?' && data.charAt(0)!='-');
+						if (hasData || !ignoreEmptySequencesInput.get()) {
+							out.println(">" + taxon);
+							out.println(data);
+						}
+					}
+				}
+			}
 		}
+
+		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
+			out.close();
+		}
+
 		Log.err.println("Done");	
 	}
 
-	private Alignment loadFile(XMLFile xmlFile) throws SAXException, IOException, ParserConfigurationException, XMLParserException {
-		XMLParser parser = new XMLParser();
-		Runnable runnable = parser.parseFile(xmlFile);		
-		return findAlignment(runnable);
-	}
 
-	private Alignment findAlignment(BEASTInterface bi) {
-		if (bi instanceof Alignment) {
-			return (Alignment) bi;
-		}
-		for (BEASTInterface o : bi.listActiveBEASTObjects()) {
-			Alignment a = findAlignment(o);
-			if (a != null) {
-				return a;
-			}
-		}
-		return null;
-	}
 
 	public static void main(String[] args) throws Exception {
 		new Application(new XML2Fasta(), "XML to fasta converter", args);
