@@ -7,13 +7,11 @@ import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.XMLFile;
-import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Runnable;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
-import beast.base.evolution.alignment.Alignment;
 
 @Description("Convert BEAST XML file into fasta alignemnt file")
 public class XML2Fasta extends Runnable {

@@ -1,4 +1,4 @@
-<package name='Babel' version='0.4.1'>
+<package name='Babel' version='0.4.2'>
     <depends on='BEAST.base' atleast='2.7.0'/>
     <depends on='BEAST.app' atleast='2.7.0'/>
 	<depends on='BEASTLabs' atleast='2.0.0'/>
@@ -69,6 +69,7 @@
         <provider classname="babel.tools.MRCAFinder"/>
         <provider classname="babel.tools.Newick2Nexus"/>
         <provider classname="babel.tools.NextStream2Newick"/>
+        <provider classname="babel.tools.Nexus2AlignmentInJson"/>
         <provider classname="babel.tools.Nexus2Fasta"/>
         <provider classname="babel.tools.Nexus2Json"/>
         <provider classname="babel.tools.Nexus2Newick"/>
@@ -149,6 +150,10 @@
             />
     <packageapp description="Convert NEXUS tree file"
               class="babel.tools.Nexus2Newick"
+              args=""
+            />
+    <packageapp description="Convert NEXUS alignment file into json file with alignemnt that can be used in BEAST with the -DF option"
+              class="babel.tools.Nexus2AlignmentInJson"
               args=""
             />
     <packageapp description="Convert newick tree file"

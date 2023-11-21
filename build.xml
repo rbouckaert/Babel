@@ -1,5 +1,5 @@
 <!-- Build Babel. It is also used by Hudson Babel project. JUnit test is available for this build. -->
-<project basedir="." default="addon" name="BUILD_Babel">
+<project basedir="." default="package" name="BUILD_Babel">
 	<description>
 	    Build Babel. 
             Also used by Hudson Babel project. 
@@ -20,7 +20,7 @@
 	<property name="beast2classpath" location="${beast2path}/build" />
 	<property name="beastappclasspath" location="../BeastFX/build" />
     <property name="BEASTLabsclasspath" location="../BEASTLabs/build" />
-	<property name="Add_on_dir" value="${release_dir}/add-on" />
+	<property name="Package_dir" value="${release_dir}/add-on" />
 
     <import file="${beast2path}/build.xml" />
 
@@ -53,6 +53,7 @@
 
         <!-- Read package name and version from xml file -->
             <xmlproperty file="${Babeldir}/version.xml" prefix="fromVersionFile" />
+        <property name="projName" value="${fromVersionFile.package(name)}" />
         <property name="Babelversion" value="${fromVersionFile.package(version)}" />
 	</target>
 
@@ -147,7 +148,7 @@
 				<include name="**/*.png" />
 			</fileset>
         </jar>
-		<jar jarfile="${distBabel}/Babel.addon.jar">
+		<jar jarfile="${distBabel}/Babel.package.jar">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 			</manifest>
@@ -234,47 +235,72 @@
 	</target>
 
 
-	<target name="addon"
+	<target name="package"
 	        depends="build_jar_all_Babel_NoJUnitTest"
 	        description="release BEAST 2 add-on version of Babel">
 
-		<delete dir="${Add_on_dir}" />
+		<delete dir="${Package_dir}" />
 		<!-- Create the release directory -->
-		<mkdir dir="${Add_on_dir}" />
-		<mkdir dir="${Add_on_dir}/lib" />
-		<mkdir dir="${Add_on_dir}/examples" />
-		<mkdir dir="${Add_on_dir}/fxtemplates" />
+		<mkdir dir="${Package_dir}" />
+		<mkdir dir="${Package_dir}/lib" />
+		<mkdir dir="${Package_dir}/examples" />
+		<mkdir dir="${Package_dir}/fxtemplates" />
 
-		<copy todir="${Add_on_dir}">
+		<copy todir="${Package_dir}">
 			<fileset file="version.xml"/>
 		</copy>
-		<copy todir="${Add_on_dir}/examples">
+		<copy todir="${Package_dir}/examples">
 			<fileset dir="examples" />
 		</copy>
-		<copy todir="${Add_on_dir}/fxtemplates">
+		<copy todir="${Package_dir}/fxtemplates">
 			<fileset dir="fxtemplates" />
 		</copy>
-		<copy todir="${Add_on_dir}/lib">
-			<fileset dir="${distBabel}" includes="Babel.addon.jar" />
+		<copy todir="${Package_dir}/lib">
+			<fileset dir="${distBabel}" includes="Babel.package.jar" />
 		</copy>
-		<copy todir="${Add_on_dir}/lib">
+		<copy todir="${Package_dir}/lib">
 			<fileset dir="${libBabel}" includes="itextpdf-5.5.9.jar" />
 		</copy>
-		<copy todir="${Add_on_dir}">
+		<copy todir="${Package_dir}">
 			<fileset dir="${distBabel}" includes="Babel.src.jar" />
 		</copy>
-		<copy todir="${Add_on_dir}/fxtemplates">
+		<copy todir="${Package_dir}/fxtemplates">
 			<fileset dir="fxtemplates">
 				<include name="*.xml"/>
 			</fileset>
 		</copy>
 
-		<jar jarfile="${distBabel}/Babel.addon.v${Babelversion}.zip">
-			<fileset dir="${Add_on_dir}">
+		<jar jarfile="${distBabel}/Babel.package.v${Babelversion}.zip">
+			<fileset dir="${Package_dir}">
 				<include name="**/*" />
 			</fileset>
         </jar>
 		<echo message="Add-on version v${Babelversion} release is finished." />
 	</target>
+
+
+	<condition property="isWindows"><os family="windows" /></condition>
+	<condition property="isLinux"><and><os family="unix"/><not><os family="mac"/></not></and></condition>
+	<condition property="isMac"><os family="mac" /></condition>
+
+	<target name="installLinux" depends="package" if="isLinux">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${distBabel}/Babel.package.v${Babelversion}.zip" dest="${user.home}/.beast/2.7/${projName}"/>
+	</target>
+
+	<target name="installMac" depends="package" if="isMac">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${distBabel}/Babel.package.v${Babelversion}.zip" dest="${user.home}/Library/Application Support/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="installWindows" depends="package" if="isWindows">
+	        <mkdir dir="${user.home}/BEAST/2.7/${projName}"/>
+			<unzip src="${distBabel}/Babel.package.v${Babelversion}.zip" dest="${user.home}/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="install" depends="installWindows,installMac,installLinux">
+	</target>
+
+
 
 </project>
