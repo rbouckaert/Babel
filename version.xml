@@ -197,6 +197,10 @@
               class="babel.tools.dplace.TreeGrafter"
               args=""
             />
+    <packageapp description="TaxonReplacer"
+              class="babel.tools.dplace.TaxonReplacer"
+              args=""
+            />
     <packageapp description="Relabels taxa in a tree file. Usfeful for instance when labels are iso codes and language names are required for visualisation"
               class="babel.tools.TreeRelabeller"
               args=""

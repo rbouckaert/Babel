@@ -247,7 +247,7 @@ public class ISOTreeParser extends BEASTObject {
 		
 	}
 
-	private void toRandomBinary(Node n) {
+	public void toRandomBinary(Node n) {
 		if (n.isLeaf()) {
 			return;
 		} else {
