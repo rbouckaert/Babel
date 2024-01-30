@@ -78,10 +78,25 @@ public class TaxonReplacer extends TreeCombiner {
 					ISOTreeParser p = new ISOTreeParser();
 					Node root = p.parse(replacementSets[i]);
 					p.toRandomBinary(root);
+					
+					// make sure parent is old enough to fit tip dates
+					Node node = parent;
+					double limit = oldestTaxon[i];
+					while (node.getHeight() <  limit) {
+						node.setHeight(limit + EPSILON);
+						limit = node.getHeight();
+						node = node.getParent();
+					}
+					
+					// choose root height in between parent and oldest tip
 					root.setHeight(oldestTaxon[i] + (parent.getHeight() - oldestTaxon[i]) * Randomizer.nextDouble());
+					// set internal node heights below subtree root
 					traverse(root, root.getHeight());
 					parent.removeChild(src);
-					root.setParent(parent);
+					if (parent.getChildCount() != 1) {
+						Log.warning("deleting child failed");
+					}
+					parent.addChild(root);
 				} else {
 					// simple replacement of taxon name and height
 					String replacement = replacementSets[i];
@@ -101,15 +116,15 @@ public class TaxonReplacer extends TreeCombiner {
 		out.close();
 	}
 
-	private double traverse(Node node, double max) {
+	private double traverse(Node node, double upper) {
 		if (node.isLeaf()) {
 			node.setHeight(replacementTaxonHeight.get(node.getID()));
 			return node.getHeight();
 		} else {
-			double min = traverse(node.getLeft(), max);
-			min = Math.min(traverse(node.getRight(), max), min);
+			double lower = traverse(node.getLeft(), upper);
+			lower = Math.max(traverse(node.getRight(), upper), lower);
 			
-			double h = min + Randomizer.nextDouble() * (max - min);
+			double h = lower + Randomizer.nextDouble() * (upper - lower);
 			node.setHeight(h);
 			return h;
 		}
