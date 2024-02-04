@@ -17,7 +17,7 @@ abstract public class TreeCombiner extends Runnable {
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 
-    boolean [] nodesTraversed;
+    protected boolean [] nodesTraversed;
     protected int nseen;
     
 	@Override

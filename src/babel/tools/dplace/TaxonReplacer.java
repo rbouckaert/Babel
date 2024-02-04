@@ -29,11 +29,15 @@ public class TaxonReplacer extends TreeCombiner {
 	
 	final public Input<File> timeFileInput = new Input<>("times", "file containing age of replacement taxa. "
 			+ "Format is one item per line containing <replacement taxon name><tab><age>", new File("[[none]]"));
+
+	final public Input<Double> maxtTimeInput = new Input<>("maxtTime", "maximum time before oldest replacement taxon that splits can occur among replacement taxa.", Double.POSITIVE_INFINITY);
+
 	
 	String [] taxonName;
 	double [] oldestTaxon;
 	String [] replacementSets;
 	Map<String,Double> replacementTaxonHeight;
+	double maxtTime;
 
 	// minimum height difference between replacement nodes
 	final static double EPSILON = 1e-4;
@@ -44,6 +48,7 @@ public class TaxonReplacer extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
+		maxtTime = maxtTimeInput.get();
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
@@ -89,7 +94,8 @@ public class TaxonReplacer extends TreeCombiner {
 					}
 					
 					// choose root height in between parent and oldest tip
-					root.setHeight(oldestTaxon[i] + (parent.getHeight() - oldestTaxon[i]) * Randomizer.nextDouble());
+					double maxHeight = Math.min(parent.getHeight(), maxtTime + oldestTaxon[i]);
+					root.setHeight(oldestTaxon[i] + (maxHeight - oldestTaxon[i]) * Randomizer.nextDouble());
 					// set internal node heights below subtree root
 					traverse(root, root.getHeight());
 					parent.removeChild(src);
@@ -139,23 +145,25 @@ public class TaxonReplacer extends TreeCombiner {
 		Set<String> replacementTaxa = new HashSet<>();
 		int i = 0;
 		for (String str2 : strs) {
-			String [] strs2 = str2.split("\t");
-			String taxon = strs2[0].trim();
-			if (taxa.contains(taxon)) {
-				taxonName[i] = taxon;
-				replacementSets[i] = strs2[1].trim();
-				i++;
-			} else {
-				Log.warning("taxon found in " + cfgFileInput.get().getName() + "  that is not in tree");
-			}
-			// sanity check for duplicates replacement taxa
-			String [] strs3 = strs2[1].trim().split("[\\(\\),]");
-			for (String s : strs3) {
-				if (s.trim().length() > 0) {
-					if (replacementTaxa.contains(s)) {
-						Log.warning("Duplicate replacement taxon " + s + " found");
+			if (!str2.startsWith("#")) {
+				String [] strs2 = str2.split("\t");
+				String taxon = strs2[0].trim();
+				if (taxa.contains(taxon)) {
+					taxonName[i] = taxon;
+					replacementSets[i] = strs2[1].trim();
+					i++;
+				} else {
+					Log.warning("taxon found in " + cfgFileInput.get().getName() + "  that is not in tree");
+				}
+				// sanity check for duplicates replacement taxa
+				String [] strs3 = strs2[1].trim().split("[\\(\\),]");
+				for (String s : strs3) {
+					if (s.trim().length() > 0) {
+						if (replacementTaxa.contains(s)) {
+							Log.warning("Duplicate replacement taxon " + s + " found");
+						}
+						replacementTaxa.add(s);
 					}
-					replacementTaxa.add(s);
 				}
 			}
 		}		
@@ -165,12 +173,14 @@ public class TaxonReplacer extends TreeCombiner {
 		str = BeautiDoc.load(timeFileInput.get());
 		strs = str.split("\n");
 		for (String str2 : strs) {
-			String [] strs2 = str2.split("\t");
-			String replacement = strs2[0].trim();
-			if (replacementTaxa.contains(replacement)) {
-				replacementTaxonHeight.put(replacement, Double.parseDouble(strs2[1].trim()));
-			} else {
-				Log.warning("mild warning: time for taxon " + replacement + " found that is not a replacement taxon and will not be used");
+			if (!str2.startsWith("#")) {
+				String [] strs2 = str2.split("\t");
+				String replacement = strs2[0].trim();
+				if (replacementTaxa.contains(replacement)) {
+					replacementTaxonHeight.put(replacement, Double.parseDouble(strs2[1].trim()));
+				} else {
+					Log.warning("mild warning: time for taxon " + replacement + " found that is not a replacement taxon and will not be used");
+				}
 			}
 		}
 		

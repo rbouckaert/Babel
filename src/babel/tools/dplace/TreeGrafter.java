@@ -28,12 +28,15 @@ public class TreeGrafter extends TreeCombiner {
 	final public Input<File> cfgFileInput = new Input<>("cfg", "tab separated configuration file containing three columns: "
 			+ "column 1: name of taxon\n"
 			+ "column 2: height (age) of taxon\n"
-			+ "column 3: a comma separated list of taxa determining MRCA to graft above in source tree (if no constraints have been specified).");
-	final public Input<TreeFile> constraintsFileInput = new Input<>("constraints","newick tree file with constraints on where to insert leaf nodes");
+			+ "column 3: a comma separated list of taxa determining MRCA to graft above in source tree (if no constraints have been specified)."
+			+ "If lists of taxa are separated by a bar \"|\" instead of using the MRCA of all taxa, a taxon is randomly selected above the "
+			+ "MRCA of the individual sets separated by bars, and below the MRCA of all of these sets.");
+	final public Input<TreeFile> constraintsFileInput = new Input<>("constraints", "newick tree file with constraints on where to insert leaf nodes");
 	
 	String [] taxonName;
 	double [] taxonHeight;
 	Set<String> [] subTaxonSets;
+	Set<String> [][] subTaxonSets2;
 	
 	// for debugging:
 	int found = 0;
@@ -67,7 +70,12 @@ public class TreeGrafter extends TreeCombiner {
 			tree = srcTreeSet.next();
 			System.err.println("Processing tree " + (k++));
 			for (int i = 0; i < n; i++) {
-				Node src = getMRCA(tree, subTaxonSets[i]);
+				Node src = null;
+				if (subTaxonSets2[i] == null) {
+					src = getMRCA(tree, subTaxonSets[i]);
+				} else {
+					src = getRandomNodeAbove(tree, subTaxonSets2[i]);
+				}
 				Node parent = src.getParent();
 				double len = src.getLength();
 				// create intermediary node on branch
@@ -107,6 +115,34 @@ public class TreeGrafter extends TreeCombiner {
 		out.close();
 	}
 
+	private Node getRandomNodeAbove(Tree tree, Set<String>[] sets) {
+		// find MRCA of each individual set
+		List<Node> mrcas = new ArrayList<>();
+		for (Set<String> set : sets) {
+			mrcas.add(getMRCA(tree, set));
+		}
+		
+		// find MRCA of all sets, starting at MRCA of each individual set (i.e. excluding nodes below MRCAs)
+        nodesTraversed = new boolean[tree.getRoot().getAllChildNodesAndSelf().size()];
+        nseen = 0;
+        Node cur = mrcas.get(0);
+        for (int k = 1; k < mrcas.size(); ++k) {
+            cur = getCommonAncestor(cur, mrcas.get(k));
+        }
+        
+        // collect nodes from MRCAs of each individual set to MRCA of all sets
+        List<Node> candidates = new ArrayList<>();
+        for (int i = 0; i < nodesTraversed.length; i++) {
+        	if (nodesTraversed[i] && i != cur.getNr()) {
+        		candidates.add(tree.getNode(i));
+        	}
+        }
+        
+        int k = Randomizer.nextInt(candidates.size());
+        
+        return candidates.get(k);
+	}
+
 	private void processCfgFile(Set<String> taxa) throws IOException {
 		boolean hasConstraints = constraintsFileInput.get() != null && !constraintsFileInput.get().getName().equals("[[none]]");
 		
@@ -114,26 +150,39 @@ public class TreeGrafter extends TreeCombiner {
 		String [] strs = cfg.split("\n");
 		int n = 0;
 		for (String str : strs) {
-			if (!str.matches("^\\s*$")) {
+			if (!(str.startsWith("#") || str.matches("^\\s*$"))) {
 				n++;
 			}
 		}
 		subTaxonSets = new Set[n];
+		subTaxonSets2 = new Set[n][];
 		taxonName = new String[n];
 		taxonHeight = new double[n];
 		int i = 0;
 		for (String str : strs) {
-			if (!str.matches("^\\s*$")) {
+			if (!(str.startsWith("#") || str.matches("^\\s*$"))) {
 				String [] strs2 = str.split("\t");
 				taxonName[i] = strs2[0];
 				taxonHeight[i] = strs2.length > 1 ? Double.parseDouble(strs2[1]) : 0.0;
 				subTaxonSets[i] = new HashSet<>();
-				if (!hasConstraints) {
-					for (String taxon : strs2[2].split(",")) {
-						subTaxonSets[i].add(taxon);					
+				if (!strs2[2].contains("|")) {
+					if (!hasConstraints) {
+						for (String taxon : strs2[2].split(",")) {
+							subTaxonSets[i].add(taxon);					
+						}
+					} else {
+						taxa.add(taxonName[i]);
 					}
 				} else {
-					taxa.add(taxonName[i]);
+					String [] strs3 = strs2[2].split("\\|");
+					subTaxonSets2[i] = new Set[strs3.length];
+					for (int j = 0; j < strs3.length; j++) {
+						subTaxonSets2[i][j] = new HashSet<>();
+						for (String taxon : strs3[j].split(",")) {
+							subTaxonSets2[i][j].add(taxon);	
+							subTaxonSets[i].add(taxon);
+						}
+					}
 				}
 				i++;
 			}
