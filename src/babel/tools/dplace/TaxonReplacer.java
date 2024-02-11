@@ -30,14 +30,14 @@ public class TaxonReplacer extends TreeCombiner {
 	final public Input<File> timeFileInput = new Input<>("times", "file containing age of replacement taxa. "
 			+ "Format is one item per line containing <replacement taxon name><tab><age>", new File("[[none]]"));
 
-	final public Input<Double> maxtTimeInput = new Input<>("maxtTime", "maximum time before oldest replacement taxon that splits can occur among replacement taxa.", Double.POSITIVE_INFINITY);
+	final public Input<Double> maxTimeInput = new Input<>("maxTime", "maximum time before oldest replacement taxon that splits can occur among replacement taxa.", Double.POSITIVE_INFINITY);
 
 	
 	String [] taxonName;
 	double [] oldestTaxon;
 	String [] replacementSets;
 	Map<String,Double> replacementTaxonHeight;
-	double maxtTime;
+	double maxTime;
 
 	// minimum height difference between replacement nodes
 	final static double EPSILON = 1e-4;
@@ -48,7 +48,7 @@ public class TaxonReplacer extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
-		maxtTime = maxtTimeInput.get();
+		maxTime = maxTimeInput.get();
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
@@ -94,7 +94,7 @@ public class TaxonReplacer extends TreeCombiner {
 					}
 					
 					// choose root height in between parent and oldest tip
-					double maxHeight = Math.min(parent.getHeight(), maxtTime + oldestTaxon[i]);
+					double maxHeight = Math.min(parent.getHeight(), maxTime + oldestTaxon[i]);
 					root.setHeight(oldestTaxon[i] + (maxHeight - oldestTaxon[i]) * Randomizer.nextDouble());
 					// set internal node heights below subtree root
 					traverse(root, root.getHeight());

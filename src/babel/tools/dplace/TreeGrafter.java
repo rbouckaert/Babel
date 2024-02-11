@@ -32,9 +32,12 @@ public class TreeGrafter extends TreeCombiner {
 			+ "If lists of taxa are separated by a bar \"|\" instead of using the MRCA of all taxa, a taxon is randomly selected above the "
 			+ "MRCA of the individual sets separated by bars, and below the MRCA of all of these sets.");
 	final public Input<TreeFile> constraintsFileInput = new Input<>("constraints", "newick tree file with constraints on where to insert leaf nodes");
+	final public Input<Double> minTimeInput = new Input<>("minTime", "minimum time before sample time of grafted taxon.", 0.0);
+
 	
 	String [] taxonName;
 	double [] taxonHeight;
+	double minTime;
 	Set<String> [] subTaxonSets;
 	Set<String> [][] subTaxonSets2;
 	
@@ -47,6 +50,7 @@ public class TreeGrafter extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
+		minTime = minTimeInput.get();
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
@@ -77,12 +81,15 @@ public class TreeGrafter extends TreeCombiner {
 					src = getRandomNodeAbove(tree, subTaxonSets2[i]);
 				}
 				Node parent = src.getParent();
-				double len = src.getLength();
+				double len = parent.getHeight() - minTime;
+				if (len < 0) {
+					len = 0;
+				}
 				// create intermediary node on branch
-				double newHeight = src.getHeight() + Randomizer.nextDouble() * len;
-				if (src.getHeight() + len > taxonHeight[i]) {
+				double newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
+				if (src.getHeight() + minTime + len > taxonHeight[i]) {
 					while (newHeight <= taxonHeight[i]) {
-						newHeight = src.getHeight() + Randomizer.nextDouble() * len;
+						newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
 					}
 				} else {
 					newHeight = src.getHeight() + len;
@@ -106,6 +113,12 @@ public class TreeGrafter extends TreeCombiner {
 				leaf.setHeight(taxonHeight[i]);
 				newNode.addChild(leaf);
 				leaf.setParent(newNode);
+				
+				// make sure no negative branches are introduced
+				while (newNode.getHeight() > newNode.getParent().getHeight()) {
+					newNode.getParent().setHeight(newNode.getHeight() + 1e-10);
+					newNode = newNode.getParent();
+				}
 			}
 			out.print(tree.getRoot().toNewick());
 			out.println(";");
