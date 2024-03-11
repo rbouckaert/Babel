@@ -24,8 +24,14 @@ public class DTARatesVisualiser extends MatrixVisualiserBase {
 			+ "Attempt is made to identify them automatically if not specified.");
 	final public Input<String> separatorInput = new Input<>("separator","label separator in trace entry names", "_");
 
+
 	String [] labels;
 	String separator;
+	
+	public DTARatesVisualiser() {
+		arrowThresholdInput.defaultValue = 0.0;
+		rateThresholdInput.defaultValue = 0.0;
+	}
 	
 	@Override
 	public double [][] getMatrix() {

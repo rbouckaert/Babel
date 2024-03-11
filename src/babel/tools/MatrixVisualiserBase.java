@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 
 import beast.base.core.Description;
+import beast.base.core.Input;
 import beast.base.inference.Runnable;
 import beast.base.core.Log;
 
@@ -17,6 +18,8 @@ import beast.base.core.Log;
 /** Do not use directly. Use MatrixVisualiser tool (or any other derived class), 
  * which has Application support **/
 public class MatrixVisualiserBase extends Runnable {
+	final public Input<Double> rateThresholdInput = new Input<>("rateThreshold", "Threshold used to display numerical values on arrows: values below the threshold will be suppressed", Double.NEGATIVE_INFINITY);
+	final public Input<Double> arrowThresholdInput = new Input<>("arrowThreshold", "Threshold used to display arrows: values below the threshold will suppress the arrow", Double.NEGATIVE_INFINITY);
 
 	String [] colour = new String[]{
 			"f7eb00",
@@ -89,10 +92,12 @@ public class MatrixVisualiserBase extends Runnable {
 	public void initAndValidate() {
 	}
 
+	double rateThreshold, arrowThreshold;
 	
 	@Override
 	public void run() throws Exception {
-
+		rateThreshold = rateThresholdInput.get();
+		arrowThreshold = arrowThresholdInput.get();
 		double[][] matrix = getMatrix();
 		String[] labels = getLabels(matrix);
 		String svg = getSVG(matrix, labels);
@@ -217,12 +222,14 @@ public class MatrixVisualiserBase extends Runnable {
 					if (width < 0.25) {
 //						width = 0.25;
 					}
-					svg += "  <path marker-end='url(#head"+i+")' stroke-width='" + width
+					if (matrix[i][j] >= arrowThreshold)
+						svg += "  <path marker-end='url(#head"+i+")' stroke-width='" + width
 							+ "' fill='none' "
 //							+ "stroke='url(#grad"+i+")' "
 							+ "stroke='#"+colour[i]+"' "
 							+ "d='M" + start + " Q" + middle + " " + end + "'></path>  \n";
-					svg +=  "<text x='"+(midx + 0.8*c * (y[i] - y[j]) - 10)+"' "
+					if (matrix[i][j] >= rateThreshold)
+						svg +=  "<text x='"+(midx + 0.8*c * (y[i] - y[j]) - 10)+"' "
 							+ "y='"+(midy - 0.8*c * (x[i] - x[j]))+"' font-family='Verdana' font-size='10' fill='#" + colour[i] + "'>" + formatter.format(matrix[i][j])  + "</text>\n";
 				}
 			}
