@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,7 +28,7 @@ import beast.base.util.Randomizer;
 public class TreeGrafter extends TreeCombiner {
 	final public Input<File> cfgFileInput = new Input<>("cfg", "tab separated configuration file containing three columns: "
 			+ "column 1: name of taxon\n"
-			+ "column 2: height (age) of taxon\n"
+			+ "column 2: height (age) of taxon -- a range for the insertion age can be specified by adding the lower and upper bound with commas in between (i.e. \"<tip age>,<lower parent age>,<upper parent age>\")\n"
 			+ "column 3: a comma separated list of taxa determining MRCA to graft above in source tree (if no constraints have been specified)."
 			+ "If lists of taxa are separated by a bar \"|\" instead of using the MRCA of all taxa, a taxon is randomly selected above the "
 			+ "MRCA of the individual sets separated by bars, and below the MRCA of all of these sets.");
@@ -37,6 +38,8 @@ public class TreeGrafter extends TreeCombiner {
 	
 	String [] taxonName;
 	double [] taxonHeight;
+	double [] taxonParentLowerHeight;
+	double [] taxonParentUpperHeight;
 	double minTime;
 	Set<String> [] subTaxonSets;
 	Set<String> [][] subTaxonSets2;
@@ -85,15 +88,32 @@ public class TreeGrafter extends TreeCombiner {
 				if (len < 0) {
 					len = 0;
 				}
+				 
 				// create intermediary node on branch
-				double newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
+ 				double heightLower = Math.max(src.getHeight() + minTime, taxonParentLowerHeight[i]);
+				double heightUpper = Math.min(src.getHeight()+len, taxonParentUpperHeight[i]);
+				
+				double newHeight = heightLower + Randomizer.nextDouble() * (heightUpper - heightLower);
 				if (src.getHeight() + minTime + len > taxonHeight[i]) {
 					while (newHeight <= taxonHeight[i]) {
-						newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
+						newHeight = heightLower + Randomizer.nextDouble() * (heightUpper - heightLower);
 					}
 				} else {
 					newHeight = src.getHeight() + len;
 				}
+				if (Double.isNaN(newHeight)) {
+					System.out.println("NaN tree height found -- fixing it to " + src.getHeight());
+					newHeight = src.getHeight();
+				}
+				
+//				double newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
+//				if (src.getHeight() + minTime + len > taxonHeight[i]) {
+//					while (newHeight <= taxonHeight[i]) {
+//						newHeight = src.getHeight() + minTime + Randomizer.nextDouble() * len;
+//					}
+//				} else {
+//					newHeight = src.getHeight() + len;
+//				}
 				
 				Node newNode = new Node();
 				newNode.setHeight(newHeight);
@@ -171,12 +191,28 @@ public class TreeGrafter extends TreeCombiner {
 		subTaxonSets2 = new Set[n][];
 		taxonName = new String[n];
 		taxonHeight = new double[n];
+		taxonParentLowerHeight = new double[n];
+		Arrays.fill(taxonParentLowerHeight, Double.NEGATIVE_INFINITY);
+		taxonParentUpperHeight = new double[n];
+		Arrays.fill(taxonParentUpperHeight, Double.POSITIVE_INFINITY);
 		int i = 0;
 		for (String str : strs) {
 			if (!(str.startsWith("#") || str.matches("^\\s*$"))) {
 				String [] strs2 = str.split("\t");
 				taxonName[i] = strs2[0];
-				taxonHeight[i] = strs2.length > 1 ? Double.parseDouble(strs2[1]) : 0.0;
+				if (strs2.length > 1) {
+					String str3 = strs2[1];
+					if (str3.contains(",")) {
+						String [] strs3 = str3.split(",");
+						taxonHeight[i] = Double.parseDouble(strs3[0]);
+						taxonParentLowerHeight[i] = Double.parseDouble(strs3[1]);
+						taxonParentUpperHeight[i] = Double.parseDouble(strs3[2]);
+					} else {
+						taxonHeight[i] = Double.parseDouble(strs2[1]);
+					}
+				} else {
+					taxonHeight[i] = 0.0;
+				}
 				subTaxonSets[i] = new HashSet<>();
 				if (!strs2[2].contains("|")) {
 					if (!hasConstraints) {
