@@ -21,6 +21,7 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import beast.base.util.Randomizer;
 //import beast.base.evolution.tree.TreeParser;
 
@@ -34,12 +35,14 @@ public class TreeGrafter extends TreeCombiner {
 			+ "MRCA of the individual sets separated by bars, and below the MRCA of all of these sets.");
 	final public Input<TreeFile> constraintsFileInput = new Input<>("constraints", "newick tree file with constraints on where to insert leaf nodes");
 	final public Input<Double> minTimeInput = new Input<>("minTime", "minimum time before sample time of grafted taxon.", 0.0);
+	final public Input<Long> seedInput = new Input<>("seed", "random number seed -- ignored if 0.", 0L);
 
 	
 	String [] taxonName;
 	double [] taxonHeight;
 	double [] taxonParentLowerHeight;
 	double [] taxonParentUpperHeight;
+	boolean [] needsRefresh;
 	double minTime;
 	Set<String> [] subTaxonSets;
 	Set<String> [][] subTaxonSets2;
@@ -53,10 +56,19 @@ public class TreeGrafter extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
+		if (seedInput.get() != 0) {
+			Randomizer.setSeed(seedInput.get());
+		}
 		minTime = minTimeInput.get();
 		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
+		
+		Set<String> taxa = new LinkedHashSet<>();
+		for (String taxon : tree.getTaxaNames()) {
+			taxa.add(taxon);
+		}
+		processCfgFile(taxa);
 		
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {
@@ -64,19 +76,18 @@ public class TreeGrafter extends TreeCombiner {
 			out = new PrintStream(outputInput.get());
 		}
 
-		Set<String> taxa = new LinkedHashSet<>();
-		for (String taxon : tree.getTaxaNames()) {
-			taxa.add(taxon);
-		}
-		processCfgFile(taxa);
-
 		srcTreeSet.reset();
 		int n = taxonName.length;
 		int k = 0;
+		long start = System.currentTimeMillis();
 		while (srcTreeSet.hasNext()) {
 			tree = srcTreeSet.next();
-			System.err.println("Processing tree " + (k++));
+			System.err.println("Processing tree " + (k++) + " at " + (System.currentTimeMillis()-start)/1000 + " seconds");
 			for (int i = 0; i < n; i++) {
+				if (needsRefresh[i]) {
+					String newick = tree.getRoot().toNewick();
+					tree = new TreeParser(newick);
+				}
 				Node src = null;
 				if (subTaxonSets2[i] == null) {
 					src = getMRCA(tree, subTaxonSets[i]);
@@ -84,6 +95,11 @@ public class TreeGrafter extends TreeCombiner {
 					src = getRandomNodeAbove(tree, subTaxonSets2[i]);
 				}
 				Node parent = src.getParent();
+				if (parent == null) {
+					int h  = 3;
+					h++;
+					src = getMRCA(tree, subTaxonSets[i]);
+				}
 				double len = parent.getHeight() - minTime;
 				if (len < 0) {
 					len = 0;
@@ -129,10 +145,10 @@ public class TreeGrafter extends TreeCombiner {
 				// create new leaf node
 				Node leaf = new Node();
 				leaf.setID(taxonName[i]);
-				Log.warning("Adding " + taxonName[i]);
 				leaf.setHeight(taxonHeight[i]);
 				newNode.addChild(leaf);
 				leaf.setParent(newNode);
+				Log.warning("Adding " + taxonName[i]);				
 				
 				// make sure no negative branches are introduced
 				while (newNode.getHeight() > newNode.getParent().getHeight()) {
@@ -214,7 +230,7 @@ public class TreeGrafter extends TreeCombiner {
 					taxonHeight[i] = 0.0;
 				}
 				subTaxonSets[i] = new HashSet<>();
-				if (!strs2[2].contains("|")) {
+				if (strs2[2].indexOf('|') == -1) {
 					if (!hasConstraints) {
 						for (String taxon : strs2[2].split(",")) {
 							subTaxonSets[i].add(taxon);					
@@ -247,7 +263,21 @@ public class TreeGrafter extends TreeCombiner {
 			for (i = 0; i < n; i++) {
 				findTaxa(taxonName[i], root, subTaxonSets[i]);
 			}
-		}		
+		}
+		
+		
+		needsRefresh = new boolean[n];
+		for (i = 1; i < n-1; i++) {
+			Set<String> taxa2 = new HashSet<>();
+			for (String s : subTaxonSets[i]) {
+				taxa2.add(s);
+			}
+			for (int j = 0; j < i; j++) {
+				if (taxa2.contains(taxonName[j])) {
+					needsRefresh[i] = true;
+				}
+			}
+		}
 	}
 
 	private String toShortNewick(Node node) {

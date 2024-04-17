@@ -8,6 +8,7 @@ import java.util.Set;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.inference.Runnable;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
@@ -95,8 +96,38 @@ abstract public class TreeCombiner extends Runnable {
 				leafs.add(node);
 			}
 		}
+		
+		if (taxa.size() < leafs.size()) {
+			StringBuilder b = new StringBuilder();
+			for (Node node : leafs) {
+				if (!taxa.remove(node.getID())) {
+					Log.warning("could not remove " + node.getID());
+				} else {
+					b.append(node.getID() + " ");
+				}
+			}
+			throw new IllegalArgumentException("getMRCA::Could not find " + (taxa.size()-leafs.size()) + " taxa among leafs: " + b.toString());
+		}
 
-        nodesTraversed = new boolean[tree.getRoot().getAllChildNodesAndSelf().size()];
+		if (taxa.size() > leafs.size()) {
+			StringBuilder b = new StringBuilder();
+			for (String taxon : taxa) {
+				boolean found = false;
+				for (int i = 0; i < leafs.size(); i++) {
+					if (leafs.get(i).getID().equals(taxon)) {
+						leafs.remove(i);
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					Log.warning("getMRCA::Could not find leaf " + taxon);
+				}
+			}
+			throw new IllegalArgumentException("Could not find " + (taxa.size()-leafs.size()) + " taxa among leafs: " + b.toString());
+		}
+
+		nodesTraversed = new boolean[tree.getRoot().getAllChildNodesAndSelf().size()];
         nseen = 0;
         Node cur = leafs.get(0);
 
