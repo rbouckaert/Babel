@@ -2,8 +2,12 @@ package babel.tools;
 
 
 import java.io.PrintStream;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
@@ -21,47 +25,67 @@ import beast.base.evolution.tree.Tree;
 public class Trees2Distance extends Runnable {
 	final public Input<TreeFile> srcInput = new Input<>("tree", "1 or more source tree files", new TreeFile("[[none]]"));
 	final public Input<Integer> burnInPercentageInput = new Input<>("burnin", "percentage of trees to used as burn-in (and will be ignored)", 10);
+	final public Input<Integer> threadsInput = new Input<>("threads", "number of threads to use. Ignored if 1 or less", -1);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file containing distance matrix.",
 			new OutFile("[[none]]"));
 
-	@Override
+    private ExecutorService exec;
+    private CountDownLatch countDown;
+    private double [][] distances;
+    private List<Tree> trees;
+    private long start;
+    private int distancesCalctulated, totalDistances;
+
+    @Override
 	public void initAndValidate() {
 	}
 
 	@Override
 	public void run() throws Exception {
-		
+		// collect trees
+		trees = new ArrayList<>(); 
 		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
-
-		MemoryFriendlyTreeSet srcTreeSet2 = new MemoryFriendlyTreeSet(srcInput.get().getPath(), burnInPercentageInput.get());
-		
-		int [] map;
-		
-		List<List<Double>> distances = new ArrayList<>();
-
-		int i = 0;
 		while (srcTreeSet.hasNext()) {
-			// set up mapping of taxon names in this tree set to that of the focal tree
-			Tree tree = srcTreeSet.next();
-			List<Double> d = new ArrayList<>();
-			distances.add(d);
-			srcTreeSet2.reset();
-			int j = 0;
-			while (j < i && srcTreeSet2.hasNext()) {
-				Tree tree2 = srcTreeSet2.next();
+			trees.add(srcTreeSet.next());
+		}
+		totalDistances = trees.size() * (trees.size()-1)/2;
+		distancesCalctulated = 0;
+		Log.warning(totalDistances + " distances to calculate");
+		
+		// reserve memory for distance matrix
+		distances = new double[trees.size()][trees.size()];
+		int threadCount = threadsInput.get();
+		if (threadCount > 1) {
+		     exec = Executors.newFixedThreadPool(threadCount);
+		}
+
+		start = System.currentTimeMillis();
+		if (threadCount <= 1) {
+			int i = 0;
+			while (i < trees.size()) {
+				distances[i][i] = 0.0;
 				
-//				map = new int[tree2.getLeafNodeCount()];
-//				String [] taxa = tree2.getTaxaNames();
-//				for (int k = 0; k < map.length; k++) {
-//					String name = tree.getTaxaNames()[k];
-//					map[i] = indexOf(taxa, name);
-//				}
-				d.add(RNNIDistance(tree, tree2));
-				j++;
+				process(i, trees, distances);
+				distancesCalctulated += i;
+				i++;
+				
+				Log.warning.print('.');
+				if (true || i % 10 == 0) {
+					long time = System.currentTimeMillis() - start;
+					Log.warning(" " + distancesCalctulated + " in " + time/1000 + " seconds = " + time/distancesCalctulated + " ms per distance " + ((totalDistances-distancesCalctulated)*time/(1000*distancesCalctulated)) + " seconds to go");
+				}
+				System.gc();
 			}
-			d.add(0.0);
-			i++;
+		} else {
+            countDown = new CountDownLatch(threadCount);
+            // kick off the threads
+        	boolean [] done = new boolean[trees.size()];
+            for (int i = 0; i < threadCount; i++) {
+                CoreRunnable coreRunnable = new CoreRunnable(i, done);
+                exec.execute(coreRunnable);
+            }
+            countDown.await();
 		}
 		
 		// save to file?
@@ -70,10 +94,10 @@ public class Trees2Distance extends Runnable {
 				!outputInput.get().getName().equals("[[none]]")) {
 			out = new PrintStream(outputInput.get());
 		}		
-		int n = distances.size();
-		for (i = 0; i < n; i++) {
+		int n = trees.size();
+		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
-				double d = i > j ? distances.get(i).get(j) : distances.get(j).get(i);
+				double d = distances[i][j];
 				out.print(d + ",");
 			}
 			out.println();
@@ -84,27 +108,75 @@ public class Trees2Distance extends Runnable {
 			out.close();
 		}
 		
+//		double [][] mds = MDSJ.classicalScaling(distances, 2);
+		
+		
 		Log.warning("Done");
 	}
+
+    class CoreRunnable implements java.lang.Runnable {
+    	int i;
+    	boolean [] done;
+    	
+        CoreRunnable(int start, boolean [] done) {
+            i = start;
+            this.done = done;
+        }
+
+        @Override
+		public void run() {
+            try {
+            	while (i < done.length) {
+    				distances[i][i] = 0.0;
+    				
+    				process(i, trees, distances);
+    				synchronized (this) {
+    					distancesCalctulated += i;
+    				}
+    				done[i] = true;
+    				Log.warning.print('.');
+    				if (i > 0 && i % 10 == 0) {
+    					long time = System.currentTimeMillis() - start;
+    					try {
+    						Log.warning(" " + distancesCalctulated + " in " + time/1000 + " seconds = " + time/distancesCalctulated + " ms per distance " + ((totalDistances-distancesCalctulated)*time/(1000*distancesCalctulated)) + " seconds to go");
+    					} catch (ArithmeticException e) {
+    						// ignore
+    					}
+    				}
+    				i += threadsInput.get();
+    				System.gc();
+            	}
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+            countDown.countDown();
+        }
+
+    } // CoreRunnable
 	
-	private int indexOf(String[] focalTaxa, String name) {
-		for (int i = 0; i < focalTaxa.length; i++) {
-			if (focalTaxa[i].equals(name)) {
-				return i;
-			}
+	
+	private int process(int i, List<Tree> trees, double[][] distances) {
+		Tree tree = trees.get(i);
+		RNNIMetric metric = new RNNIMetric(tree.getTaxaNames());
+		int j = 0;
+		while (j < i) { 
+			Tree tree2 = trees.get(j);
+			double d = RNNIDistance(metric, tree, tree2);
+			distances[i][j] = d;
+			distances[j][i] = d;
+			j++;
 		}
-		throw new IllegalArgumentException("Tree set incompatible with focal tree: could not find taxon " + name + " in focal tree");
+		return j;
 	}
 
-	
-	private double RNNIDistance(Tree tree1, Tree tree2) {
+	private double RNNIDistance(RNNIMetric metric, Tree tree1, Tree tree2) {
 		if (tree1.getRoot().getNr() == 0) {
 			renumberInternal(tree1.getRoot(), new int[]{tree1.getLeafNodeCount()});
 		}
 		if (tree2.getRoot().getNr() == 0) {
 			renumberInternal(tree2.getRoot(), new int[]{tree2.getLeafNodeCount()});
 		}
-		RNNIMetric metric = new RNNIMetric(tree1.getTaxaNames());
 		return metric.distance(tree1, tree2);
 	}
 
@@ -121,7 +193,7 @@ public class Trees2Distance extends Runnable {
 
 
 	public static void main(String[] args) throws Exception {
-		new Application(new Trees2Distance(), "Tree2Distance", args);		
+		new Application(new Trees2Distance(), "Trees2Distance", args);		
 	}
 
 }
