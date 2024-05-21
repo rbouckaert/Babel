@@ -20,6 +20,7 @@ import beast.base.core.Log;
 public class MatrixVisualiserBase extends Runnable {
 	final public Input<Double> rateThresholdInput = new Input<>("rateThreshold", "Threshold used to display numerical values on arrows: values below the threshold will be suppressed", Double.NEGATIVE_INFINITY);
 	final public Input<Double> arrowThresholdInput = new Input<>("arrowThreshold", "Threshold used to display arrows: values below the threshold will suppress the arrow", Double.NEGATIVE_INFINITY);
+	final public Input<Double> startingAgleInput = new Input<>("angle", "angle of the first entry (in degrees)", 0.0);
 
 	String [] colour = new String[]{
 			"f7eb00",
@@ -180,9 +181,10 @@ public class MatrixVisualiserBase extends Runnable {
 
 		double[] x = new double[n];
 		double[] y = new double[n];
+		double angle = startingAgleInput.get() * Math.PI * 2.0 / 360.0;
 		for (int i = 0; i < n; i++) {
-			x[i] = 10+(w-40) / 2.0 * (1.0 + Math.cos(i * Math.PI * 2.0 / n));
-			y[i] = 10+(h-40) / 2.0 * (1.0 + Math.sin(i * Math.PI * 2.0 / n));
+			x[i] = 10+(w-40) / 2.0 * (1.0 + Math.cos(angle + i * Math.PI * 2.0 / n));
+			y[i] = 10+(h-40) / 2.0 * (1.0 + Math.sin(angle + i * Math.PI * 2.0 / n));
 		}
 
         final DecimalFormat formatter = new DecimalFormat("#.##");
@@ -242,7 +244,8 @@ public class MatrixVisualiserBase extends Runnable {
 		AffineTransform affinetransform = new AffineTransform();     
 		FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
 		for (int i = 0; i < n; i++) {
-			double a = i * Math.PI * 2.0 / n;
+			double a = angle + i * Math.PI * 2.0 / n;
+			if (a < 0) { a += Math.PI * 2.0;}
 			Font font = new Font("Verdana", Font.PLAIN, 28);
 			double textWidth = 30 + font.getStringBounds(label[i], frc).getWidth();
 			double x1 = a <= Math.PI/2.0 || a >= 1.5*Math.PI ? x[i] + 30 : x[i]-textWidth;
