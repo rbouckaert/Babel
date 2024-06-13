@@ -130,7 +130,7 @@ public class FrechetMeanCentroid extends Runnable {
 			NexusParser parser = new NexusParser();
 			parser.parseFile(outputInput.get());
 			return parser.trees.get(0);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
