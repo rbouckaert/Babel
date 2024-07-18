@@ -21,6 +21,9 @@ public class Newick2Nexus extends Runnable {
 	final public Input<TreeFile> treesInput = new Input<>("trees","Newick file containing a tree set", Validate.REQUIRED);
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
+    public final Input<Boolean> adjustTipHeightsInput = new Input<>(
+            "adjustTipHeights",
+            "flag to indicate if tipHeights shall be adjusted when date traits missing. Default=true.", false);
 	
 	final public Input<Boolean> makeBinaryInput = new Input<>("makeBinary", "converts tree to a binary tree, so single node child sets are collapsed", false);
 
@@ -46,7 +49,7 @@ public class Newick2Nexus extends Runnable {
             str = fin.readLine();
             if (!str.matches("\\s*")) {
             	try {
-		            parser = new TreeParser(str);
+		            parser = new TreeParser(str, adjustTipHeightsInput.get());
 		            if (k == 0) {
 		            	parser.init(out);
 		            }

@@ -125,8 +125,13 @@ public class FrechetMeanCentroid extends Runnable {
 	private Tree MCCTree() {
 		try {
 			String output = outputInput.get().getAbsolutePath();
-			TreeAnnotator.main(new String[]{"-b",burnInPercentageInput.get() + "",
-					treeFileInput.get().getPath(), output});
+			try {
+				TreeAnnotator.main(new String[]{"-b",burnInPercentageInput.get() + "",
+						treeFileInput.get().getPath(), output});
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			NexusParser parser = new NexusParser();
 			parser.parseFile(outputInput.get());
 			return parser.trees.get(0);
