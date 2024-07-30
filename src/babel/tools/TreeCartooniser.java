@@ -13,7 +13,7 @@ import beast.base.evolution.tree.Tree;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.tools.Application;
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 
 @Description("Add `cartoon` annotations to summary tree, so FigTree shows them as triangle")
 public class TreeCartooniser extends TreeCombiner {
@@ -25,7 +25,7 @@ public class TreeCartooniser extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 

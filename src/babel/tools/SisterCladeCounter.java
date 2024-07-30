@@ -12,7 +12,7 @@ import beast.base.evolution.tree.Tree;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.tools.Application;
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 
 @Description("Produce statistics on taxa that form the sister clade of a given clade")
 public class SisterCladeCounter extends TreeCombiner {
@@ -26,7 +26,7 @@ public class SisterCladeCounter extends TreeCombiner {
 	
 	@Override
 	public void run() throws Exception {
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), burnInPercentageInput.get());
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().getPath(), burnInPercentageInput.get());
 
 		PrintStream out = System.out;
 		if (outputInput.get() != null && !outputInput.get().getName().equals("[[none]]")) {

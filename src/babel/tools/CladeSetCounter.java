@@ -6,7 +6,7 @@ import java.util.List;
 
 import babel.tools.CladeSetComparator.CladeSetWithHeights;
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.TreeFile;
 import beast.base.core.Description;
@@ -37,7 +37,7 @@ public class CladeSetCounter extends Runnable {
 	
 	private int getCladeSet(String path) throws IOException {
 		Log.warning("Processing " + path);
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 		CladeSetWithHeights cladeSet1 = new CladeSetComparator().new CladeSetWithHeights(tree);

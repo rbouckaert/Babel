@@ -3,7 +3,7 @@ package babel.tools;
 import java.io.PrintStream;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
@@ -34,7 +34,7 @@ public class IllegalTreeCleaner extends Runnable {
 		
 
 		// Iterate through trees
-		MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
+		MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
 		int i = 0;
 		int badTrees = 0;
 		trees.reset();

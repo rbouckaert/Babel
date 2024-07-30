@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -49,7 +49,7 @@ public class LeafSplitter extends Nexus2Newick {
         }
 
         // read trees one by one, relabel and write out relabeled tree in newick format
-        MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
+        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
     	Tree tree = trees.next();
         trees.reset();

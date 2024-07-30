@@ -9,7 +9,7 @@ import java.util.Set;
 
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -32,7 +32,7 @@ public class TreeMerger extends TreeCombiner {
 
 	@Override
 	public void run() throws Exception {
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(srcInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 		
@@ -120,7 +120,7 @@ public class TreeMerger extends TreeCombiner {
 		for (String str : strs) {
 			if (!str.matches("^\\s*$")) {
 				String [] strs2 = str.trim().split("\t+");
-				subTreeSet[i] = new TreeAnnotator().new MemoryFriendlyTreeSet(strs2[0], 0);
+				subTreeSet[i] = new MemoryFriendlyTreeSet(strs2[0], 0);
 				subTreeSet[i].reset();
 				subTaxonSets[i] = new HashSet<>();
 				for (String taxon : strs2[1].trim().split(",")) {

@@ -11,7 +11,7 @@ import java.util.Map;
 
 import beastfx.app.treeannotator.TreeAnnotator;
 import beastfx.app.treeannotator.TreeAnnotator.FastTreeSet;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;

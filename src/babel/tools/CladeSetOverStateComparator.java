@@ -28,7 +28,7 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
@@ -78,7 +78,7 @@ public class CladeSetOverStateComparator extends Runnable {
 		// List of tree readers
 		List<MemoryFriendlyTreeSet> treeSets = new ArrayList<MemoryFriendlyTreeSet>();
 		for (TreeFile treeFile : srcInput.get()) {
-			MemoryFriendlyTreeSet treeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(treeFile.getAbsolutePath(), 0);
+			MemoryFriendlyTreeSet treeSet = new MemoryFriendlyTreeSet(treeFile.getAbsolutePath(), 0);
 			treeSet.reset();
 			treeSets.add(treeSet);
 		}

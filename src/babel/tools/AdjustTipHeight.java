@@ -8,8 +8,7 @@ import java.io.PrintStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
@@ -51,7 +50,7 @@ public class AdjustTipHeight extends Runnable {
 		processCfgFile();
 		
         // read trees one by one, adjust tip heights and write out relabeled tree in newick format
-        MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
+        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
     	Tree tree = trees.next();
         trees.reset();

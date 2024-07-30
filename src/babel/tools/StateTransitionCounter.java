@@ -8,7 +8,7 @@ import java.io.PrintStream;
 import java.util.*;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
@@ -141,7 +141,7 @@ public class StateTransitionCounter extends MatrixVisualiserBase {
 
 	private void process(double tLo, double tHi, PrintStream out) throws Exception {
 		// find all tag values
-		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(src1Input.get().getPath(), burnInPercentageInput.get());
+		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(src1Input.get().getPath(), burnInPercentageInput.get());
 		srcTreeSet.reset();
 		String tag = tagInput.get();
 		Set<String> tagSet = new HashSet<>();

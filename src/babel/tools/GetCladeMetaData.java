@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -40,7 +40,7 @@ public class GetCladeMetaData extends TreeCombiner {
 		processCfgFile();
 		
         // read trees one by one, adjust tip heights and write out relabeled tree in newick format
-        MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getAbsolutePath(), 0);
+        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(srcInput.get().getAbsolutePath(), 0);
         trees.reset();
     	Tree tree = trees.next();
         trees.reset();

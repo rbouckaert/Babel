@@ -3,7 +3,7 @@ package babel.tools;
 import java.io.PrintStream;
 
 import beastfx.app.treeannotator.TreeAnnotator;
-import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beast.base.core.Description;
@@ -42,7 +42,7 @@ public class MRCAFinder extends GetCladeMetaData {
 		processCfgFile();
 		
         // read trees one by one, find MRCA, label nodes in MRCA path
-        MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(srcInput.get().getAbsolutePath(), 0);
+        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(srcInput.get().getAbsolutePath(), 0);
         trees.reset();
     	Tree tree = trees.next();
         trees.reset();

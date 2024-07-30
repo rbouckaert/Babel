@@ -18,15 +18,18 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.parser.NexusParser;
 
 @Description("filters all leafs from specified taxon sets out of a tree file")
 public class TaxonFilter extends Runnable {
 	public Input<TreeFile> treesInput = new Input<>("trees","NEXUS file containing a tree set", Validate.REQUIRED);
-	public Input<File> subsetInput = new Input<>("subset","text file with list of taxa to include (one per line)", Validate.REQUIRED);
+	public Input<File> subsetInput = new Input<>("subset","text file with list of taxa to consider (one per line)", Validate.REQUIRED);
+	public Input<Boolean> includeInput = new Input<>("include", "whether to include the taxa listed or exclude them", true);
 	public Input<OutFile> outputInput = new Input<>("out","output file. Print to stdout if not specified");
 	public Input<Boolean> verboseInput = new Input<>("verbose","print out extra information while processing", true);
 
+	
+	protected boolean include;
+	
 	@Override
 	public void initAndValidate() {
 	}
@@ -37,14 +40,15 @@ public class TaxonFilter extends Runnable {
 			Log.setLevel(Log.Level.error);
 		}
 		
-
+		include = includeInput.get();
+		
 		// get taxa in subsets
-		Set<String> taxaToInclude = new HashSet<>();
+		Set<String> taxaSubSet = new HashSet<>();
 		BufferedReader fin = new BufferedReader(new FileReader(subsetInput.get()));
         String str = null;
         while (fin.ready()) {
             str = fin.readLine();
-			taxaToInclude.add(str.trim());
+			taxaSubSet.add(str.trim());
         }
         fin.close();
 
@@ -58,6 +62,14 @@ public class TaxonFilter extends Runnable {
         for (String taxon :	tree.getTaxaNames()) {
         	taxaInTree.add(taxon);
         }
+        Set<String> taxaToInclude = taxaSubSet;
+        if (!include) {
+        	// we want to exclude the taxa in the subset
+        	taxaToInclude = taxaInTree;
+        	taxaToInclude.removeAll(taxaSubSet);
+        }
+
+        
         StringBuilder buf = new StringBuilder();
         buf.append("Taxa in subset, but not in tree:");
         for (String taxon : taxaToInclude) {
@@ -84,7 +96,6 @@ public class TaxonFilter extends Runnable {
         Log.warning.println(buf.toString());
 		
         Log.warning.println("Expecting " + k + " taxa to be left:" + buf2.toString());
-		
         
         // filter trees, and print out newick trees
         PrintStream out = System.out;
