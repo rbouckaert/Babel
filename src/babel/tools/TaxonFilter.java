@@ -1,5 +1,6 @@
 package babel.tools;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -7,8 +8,10 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import babel.tools.utils.MemoryFriendlyTreeSet;
+//import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
+import beastfx.app.treeannotator.TreeAnnotator;
+import beastfx.app.treeannotator.TreeAnnotator.MemoryFriendlyTreeSet;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
 import beast.base.core.Description;
@@ -53,7 +56,7 @@ public class TaxonFilter extends Runnable {
         fin.close();
 
 		// get trees
-		MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(treesInput.get().getPath(), 0);
+		MemoryFriendlyTreeSet srcTreeSet = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getPath(), 0);
 		srcTreeSet.reset();
 		Tree tree = srcTreeSet.next();
 
@@ -62,35 +65,38 @@ public class TaxonFilter extends Runnable {
         for (String taxon :	tree.getTaxaNames()) {
         	taxaInTree.add(taxon);
         }
-        Set<String> taxaToInclude = taxaSubSet;
-        if (!include) {
-        	// we want to exclude the taxa in the subset
-        	taxaToInclude = taxaInTree;
-        	taxaToInclude.removeAll(taxaSubSet);
-        }
-
         
         StringBuilder buf = new StringBuilder();
         buf.append("Taxa in subset, but not in tree:");
-        for (String taxon : taxaToInclude) {
+        for (String taxon : taxaSubSet) {
         	if (!taxaInTree.contains(taxon)) {
         		buf.append(' ');
         		buf.append(taxon);
         	}
         }
         Log.warning.println(buf.toString());
+        
+        Set<String> taxaToInclude = new HashSet<>();
+        if (include) {
+        	taxaToInclude.addAll(taxaSubSet);
+        } else {
+        	// we want to exclude the taxa in the subset
+        	taxaToInclude.addAll(taxaInTree);
+        	taxaToInclude.removeAll(taxaSubSet);
+        }
+
         buf = new StringBuilder();
         buf.append("Taxa to be removed:");
         StringBuilder buf2 = new StringBuilder();
         int k = 0;
         for (String taxon : taxaInTree) {
-        	if (!taxaToInclude.contains(taxon)) {
-        		buf.append(' ');
-        		buf.append(taxon);
-        	} else {
+        	if (taxaToInclude.contains(taxon)) {
         		buf2.append(' ');
         		buf2.append(taxon);
         		k++;
+        	} else {
+        		buf.append(' ');
+        		buf.append(taxon);
         	}
         }
         Log.warning.println(buf.toString());
@@ -121,7 +127,7 @@ public class TaxonFilter extends Runnable {
        }
 
 
-	   public String toNewick(Node node) {
+		static public String toNewick(Node node) {
 	    	if (node.getChildCount() == 1) {
 	    		return toNewick(node.getChild(0));
 	    	}
@@ -141,7 +147,7 @@ public class TaxonFilter extends Runnable {
 	            if (node.getID() == null) {
 	                buf.append(node.getNr());
 	            } else {
-	                buf.append(node.getID());
+	                buf.append(normalise(node.getID()));
 	            }
 	        }
 	        if (node.metaDataString != null) {
@@ -153,7 +159,14 @@ public class TaxonFilter extends Runnable {
 	    }
 
 
-		
+	    // wrap ID in quotes if it contains special characters
+		static public String normalise(String id) {
+			if (id.contains(":") || id.contains("(") || id.contains("[")) {
+				return "\"" + id + "\"";
+			}
+			return id;
+		}
+
 		protected Node filter(Node node, Set<String> taxaToInclude) {
 			if (node.isLeaf()) {
 				if (taxaToInclude.contains(node.getID())) {

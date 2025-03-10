@@ -66,7 +66,7 @@ public class FamilyPruner extends Runnable {
 		for (Tree tree : parser.trees) {
 			filter(tree, taxonsets);
 			Node root = tree.getRoot();
-        	out.println(toNewick(root));
+        	out.println(TaxonFilter.toNewick(root));
 		}
 		
         if (outputInput.get() != null) {
@@ -74,33 +74,6 @@ public class FamilyPruner extends Runnable {
         }
         Log.warning.println("Done.");
 	}
-
-    public String toNewick(Node node) {
-    	if (node.getChildCount() == 1) {
-    		return toNewick(node.getChild(0));
-    	}
-        final StringBuilder buf = new StringBuilder();
-        if (node.getLeft() != null && node.getID() == null) {
-            buf.append("(");
-            buf.append(toNewick(node.getLeft()));
-            if (node.getRight() != null) {
-                buf.append(',');
-                buf.append(toNewick(node.getRight()));
-            }
-            buf.append(")");
-            if (node.getID() != null) {
-                buf.append(node.getID());
-            }
-        } else {
-            if (node.getID() == null) {
-                buf.append(node.getNr());
-            } else {
-                buf.append(node.getID());
-            }
-        }
-        buf.append(":").append(node.getLength());
-        return buf.toString();
-    }
 
 
 	
