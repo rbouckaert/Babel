@@ -35,7 +35,7 @@
 		<fileset dir="${libBeast2}" includes="antlr-runtime-4.10.1.jar"/>
 		<fileset dir="${libBeast2}" includes="beagle.jar"/> 
 		<fileset dir="${libBeast2}" includes="colt.jar"/> 
-		<fileset dir="${libBeast2}" includes="jam.jar"/>
+		<fileset dir="${libBeast2}" includes="commons-math3-3.6.1.jar"/>
 		<fileset dir="../BEASTLabs/lib" includes="nashorn-core-15.3.jar"/>
         <pathelement path="${beast2classpath}"/>
         <pathelement path="${beastappclasspath}"/>

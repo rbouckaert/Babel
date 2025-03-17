@@ -2,6 +2,7 @@ package babel.tools;
 
 import java.io.PrintStream;
 
+import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.treeannotator.TreeAnnotator;
 import beastfx.app.treeannotator.TreeAnnotator.FastTreeSet;
 import beastfx.app.tools.Application;
@@ -37,8 +38,9 @@ public class Nexus2Newick extends Runnable {
         }
 
         
-        FastTreeSet trees = new TreeAnnotator().new FastTreeSet(treesInput.get().getAbsolutePath(), 0);
+        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
+        int k = 0;
         while (trees.hasNext()) {
             Tree tree = trees.next();
             StringBuilder buf = new StringBuilder();
@@ -47,6 +49,10 @@ public class Nexus2Newick extends Runnable {
             }
             toShortNewick(tree.getRoot(), buf, includeMetaDataInput.get());
         	out.println(buf.toString());
+        	k++;
+        	if (k % 100 == 0) {
+        		Log.err.print(".");
+        	}
         }
         out.println();
         Log.err.println("Done");

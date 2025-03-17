@@ -68,7 +68,17 @@ public class MRCAFinder extends GetCladeMetaData {
             	node = node.getParent();
             }
             for (int i = 0; i < nodes.length; i++) {
-            	nodes[i].metaDataString += ",traversed=" + nodesTraversed[i];
+            	if (nodes[i] != null) {
+	            	if (nodes[i].metaDataString == null) {
+	                	nodes[i].metaDataString = "traversed=" + nodesTraversed[i];            		
+	            	} else {
+	            		nodes[i].metaDataString += ",traversed=" + nodesTraversed[i];
+	            	}
+            	} else {
+            		int h = 3;
+            		h++;
+            			
+            	}
             }
 
             if (out != null) {
