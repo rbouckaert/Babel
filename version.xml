@@ -55,6 +55,7 @@
         <provider classname="babel.tools.FamilyFilter"/>
         <provider classname="babel.tools.FamilyPruner"/>
         <provider classname="babel.tools.Fasta2Nexus"/>
+        <provider classname="babel.tools.Fasta2Json"/>
         <provider classname="babel.tools.GetCladeMetaData"/>
         <provider classname="babel.tools.GetDescription"/>
         <provider classname="babel.tools.IllegalTreeCleaner"/>
@@ -177,8 +178,12 @@
               class="babel.tools.Nexus2Fasta"
               args=""
             />
-    <packageapp description="Convert FASTA file into NEXUS alignemtn file"
+    <packageapp description="Convert FASTA file into NEXUS alignment file"
               class="babel.tools.Fasta2Nexus"
+              args=""
+            />
+    <packageapp description="Convert FASTA file into JSON alignment file"
+              class="babel.tools.Fasta2Json"
               args=""
             />
     <packageapp description="Convert phyml phy format to nexus alignment file"

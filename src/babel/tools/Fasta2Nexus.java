@@ -23,7 +23,7 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.parser.NexusParser;
 
-@Description("Convert FASTA file into NEXUS alignemtn file")
+@Description("Convert FASTA file into NEXUS alignment file")
 public class Fasta2Nexus extends Runnable {
 	final public Input<File> fastaInput = new Input<>("in", "fasta file containing an alignment",
 			Validate.REQUIRED);

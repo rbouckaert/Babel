@@ -38,7 +38,7 @@ public class Nexus2Newick extends Runnable {
         }
 
         
-        MemoryFriendlyTreeSet trees = new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
+        TreeAnnotator.MemoryFriendlyTreeSet trees = new TreeAnnotator().new MemoryFriendlyTreeSet(treesInput.get().getAbsolutePath(), 0);
         trees.reset();
         int k = 0;
         while (trees.hasNext()) {

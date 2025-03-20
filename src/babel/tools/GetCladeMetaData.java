@@ -8,7 +8,6 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import beastfx.app.treeannotator.TreeAnnotator;
 import babel.tools.utils.MemoryFriendlyTreeSet;
 import beastfx.app.tools.Application;
 import beast.base.core.Description;
@@ -73,7 +72,7 @@ public class GetCladeMetaData extends TreeCombiner {
 	}	
 		
 	public static void main(String[] args) throws Exception {
-		new Application(new GetCladeMetaData(), "Clage Meta Data", args);
+		new Application(new GetCladeMetaData(), "Clade Meta Data", args);
 	}
 
 }
