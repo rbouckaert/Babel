@@ -297,4 +297,9 @@
               class="babel.tools.CladeHeights"
               args=""
             />
+    <packageapp
+          description="Reduce resolultion of a tree file so it becomes more managable"
+              class="babel.tools.TreeResolutionCompressor"
+              args=""
+            />
 </package>
