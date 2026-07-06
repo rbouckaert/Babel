@@ -5,6 +5,7 @@
 	
     <service type="beast.base.core.BEASTInterface">
         <provider classname="babel.CognateStats"/>
+        <provider classname="babel.evolution.alignment.FilterCovarionToBinaryAlignment"/>
         <provider classname="babel.evolution.datatype.MutationDeathType"/>
         <provider classname="babel.evolution.datatype.TwoStateCovarionPlus"/>
         <provider classname="babel.evolution.likelihood.AbstractObservationProcess"/>
@@ -300,6 +301,11 @@
     <packageapp
           description="Reduce resolultion of a tree file so it becomes more managable"
               class="babel.tools.TreeResolutionCompressor"
+              args=""
+            />
+    <packageapp
+          description="Filters trees from of a tree file containing a specified clade split"
+              class="babel.tools.CladeSplitFilter"
               args=""
             />
 </package>

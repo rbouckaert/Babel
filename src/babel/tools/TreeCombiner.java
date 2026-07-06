@@ -14,7 +14,7 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 
 abstract public class TreeCombiner extends Runnable {
-	final public Input<TreeFile> srcInput = new Input<>("src","source tree (set) file used as skeleton");
+	final public Input<TreeFile> srcInput = new Input<>("tree","source tree (set) file used as skeleton");
 	final public Input<OutFile> outputInput = new Input<>("out", "output file, or stdout if not specified",
 			new OutFile("[[none]]"));
 
